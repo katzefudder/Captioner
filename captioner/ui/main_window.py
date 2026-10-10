@@ -1,4 +1,4 @@
-"""Hauptfenster: Ordner, Filter, paginierte Galerie, Beschriftung, Drag nach Lightroom."""
+"""Hauptfenster: Ordner in Tabs, Filter, paginierte Galerie, Beschriftung, Drag nach Lightroom."""
 import dataclasses
 import html
 import json
@@ -10,9 +10,9 @@ from PySide6.QtCore import QItemSelection, QItemSelectionModel, QMimeData, Qt, Q
 from PySide6.QtGui import QAction, QColor, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QHBoxLayout,
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
-                               QToolButton, QVBoxLayout, QWidget)
+                               QTabWidget, QToolButton, QVBoxLayout, QWidget)
 
-from .. import codes, config, geo, metadata, scanner
+from .. import codes, config, geo, metadata, scanner, transfer
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
 from ..roster import Roster, RosterLoader
@@ -22,7 +22,8 @@ from . import keymap
 from .dialogs import ROSTER_FILE_FILTER, SettingsDialog, ShortcutsDialog, TemplateDialog
 from .editor import CaptionEditor
 from .viewer import Viewer
-from .gallery import CLASS_COLORS, GalleryModel, GalleryView, ItemRole, TileDelegate
+from .gallery import CLASS_COLORS, ItemRole
+from .tabs import CopyWorker, FolderTab, FolderTabBar, ask_conflicts, tab_title
 from .workers import MetadataWriter, RosterWorker, ScanWorker, ThumbnailLoader
 
 logger = logging.getLogger(__name__)
@@ -54,7 +55,25 @@ class RawCaptionStore:
             logger.warning('Rohtexte nicht gespeichert: %s', e)
 
 
+def _tab_attribute(name):
+    """Zustand des aktiven Tabs, damit Bewertung, Editor, Viewer usw. unveraendert bleiben."""
+    return property(lambda self: getattr(self.tab, name), lambda self, value: setattr(self.tab, name, value))
+
+
 class MainWindow(QMainWindow):
+    folder = _tab_attribute('folder')
+    all_items = _tab_attribute('all_items')
+    by_key = _tab_attribute('by_key')
+    filtered = _tab_attribute('filtered')
+    page = _tab_attribute('page')
+    selected_keys = _tab_attribute('selected_keys')
+    scan_worker = _tab_attribute('scan_worker')
+    model = _tab_attribute('model')
+    view = _tab_attribute('view')
+    prev_button = _tab_attribute('prev_button')
+    next_page_button = _tab_attribute('next_page_button')
+    page_label = _tab_attribute('page_label')
+
     def __init__(self, settings: config.Settings, folder=None):
         super().__init__()
         self.settings = settings
@@ -73,16 +92,11 @@ class MainWindow(QMainWindow):
         self.raw_captions = RawCaptionStore(config.cache_dir() / 'raw_captions.json')
         self.places = geo.PlaceBook(settings.places)
 
-        self.folder = None
-        self.all_items = []
-        self.by_key = {}
-        self.filtered = []
-        self.page = 0
-        self.selected_keys = set()
-        self.edited_keys = set()
+        self.edited_keys = set()   # ueber alle Tabs; Keys sind Pfade
         self.last_raw_caption = ''
-        self.scan_worker = None
         self.roster_worker = None
+        self.copy_worker = None
+        self._drag_items = []
         self.viewer = None
         self._syncing_selection = False
 
@@ -100,7 +114,7 @@ class MainWindow(QMainWindow):
         open_action = QAction('Ordner öffnen …', self, shortcut=QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self.choose_folder)
         reload_action = QAction('Neu einlesen', self, shortcut=QKeySequence('F5'))
-        reload_action.triggered.connect(lambda: self.folder and self.open_folder(self.folder))
+        reload_action.triggered.connect(lambda: self.folder and self.rescan(self.tab))
         settings_action = QAction('Einstellungen …', self, shortcut=QKeySequence.StandardKey.Preferences)
         settings_action.triggered.connect(self.edit_settings)
         shortcuts_action = QAction('Tastenkürzel', self)
@@ -134,34 +148,24 @@ class MainWindow(QMainWindow):
         self.tag_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
         self.uncaptioned_filter.toggled.connect(lambda: self.apply_filter(True))
 
-        self.model = GalleryModel(self.loader)
-        self.view = GalleryView()
-        self.view.setModel(self.model)
-        self.view.setItemDelegate(TileDelegate(self.loader, self.writer, self.view))
-        self.view.mime_factory = self.build_drag_mime
-        self.view.selectionModel().selectionChanged.connect(self._on_selection_changed)
-        self._update_empty_text()
-
-        pager = QHBoxLayout()
-        self.prev_button = QToolButton(text='◀')
-        self.prev_button.clicked.connect(lambda: self.go_to_page(self.page - 1))
-        self.next_page_button = QToolButton(text='▶')
-        self.next_page_button.clicked.connect(lambda: self.go_to_page(self.page + 1))
-        self.page_label = QLabel()
-        pager.addWidget(self.prev_button)
-        pager.addWidget(self.page_label)
-        pager.addWidget(self.next_page_button)
-        pager.addStretch(1)
-        drag_hint = QLabel('Auswahl in Lightroom ziehen, um sie zu importieren')
-        drag_hint.setStyleSheet('color: gray;')
-        pager.addWidget(drag_hint)
+        self.tabs = QTabWidget()
+        tab_bar = FolderTabBar()
+        tab_bar.files_dropped.connect(lambda index: self.copy_dragged_to(self.tabs.widget(index)))
+        self.tabs.setTabBar(tab_bar)
+        self.tabs.setDocumentMode(True)
+        self.tabs.tabCloseRequested.connect(self.close_tab)
+        self.tabs.currentChanged.connect(self._on_tab_changed)
+        new_tab_button = QToolButton(text='+')
+        new_tab_button.setToolTip('Ordner in neuem Tab öffnen')
+        new_tab_button.clicked.connect(lambda: self.choose_folder(new_tab=True))
+        self.tabs.setCornerWidget(new_tab_button, Qt.Corner.TopRightCorner)
+        self.new_tab()
 
         left = QWidget()
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.addLayout(filters)
-        left_layout.addWidget(self.view, 1)
-        left_layout.addLayout(pager)
+        left_layout.addWidget(self.tabs, 1)
 
         self.editor = CaptionEditor()
         self.editor.setMinimumWidth(380)
@@ -237,6 +241,9 @@ class MainWindow(QMainWindow):
             'template_apply': self.apply_template,
             'roster_reload': lambda: self.load_roster(force=True),
             'shortcuts': self.show_shortcuts,
+            'close_tab': lambda: self.close_tab(self.tabs.currentIndex()),
+            'tab_next': lambda: self.tabs.setCurrentIndex((self.tabs.currentIndex() + 1) % self.tabs.count()),
+            'tab_prev': lambda: self.tabs.setCurrentIndex((self.tabs.currentIndex() - 1) % self.tabs.count()),
         }
         e = {
             'save_next': lambda: self.editor.submit(1),
@@ -247,7 +254,8 @@ class MainWindow(QMainWindow):
             'editor_apply_template': self.apply_template,
         }
         widget_ctx = Qt.ShortcutContext.WidgetWithChildrenShortcut
-        self._bind(g, self.view, widget_ctx)
+        # Galerie-Kuerzel gelten in jedem Tab (Fokus in einer der Galerien oder auf den Reitern)
+        self._bind(g, self.tabs, widget_ctx)
         self._bind(w, self, Qt.ShortcutContext.WindowShortcut)
         self._bind(e, self.editor, widget_ctx)
 
@@ -263,56 +271,146 @@ class MainWindow(QMainWindow):
     def show_shortcuts(self):
         ShortcutsDialog(self).exec()
 
-    # --- Ordner ---------------------------------------------------------------
+    # --- Tabs und Ordner ---------------------------------------------------------
 
-    def choose_folder(self):
+    @property
+    def tab(self) -> FolderTab:
+        return self.tabs.currentWidget()
+
+    def all_tabs(self):
+        return [self.tabs.widget(i) for i in range(self.tabs.count())]
+
+    def new_tab(self, folder=None):
+        tab = FolderTab(self.loader, self.writer)
+        tab.view.mime_factory = self.build_drag_mime
+        tab.view.selectionModel().selectionChanged.connect(self._on_selection_changed)
+        tab.view.files_dropped.connect(lambda t=tab: self.copy_dragged_to(t))
+        tab.prev_button.clicked.connect(lambda: self.go_to_page(self.page - 1))
+        tab.next_page_button.clicked.connect(lambda: self.go_to_page(self.page + 1))
+        index = self.tabs.addTab(tab, tab_title(folder))
+        self.tabs.setCurrentIndex(index)
+        self._update_empty_text()
+        self._update_pager()
+        return tab
+
+    def tab_for_folder(self, folder):
+        for tab in self.all_tabs():
+            if tab.folder and transfer._same_dir(tab.folder, folder):
+                return tab
+        return None
+
+    def choose_folder(self, new_tab=False):
         start = self.folder or self.settings.last_folder or str(Path.home())
         folder = QFileDialog.getExistingDirectory(self, 'Ordner öffnen', start)
         if folder:
-            self.open_folder(folder)
+            self.open_folder(folder, new_tab=new_tab)
 
-    def open_folder(self, folder):
-        if self.writer.pending_count() and not self._wait_for_writer('Ordner wechseln'):
-            return
-        if self.scan_worker and self.scan_worker.isRunning():
-            self.scan_worker.cancel()
-            self.scan_worker.wait(5000)
-        self.folder = str(folder)
-        self.settings.last_folder = self.folder
+    def open_folder(self, folder, new_tab=False):
+        """In einem neuen Tab; ein leerer aktueller Tab wird benutzt. Schon offen: dorthin wechseln."""
+        folder = str(folder)
+        existing = self.tab_for_folder(folder)
+        if existing is not None:
+            self.tabs.setCurrentWidget(existing)
+            return existing
+        tab = self.tab if (self.tab.folder is None and not new_tab) else self.new_tab()
+        tab.folder = folder
+        index = self.tabs.indexOf(tab)
+        self.tabs.setTabText(index, tab_title(folder))
+        self.tabs.setTabToolTip(index, folder)
+        self.settings.last_folder = folder
         self.settings.save()
-        self.all_items, self.by_key, self.filtered = [], {}, []
-        self.selected_keys.clear()
-        self.edited_keys.clear()
-        self.page = 0
-        self.model.set_items([])
-        self.folder_label.setText(f'{self.folder} – wird eingelesen …')
-        self._scan_started = time.time()
-        self.scan_worker = ScanWorker(self.pool, self.folder, self.settings.recursive)
-        self.scan_worker.scanned.connect(self._on_scanned)
-        self.scan_worker.chunk_loaded.connect(self._on_chunk_loaded)
-        self.scan_worker.failed.connect(lambda msg: QMessageBox.warning(self, 'Einlesen fehlgeschlagen', msg))
-        self.scan_worker.finished.connect(self._on_scan_finished)
-        self.scan_worker.start()
+        self.rescan(tab, wait_for_writer=False)
+        return tab
 
-    def _on_scanned(self, items):
-        self.all_items = items
-        self.by_key = {item.key: item for item in items}
-        self.apply_filter(True)
-
-    def _on_chunk_loaded(self, chunk):
-        self.model.refresh([item.key for item in chunk])
-        loaded = sum(1 for item in self.all_items if item.meta_loaded)
-        self.folder_label.setText(f'{self.folder} – Metadaten {loaded}/{len(self.all_items)} …')
-        if self._selected_items():
+    def rescan(self, tab, wait_for_writer=True):
+        if wait_for_writer and self.writer.pending_count() and not self._wait_for_writer('Neu einlesen'):
+            return
+        tab.stop_scan()
+        tab.all_items, tab.by_key, tab.filtered = [], {}, []
+        tab.selected_keys.clear()
+        tab.page = 0
+        tab.model.set_items([])
+        self._set_tab_status(tab, f'{tab.folder} – wird eingelesen …')
+        tab.scan_started = time.time()
+        worker = ScanWorker(self.pool, tab.folder, self.settings.recursive)
+        worker.tab = tab
+        tab.scan_worker = worker
+        worker.scanned.connect(self._on_scanned)
+        worker.chunk_loaded.connect(self._on_chunk_loaded)
+        worker.failed.connect(self._on_scan_failed)
+        worker.finished.connect(self._on_scan_finished)
+        worker.start()
+        if tab is self.tab:
+            self._update_empty_text()
+            self._update_pager()
             self._show_selection_in_editor()
 
-    def _on_scan_finished(self):
-        if self.sender() is not self.scan_worker:
+    def _scanning_tab(self):
+        """Tab des Scans, der das Signal gesendet hat; None, wenn er veraltet ist."""
+        worker = self.sender()
+        tab = getattr(worker, 'tab', None)
+        if tab is None or tab.scan_worker is not worker or self.tabs.indexOf(tab) < 0:
+            return None
+        return tab
+
+    def _on_scanned(self, items):
+        tab = self._scanning_tab()
+        if tab is None:
             return
-        scanner.sort_items(self.all_items)
+        tab.all_items = items
+        tab.by_key = {item.key: item for item in items}
+        if tab is self.tab:
+            self.apply_filter(True)
+
+    def _on_chunk_loaded(self, chunk):
+        tab = self._scanning_tab()
+        if tab is None:
+            return
+        tab.model.refresh([item.key for item in chunk])
+        loaded = sum(1 for item in tab.all_items if item.meta_loaded)
+        self._set_tab_status(tab, f'{tab.folder} – Metadaten {loaded}/{len(tab.all_items)} …')
+        if tab is self.tab and self._selected_items():
+            self._show_selection_in_editor()
+
+    def _on_scan_failed(self, message):
+        tab = self._scanning_tab()
+        if tab is not None:
+            QMessageBox.warning(self, 'Einlesen fehlgeschlagen', f'{tab.folder}\n\n{message}')
+
+    def _on_scan_finished(self):
+        tab = self._scanning_tab()
+        if tab is None:
+            return
+        scanner.sort_items(tab.all_items)
+        elapsed = time.time() - tab.scan_started
+        self._set_tab_status(tab, f'{tab.folder} – {len(tab.all_items)} Bilder ({elapsed:.1f} s)')
+        if tab is self.tab:
+            self.apply_filter(False)
+
+    def _set_tab_status(self, tab, text):
+        tab.status_text = text
+        if tab is self.tab:
+            self.folder_label.setText(text)
+
+    def _on_tab_changed(self, index):
+        if not hasattr(self, 'editor') or index < 0:
+            return
+        # Filter gelten fuer alle Tabs; beim Wechsel fuer den neuen anwenden
+        self.folder_label.setText(self.tab.status_text)
         self.apply_filter(False)
-        elapsed = time.time() - getattr(self, '_scan_started', time.time())
-        self.folder_label.setText(f'{self.folder} – {len(self.all_items)} Bilder ({elapsed:.1f} s)')
+
+    def close_tab(self, index):
+        tab = self.tabs.widget(index)
+        if tab is None:
+            return
+        if self.copy_worker and self.copy_worker.isRunning() and self.copy_worker.target_tab is tab:
+            QMessageBox.information(self, 'Tab schließen', 'In diesen Ordner wird gerade kopiert.')
+            return
+        tab.stop_scan()
+        self.tabs.removeTab(index)
+        tab.deleteLater()
+        if self.tabs.count() == 0:
+            self.new_tab()
 
     # --- Filter, Seiten, Auswahl -------------------------------------------------
 
@@ -359,7 +457,7 @@ class MainWindow(QMainWindow):
         if not self.folder:
             keys = QKeySequence(QKeySequence.StandardKey.Open).toString(QKeySequence.SequenceFormat.NativeText)
             text = f'Captioner\nOrdner öffnen ({keys}) oder einen Ordner hierher ziehen'
-        elif self.scan_worker and self.scan_worker.isRunning() and not self.all_items:
+        elif self.tab.scanning() and not self.all_items:
             text = 'Ordner wird eingelesen …'
         elif not self.all_items:
             text = 'Keine Bilder in diesem Ordner (JPG, NEF und andere RAWs, DNG, TIFF)'
@@ -619,19 +717,20 @@ class MainWindow(QMainWindow):
         self._update_status()
 
     def _on_written(self, key, ok, message):
-        item = self.by_key.get(key)
-        if item is None:
+        tab = next((t for t in self.all_tabs() if key in t.by_key), None)
+        if tab is None:
             return
+        item = tab.by_key[key]
         item.error = None if ok else message
         self.loader.invalidate_details(key)  # Dateigroesse und Werte neu lesen
         if not ok:
             self.statusBar().showMessage(f'Fehler: {message}', 15000)
-        self.model.refresh([key])
+        tab.model.refresh([key])
         self._update_status()
 
     def _update_status(self):
         pending = self.writer.pending_count()
-        errors = sum(1 for item in self.all_items if getattr(item, 'error', None))
+        errors = sum(1 for tab in self.all_tabs() for item in tab.all_items if getattr(item, 'error', None))
         parts = []
         if pending:
             parts.append(f'schreibe {pending} …')
@@ -671,7 +770,7 @@ class MainWindow(QMainWindow):
             finally:
                 QApplication.restoreOverrideCursor()
 
-        refused, urls = [], []
+        refused, urls, accepted = [], [], []
         for item in items:
             if getattr(item, 'error', None):
                 refused.append(f'{item.name}: {item.error}')
@@ -679,6 +778,7 @@ class MainWindow(QMainWindow):
             if item.raw and item.key in self.edited_keys and not (item.sidecar and item.sidecar.exists()):
                 refused.append(f'{item.name}: XMP-Sidecar fehlt')
                 continue
+            accepted.append(item)
             for path in item.files:
                 urls.append(QUrl.fromLocalFile(str(path)))
             if self.settings.drag_include_sidecars and item.raw and item.sidecar and item.sidecar.exists():
@@ -687,6 +787,8 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, 'Nicht alle Bilder übergeben',
                                 'Diese Bilder werden nicht gezogen, ihre Metadaten sind nicht sicher gespeichert:\n\n'
                                 + '\n'.join(refused[:20]) + ('\n…' if len(refused) > 20 else ''))
+        # Fuer einen Drop auf einen anderen Tab: dort wird mit Sidecar kopiert
+        self._drag_items = accepted
         if not urls:
             return None
         mime = QMimeData()
@@ -695,25 +797,74 @@ class MainWindow(QMainWindow):
         return mime
 
     def dragEnterEvent(self, event):
-        """Von aussen: ein Ordner, Template-Dateien (.toml) oder Roster-Dateien (.txt)."""
+        """Von aussen: Ordner (je ein Tab), Template-Dateien (.toml) oder Roster-Dateien (.txt)."""
         if event.source() is not None:
             return
         paths = [Path(u.toLocalFile()) for u in event.mimeData().urls() if u.isLocalFile()]
-        if len(paths) == 1 and paths[0].is_dir():
+        if paths and all(p.is_dir() for p in paths):
             event.acceptProposedAction()
         elif paths and all(p.suffix.lower() in ('.toml', '.txt', '.tsv') for p in paths):
             event.acceptProposedAction()
 
     def dropEvent(self, event):
         paths = [Path(u.toLocalFile()) for u in event.mimeData().urls() if u.isLocalFile()]
-        if len(paths) == 1 and paths[0].is_dir():
-            self.open_folder(paths[0])
+        if paths and all(p.is_dir() for p in paths):
+            for path in paths:
+                self.open_folder(path, new_tab=True)
             return
         for path in paths:
             if path.suffix.lower() == '.toml':
                 self.open_template_file(str(path))
             else:
                 self.add_roster_file(str(path))
+
+    # --- Kopieren zwischen Tabs ----------------------------------------------------
+
+    def copy_dragged_to(self, target):
+        """Die gezogenen Bilder (RAW, JPG, Sidecar) in den Ordner des Ziel-Tabs kopieren."""
+        items, self._drag_items = self._drag_items, []
+        if target is None or not items:
+            return
+        if not target.folder:
+            QMessageBox.information(self, 'Kopieren', 'In diesem Tab ist kein Ordner geöffnet.')
+            return
+        if self.copy_worker and self.copy_worker.isRunning():
+            QMessageBox.information(self, 'Kopieren', 'Es wird noch kopiert. Bitte warten, bis das fertig ist.')
+            return
+        files = []
+        for item in items:
+            files += item.files
+            if item.sidecar and item.sidecar.exists():
+                files.append(item.sidecar)
+        groups = [g for g in transfer.group_files(files) if not transfer.same_folder(g, target.folder)]
+        if not groups:
+            return
+        decisions = ask_conflicts(groups, target.folder, self)
+        if decisions is None:
+            return
+        worker = CopyWorker(groups, target.folder, decisions)
+        worker.target_tab = target
+        worker.progress.connect(self._on_copy_progress)
+        worker.done.connect(self._on_copy_done)
+        self.copy_worker = worker
+        self.statusBar().showMessage(f'Kopiere {len(groups)} Bilder nach {target.folder} …')
+        worker.start()
+
+    def _on_copy_progress(self, done, total):
+        target = self.copy_worker.target_tab if self.copy_worker else None
+        name = tab_title(target.folder) if target else ''
+        self.statusBar().showMessage(f'Kopiere nach {name}: {done}/{total} …')
+
+    def _on_copy_done(self, copied, skipped, errors):
+        target = self.copy_worker.target_tab
+        parts = [f'{copied} Bilder nach {tab_title(target.folder)} kopiert']
+        if skipped:
+            parts.append(f'{skipped} übersprungen')
+        self.statusBar().showMessage(', '.join(parts), 10000)
+        if errors:
+            QMessageBox.warning(self, 'Nicht alles kopiert', '\n'.join(errors[:20]) + ('\n…' if len(errors) > 20 else ''))
+        if copied and self.tabs.indexOf(target) >= 0:
+            self.rescan(target)
 
     # --- Grossansicht -------------------------------------------------------------
 
@@ -944,10 +1095,11 @@ class MainWindow(QMainWindow):
         self.load_roster(force=True)
         if old_exiftool != self.settings.exiftool_path:
             QMessageBox.information(self, 'ExifTool', 'Der neue ExifTool-Pfad gilt nach einem Neustart.')
-        if self.folder and old_recursive != self.settings.recursive:
-            self.open_folder(self.folder)
-        else:
-            self.apply_filter(False)
+        if old_recursive != self.settings.recursive:
+            for tab in self.all_tabs():
+                if tab.folder:
+                    self.rescan(tab)
+        self.apply_filter(False)
 
     # --- Beenden ----------------------------------------------------------------
 
@@ -955,6 +1107,12 @@ class MainWindow(QMainWindow):
         if self.writer.pending_count() and not self._wait_for_writer('Beenden'):
             event.ignore()
             return
+        if self.copy_worker and self.copy_worker.isRunning():
+            answer = QMessageBox.question(self, 'Kopieren läuft', 'Es wird noch kopiert. Abbrechen und beenden?\n'
+                                          'Bereits kopierte Bilder bleiben, angefangene werden verworfen.')
+            if answer != QMessageBox.StandardButton.Yes:
+                event.ignore()
+                return
         self.shutdown()
         super().closeEvent(event)
 
@@ -963,9 +1121,11 @@ class MainWindow(QMainWindow):
         if getattr(self, '_shut_down', False):
             return
         self._shut_down = True
-        if self.scan_worker and self.scan_worker.isRunning():
-            self.scan_worker.cancel()
-            self.scan_worker.wait(5000)
+        for tab in self.all_tabs():
+            tab.stop_scan()
+        if self.copy_worker and self.copy_worker.isRunning():
+            self.copy_worker.cancel()
+            self.copy_worker.wait(60000)
         self.writer.stop()
         self.loader.shutdown()
         self.pool.close()

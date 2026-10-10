@@ -70,6 +70,11 @@ def _bindings(mac):
     add('roster_reload', 'window', ['Ctrl+Meta+Shift+C' if mac else 'Ctrl+Alt+Shift+C'], 'Roster neu laden')
     add('shortcuts', 'window', ['F1'], 'Diese Übersicht')
 
+    # Ordner-Tabs
+    add('close_tab', 'window', ['Ctrl+W'], 'Tab schließen')
+    add('tab_next', 'window', ['Ctrl+Alt+Right'], 'Nächster Tab')
+    add('tab_prev', 'window', ['Ctrl+Alt+Left'], 'Vorheriger Tab')
+
     # Beschriftungs-Panel (Metadata (IPTC) Info)
     add('save_next', 'editor', ['Ctrl+]', 'Ctrl+N'] if mac else ['Alt+]', 'Ctrl+M'], 'Speichern und nächstes Bild')
     add('save_prev', 'editor', ['Ctrl+[', 'Ctrl+B'] if mac else ['Alt+[', 'Alt+B'], 'Speichern und vorheriges Bild')

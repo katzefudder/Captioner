@@ -85,7 +85,8 @@ Hardened Runtime braucht.
 ## Arbeitsablauf
 
 1. **Ordner öffnen** (`⌘O`, oder Ordner aufs Fenster ziehen). JPG, NEF und andere RAWs,
-   DNG, TIFF. RAW+JPG mit gleichem Namen sind eine Kachel.
+   DNG, TIFF. RAW+JPG mit gleichem Namen sind eine Kachel. Jeder Ordner bekommt einen
+   eigenen **Tab**, siehe „Mehrere Ordner“.
 2. **Spiel-Template** wählen, mit `+` anlegen oder mit **„Template öffnen …"** eine
    Template-Datei vom Rechner laden: Anlass (`DEL 2`), Heim, Gast (aus dem Roster),
    Stadt, Halle, Zusatz-Tags.
@@ -104,6 +105,21 @@ Hardened Runtime braucht.
    Sterne, `T` Tag. Filter oben (oder `F3`/`F4`) zeigen nur die Auswahl.
 6. **In Lightroom ziehen.** Die Auswahl (auch über mehrere Seiten) per Drag & Drop
    ins Lightroom-Raster; Lightroom öffnet den Import-Dialog.
+
+## Mehrere Ordner (Tabs)
+
+Jeder geöffnete Ordner bekommt einen Tab, z. B. je Ordner auf zwei Speicherkarten
+(„NIKON Z 9 › 100NCZ_9“). Neuer Tab: `+` rechts neben den Reitern, `⌘O` oder mehrere
+Ordner aus dem Finder aufs Fenster ziehen. Ein schon offener Ordner wird nur in den
+Vordergrund geholt. Jeder Tab hat eigene Seite und Auswahl; Filter und Beschriftungs-Panel
+gelten für den aktiven Tab.
+
+**Kopieren zwischen Tabs:** Bilder aus der Galerie auf den Reiter eines anderen Tabs ziehen
+(kurz darüber halten wechselt hinein, dann auch in dessen Galerie fallen lassen). Kopiert
+werden RAW, JPG und Sidecar zusammen, mit allen gespeicherten Metadaten; die Quelle bleibt
+unverändert. Gibt es eine Datei schon, fragt die App: **Überspringen**, **Umbenennen**
+(`DSC_0001-2.NEF` + `-2.JPG` + `-2.xmp`) oder **Ersetzen**, auf Wunsch für alle weiteren.
+Kopiert wird über eine Zwischendatei, ein Abbruch hinterlässt keine halben Bilder.
 
 ## Tastenkürzel
 
@@ -124,6 +140,7 @@ Belegung wie in einem Workflow-Tool für die Auswahl von Fotos. `F1` (oder
 | Seite zurück/vor | `Bild↑`/`Bild↓`, `⌘⇧[`/`⌘⇧]` | `Bild↑`/`Bild↓`, `Strg+←`/`→` |
 | Erstes/letztes Bild · zuletzt angesehenes | `Pos1`/`Ende` · `L` | `Pos1`/`Ende` · `L` |
 | Roster einstellen · neu laden | `⌘Control-C` · `⇧⌘Control-C` | `Strg+Alt+C` · `⇧Strg+Alt+C` |
+| Tab schließen · nächster · vorheriger | `⌘W` · `⌘⌥→` · `⌘⌥←` | `Strg+W` · `Strg+Alt+→` · `Strg+Alt+←` |
 
 Im Beschriftungs-Panel:
 

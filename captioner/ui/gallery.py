@@ -3,7 +3,7 @@ Galerie: eine Seite Kacheln, Tastaturbedienung wie in einem
 Workflow-Tool fuer die Auswahl von Fotos,
 Drag & Drop nach Lightroom (ADR 0001, Punkte 3 und 7).
 """
-from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, Qt
+from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QDrag, QFont, QPainter, QPen
 from PySide6.QtWidgets import QAbstractItemView, QListView, QStyle, QStyledItemDelegate
 
@@ -169,6 +169,7 @@ class TileDelegate(QStyledItemDelegate):
 
 class GalleryView(QListView):
     # Alle Kuerzel haengen als QShortcut am View, siehe keymap.py.
+    files_dropped = Signal()  # Bilder aus der Galerie eines anderen Tabs hierher gezogen
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -181,6 +182,9 @@ class GalleryView(QListView):
         self.setDragEnabled(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
         self.setDefaultDropAction(Qt.DropAction.CopyAction)
+        # Drops nur aus anderen Galerien (Tabs), siehe dragEnterEvent
+        self.setAcceptDrops(True)
+        self.setDropIndicatorShown(False)
         self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.mime_factory = None  # liefert QMimeData fuer die gesamte Auswahl, oder None
         self.empty_text = ''      # Hinweis mit Logo, solange die Galerie leer ist
@@ -205,6 +209,32 @@ class GalleryView(QListView):
         painter.drawText(QRect(rect.left() + 20, text_top, rect.width() - 40, 80),
                          Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop | Qt.TextFlag.TextWordWrap,
                          self.empty_text)
+
+    def _accepts(self, event):
+        source = event.source()
+        return isinstance(source, GalleryView) and source is not self
+
+    def dragEnterEvent(self, event):
+        if self._accepts(event):
+            event.setDropAction(Qt.DropAction.CopyAction)
+            event.accept()
+        else:
+            event.ignore()  # Ordner, Templates usw. nimmt das Hauptfenster
+
+    def dragMoveEvent(self, event):
+        if self._accepts(event):
+            event.setDropAction(Qt.DropAction.CopyAction)
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        if self._accepts(event):
+            event.setDropAction(Qt.DropAction.CopyAction)
+            event.accept()
+            self.files_dropped.emit()
+        else:
+            event.ignore()
 
     def startDrag(self, supported_actions):
         if self.mime_factory is None:

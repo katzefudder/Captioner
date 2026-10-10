@@ -16,16 +16,18 @@ Bedienung: `readme.md`.
 | `scanner.py` | Ordner → `Item` (RAW+JPG-Paar, vorhandenes Sidecar), `Metadata` |
 | `metadata.py` | Lesen (Sidecar > eingebettet > RAW) und Schreiben (Sidecar bzw. eingebettet) |
 | `details.py` | EXIF/IPTC fürs Info-Panel: `read()` (Kamera aus RAW, IPTC Sidecar > eingebettet), `sections()` formatiert |
+| `transfer.py` | Kopieren zwischen Ordnern: Gruppen (RAW+JPG+Sidecar), Konflikte (überspringen/umbenennen/ersetzen) |
 | `previews.py` | Kacheln/Großansicht aus eingebetteten JPEGs, Plattencache |
 | `exiftool.py` | `-stay_open`-Prozess, Pool pro OS-Thread, Aufräumen verwaister Prozesse |
 | `ui/viewer.py` | Großansicht mit Zoom (`ZoomView`): eingepasst/100 %/Stufen, Ankerpunkt, Begrenzung des Ausschnitts |
 | `ui/resources.py`, `resources/` | Logo (`logo.svg` = Quelle) und daraus erzeugte Icons; `make icons` / `scripts/make_icons.py` |
 | `ui/mapview.py` | OSM-Karte als QWidget (Kacheln, `QNetworkDiskCache`), `Geocoder` (Nominatim, 1 Anfrage/s) |
 | `ui/placepicker.py` | Dialog „Ort wählen“: Suche, Klick, Offline-Hinweis; Vorschläge aus dem `PlaceBook` |
+| `ui/tabs.py` | `FolderTab` (Zustand je Ordner), `FolderTabBar` (Drop auf Reiter), Konfliktdialog, `CopyWorker` |
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
-Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`) importiert kein Qt.
+Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`) importiert kein Qt.
 
 ## Regeln, die nicht verletzt werden dürfen
 
@@ -56,6 +58,19 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`) 
 - Offline: Dialog zeigt den Hinweis statt der Karte, sobald eine Kachel weder aus Netz noch
   Cache kommt; Stadt/Ort und Vorschläge funktionieren weiter.
 - Templates: `latitude`/`longitude` optional, ohne Wert nicht in der Datei (TOML hat kein None).
+
+## Tabs und Kopieren
+
+- Ordner-Zustand (`folder`, `all_items`, `filtered`, `page`, `selected_keys`, `model`, `view`, …)
+  liegt in `FolderTab`; `MainWindow` reicht diese Namen per Property an den aktiven Tab
+  durch (`_tab_attribute`). Scan-Signale gehen an den Tab des sendenden Workers
+  (`_scanning_tab`), nie an den aktiven.
+- Galerie-Kürzel hängen am `QTabWidget` (gelten in jedem Tab), nicht an einer Galerie.
+- **Kopieren, nie verschieben.** Drop auf Reiter oder Galerie eines anderen Tabs kopiert die
+  beim Drag-Start gemerkten Items (`_drag_items`, nach `build_drag_mime`, also nach
+  `writer.flush()`), immer mit Sidecar. Über `.<name>.captioner-part` + `os.replace`.
+- Konflikte werden vor dem Kopieren im UI-Thread entschieden, kopiert wird im `CopyWorker`;
+  danach liest der Ziel-Tab neu ein.
 
 ## Templates und Roster als Dateien
 
@@ -135,7 +150,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`) 
 ## Entwicklung
 
 ```bash
-make install && make test            # 118 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 132 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)
@@ -149,4 +164,4 @@ Mit echten Fotos nur auf **Kopien** testen. `tests/test_gui.py` läuft offscreen
 
 - Lightroom-Akzeptanztest aus ADR 0001, Punkt 7 (Sidecars beim Kopier-Import, `.xmp` im Drop).
 - Windows-Build (ExifTool als `exiftool.exe`), Signierung/Notarisierung für macOS.
-- Kein Kopieren von der Karte („Ingest"), kein direkter Upload.
+- Kein Ingest mit Umbenennen/Ordnerstruktur (nur Kopieren zwischen offenen Tabs), kein direkter Upload.
