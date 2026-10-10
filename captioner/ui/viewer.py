@@ -28,6 +28,17 @@ ZOOM_STEPS = [0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0]
 PAN_STEP = 60          # logische Pixel pro Pfeiltaste
 PAN_STEP_FAST = 300
 
+# Knoepfe der unteren Leiste: auf dunklem Grund, aktive Schalter (Beschriften, Infos)
+# deutlich hervorgehoben. Nur an diesen Knoepfen gesetzt, damit das eingehaengte
+# Beschriftungs-Panel sein normales Aussehen behaelt.
+BAR_BUTTON_STYLE = '''
+QPushButton { background: #222; color: #ddd; border: 1px solid #444; border-radius: 5px; padding: 3px 12px; }
+QPushButton:hover { border-color: #777; }
+QPushButton:disabled { color: #666; border-color: #333; }
+QPushButton:checked { background: #2f7de1; color: white; border-color: #5a9cf0; }
+QPushButton:checked:hover { background: #3b8af0; }
+'''
+
 
 def clamp_zoom(factor):
     return min(max(factor, ZOOM_MIN), ZOOM_MAX)
@@ -378,6 +389,8 @@ class Viewer(QDialog):
         self.caption_button.toggled.connect(self.set_caption_visible)
         bar.addWidget(self.caption_button)
         bar.addWidget(self.info_button)
+        for button in (self.fit_button, self.hundred_button, self.caption_button, self.info_button):
+            button.setStyleSheet(BAR_BUTTON_STYLE)
         return bar
 
     def set_caption_visible(self, visible):
