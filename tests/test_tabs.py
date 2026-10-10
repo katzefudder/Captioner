@@ -239,3 +239,27 @@ def test_folders_from_finder_open_as_tabs(window, cards, app):
     finally:
         app.removeEventFilter(requests)
         requests.deleteLater()
+
+
+def test_open_dialog_takes_several_folders(window, cards, monkeypatch):
+    from captioner.ui import folderdialog
+    monkeypatch.setattr(folderdialog, 'choose_folders', lambda parent, title, start='': [str(f) for f in cards])
+    window.choose_folder()
+    assert [window.tabs.widget(i).folder for i in range(window.tabs.count())] == [str(f) for f in cards]
+    monkeypatch.setattr(folderdialog, 'choose_folders', lambda parent, title, start='': [])
+    window.choose_folder()  # abgebrochen
+    assert window.tabs.count() == 2
+
+
+def test_qt_fallback_dialog_allows_multiple_folders(app, monkeypatch):
+    from captioner.ui import folderdialog
+    seen = {}
+
+    def fake_exec(dialog):
+        views = dialog.findChildren(QtWidgets.QListView) + dialog.findChildren(QtWidgets.QTreeView)
+        seen['modes'] = {v.selectionMode() for v in views}
+        return False
+
+    monkeypatch.setattr(QtWidgets.QFileDialog, 'exec', fake_exec)
+    assert folderdialog._choose_qt(None, 'Ordner öffnen', '/tmp') == []
+    assert seen['modes'] == {QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection}

@@ -24,6 +24,7 @@ Bedienung: `readme.md`.
 | `ui/mapview.py` | OSM-Karte als QWidget (Kacheln, `QNetworkDiskCache`), `Geocoder` (Nominatim, 1 Anfrage/s) |
 | `ui/placepicker.py` | Dialog „Ort wählen“: Suche, Klick, Offline-Hinweis; Vorschläge aus dem `PlaceBook` |
 | `ui/tabs.py` | `FolderTab` (Zustand je Ordner), `FolderTabBar` (Drop auf Reiter), Konfliktdialog, `CopyWorker` |
+| `ui/folderdialog.py` | „Ordner öffnen“ mit Mehrfachauswahl: macOS `NSOpenPanel` per ctypes, sonst Qt-Dialog |
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
@@ -71,6 +72,9 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Reiter (`FolderTabs.bar`) laufen oben über die ganze Fensterbreite, die Galerien liegen im
   `FolderTabs.stack` darunter; `FolderTabs` bietet die nötige `QTabWidget`-API.
 - Galerie-Kürzel hängen am `FolderTabs.stack` (gelten in jedem Tab), nicht an einer Galerie.
+- Ordner-Dialog: Qts nativer macOS-Dialog kann für Ordner nur Einzelauswahl.
+  `folderdialog.choose_folders` ruft deshalb `NSOpenPanel` direkt über die Objective-C-Laufzeit
+  (ctypes, jede Nachricht mit exakter Signatur, arm64); Rückfall: Qt-Dialog mit `ExtendedSelection`.
 - Finder → App: Ordner aufs Dock-Symbol bzw. „Öffnen mit“ kommen als `QFileOpenEvent`
   (`main_window.OpenRequests`, vor dem Fenster installiert, sammelt 250 ms) und gehen an
   `open_paths()`. Dafür `CFBundleDocumentTypes` (`public.folder`, `public.volume`) in der Spec.
@@ -158,7 +162,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 137 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 139 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

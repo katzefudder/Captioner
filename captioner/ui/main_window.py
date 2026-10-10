@@ -21,6 +21,7 @@ from ..templates import TemplateError, TemplateStore, unique
 from . import keymap
 from .dialogs import ROSTER_FILE_FILTER, SettingsDialog, ShortcutsDialog, TemplateDialog
 from .editor import CaptionEditor
+from . import folderdialog
 from .viewer import Viewer
 from .gallery import CLASS_COLORS, ItemRole
 from .tabs import CopyWorker, FolderTab, FolderTabs, ask_conflicts, tab_title
@@ -342,10 +343,11 @@ class MainWindow(QMainWindow):
         return None
 
     def choose_folder(self, new_tab=False):
+        """Finder-Dialog mit Mehrfachauswahl (Cmd-/Shift-Klick); jeder Ordner ein Tab."""
         start = self.folder or self.settings.last_folder or str(Path.home())
-        folder = QFileDialog.getExistingDirectory(self, 'Ordner öffnen', start)
-        if folder:
-            self.open_folders([folder], new_tab=new_tab)
+        folders = folderdialog.choose_folders(self, 'Ordner öffnen – mehrere mit ⌘-Klick', start)
+        if folders:
+            self.open_folders(folders, new_tab=new_tab)
 
     def open_paths(self, paths):
         """Vom Finder: Ordner werden Tabs, bei Bilddateien wird ihr Ordner geoeffnet."""

@@ -110,8 +110,9 @@ Hardened Runtime braucht.
 
 Jeder geöffnete Ordner bekommt einen Tab, z. B. je Ordner auf zwei Speicherkarten
 („NIKON Z 9 › 100NCZ_9“). Neuer Tab: `+` rechts neben den Reitern oder `⌘O`. Mehrere
-Ordner auf einmal: im Finder markieren und aufs Fenster ziehen, oder auf der
-Kommandozeile `python -m captioner <ordner> <ordner> …`.
+Ordner auf einmal: im Dialog „Ordner öffnen“ mit `⌘`-Klick (oder `⇧`-Klick) mehrere
+markieren, im Finder markieren und aufs Fenster ziehen, oder auf der Kommandozeile
+`python -m captioner <ordner> <ordner> …`.
 
 **Ganze Karte öffnen:** Enthält der gewählte oder gezogene Ordner selbst keine Bilder,
 aber Unterordner mit Bildern (die Karte oder `DCIM`), öffnet jeder dieser Unterordner einen
