@@ -15,7 +15,7 @@ Orte fuer Stadt/Ort (IPTC City, Sub-location) und GPS, ohne Qt.
 """
 import dataclasses
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from urllib.parse import urlencode
 
 USER_AGENT = 'Captioner (+https://github.com/katzefudder/Captioner)'
@@ -41,6 +41,9 @@ class Place:
     latitude: float = None
     longitude: float = None
     label: str = ''  # Anzeige in Suchergebnissen, wird nicht gespeichert
+    # Von der Adresssuche, fuer Bundesland/Land im Template; nicht im PlaceBook
+    state: str = field(default='', compare=False)
+    country: str = field(default='', compare=False)
 
     @property
     def has_coordinates(self):
@@ -147,7 +150,8 @@ def place_from_result(result):
     category = result.get('category') or result.get('class') or ''
     sublocation = name if name and category in VENUE_CLASSES and name != city else ''
     return Place(city=city, sublocation=sublocation, latitude=lat, longitude=lon,
-                 label=result.get('display_name') or name or city)
+                 label=result.get('display_name') or name or city,
+                 state=address.get('state', ''), country=address.get('country', ''))
 
 
 def places_from_search(results):

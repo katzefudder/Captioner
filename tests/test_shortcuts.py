@@ -210,7 +210,7 @@ def test_copy_next_paste_while_typing(window):
     from captioner.templates import MatchTemplate
     first, second = window.filtered[0], window.filtered[1]
     first.taken_at, second.taken_at = '2026:03:01 18:00:00', '2026:03:02 19:00:00'
-    window.editor.template = MatchTemplate(occasion='DEL 2', home='A', away='B', caption_suffix=', {date}')
+    window.editor.template = MatchTemplate(headline='DEL 2 - A gegen B', caption_suffix=', {date}')
     window.editor.headline.setText('DEL 2 - A gegen B')
     window.editor.city.setText('Bad Nauheim')
     window.editor.keywords.setPlainText('Eishockey')
@@ -296,7 +296,7 @@ def test_template_without_teams_keeps_typed_headline(window, roster):
     from captioner.templates import MatchTemplate
     editor = window.editor
     editor.set_roster(roster, '#')
-    editor.template = MatchTemplate(name='DEL2 Heim', occasion='DEL 2', city='Bad Nauheim', caption_suffix='')
+    editor.template = MatchTemplate(name='DEL2 Heim', city='Bad Nauheim', caption_suffix='')
     first, second = window.filtered[0], window.filtered[1]
 
     # Titel in falschem Format: Hinweis, Speichern geht trotzdem
@@ -318,3 +318,37 @@ def test_template_without_teams_keeps_typed_headline(window, roster):
     window.apply_template()
     assert first.meta.headline == 'DEL 2 - Bietigheim Steelers gegen EC Bad Nauheim'
     assert first.meta.city == 'Bad Nauheim'
+
+
+@requires_exiftool
+def test_saving_with_template_writes_rights(window):
+    from captioner.templates import MatchTemplate
+    editor = window.editor
+    editor.template = MatchTemplate(name='Rechte', creator='Florian Dehn', copyright='© 2026 Florian Dehn',
+                                    country='Deutschland', caption_suffix='')
+    item = window.filtered[0]
+    item.meta.source = 'vorher'
+    editor.headline.setText('DEL 2 - A gegen B')
+    editor.caption.setPlainText('Jubel')
+    assert 'Fotograf Florian Dehn' in editor.rights_hint.text()
+    editor.submit(0)
+    assert (item.meta.creator, item.meta.copyright, item.meta.country) == (
+        'Florian Dehn', '© 2026 Florian Dehn', 'Deutschland')
+    assert item.meta.source == 'vorher'  # leeres Template-Feld laesst den Wert stehen
+
+
+def test_template_dialog_checks_lengths_and_headline(app):
+    from captioner.templates import MatchTemplate
+    from captioner.ui.dialogs import TemplateDialog
+    from PySide6.QtWidgets import QDialogButtonBox
+    dialog = TemplateDialog(MatchTemplate(name='X'))
+    save = dialog.buttons.button(QDialogButtonBox.StandardButton.Save)
+    assert save.isEnabled() and not dialog.headline_hint.isVisibleTo(dialog)
+    dialog.headline.setText('Training')
+    assert save.isEnabled() and 'Format' in dialog.headline_hint.text()   # warnt nur
+    dialog.creator.setText('x' * 40)
+    assert not save.isEnabled() and 'Fotograf' in dialog.headline_hint.text()
+    dialog.creator.setText('Florian Dehn')
+    dialog.headline.setText('DEL 2 - A gegen B')
+    assert save.isEnabled()
+    assert dialog.template() == MatchTemplate(name='X', headline='DEL 2 - A gegen B', creator='Florian Dehn')

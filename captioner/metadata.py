@@ -25,7 +25,40 @@ LIMITS = {
     'keyword': 64,
     'city': 32,
     'sublocation': 32,
+    'state': 32,
+    'country': 64,
+    'creator': 32,
+    'authors_position': 32,
+    'caption_writer': 32,
+    'copyright': 128,
+    'source': 32,
 }
+
+# Ort und Rechte: Metadata-Feld -> (XMP, IPTC, EXIF) zum Schreiben; gelesen wird ueber
+# die Tag-Namen ohne Gruppe (READ_TAGS), erster nicht leerer gewinnt
+RIGHTS_TAGS = {
+    'state': ('XMP-photoshop:State', 'IPTC:Province-State', None),
+    'country': ('XMP-photoshop:Country', 'IPTC:Country-PrimaryLocationName', None),
+    'creator': ('XMP-dc:Creator', 'IPTC:By-line', 'EXIF:Artist'),
+    'authors_position': ('XMP-photoshop:AuthorsPosition', 'IPTC:By-lineTitle', None),
+    'caption_writer': ('XMP-photoshop:CaptionWriter', 'IPTC:Writer-Editor', None),
+    'copyright': ('XMP-dc:Rights', 'IPTC:CopyrightNotice', 'EXIF:Copyright'),
+    'web_statement': ('XMP-xmpRights:WebStatement', None, None),
+    'source': ('XMP-photoshop:Source', 'IPTC:Source', None),
+}
+RIGHTS_READ = {
+    'state': ('State', 'Province-State'),
+    'country': ('Country', 'Country-PrimaryLocationName'),
+    'creator': ('Creator', 'By-line', 'Artist'),
+    'authors_position': ('AuthorsPosition', 'By-lineTitle'),
+    'caption_writer': ('CaptionWriter', 'Writer-Editor'),
+    'copyright': ('Rights', 'CopyrightNotice', 'Copyright'),
+    'web_statement': ('WebStatement',),
+    'source': ('Source',),
+}
+LABELS = {'state': 'Bundesland', 'country': 'Land', 'creator': 'Fotograf', 'authors_position': 'Position',
+          'caption_writer': 'Beschriftet von', 'copyright': 'Copyright', 'web_statement': 'Copyright-URL',
+          'source': 'Quelle'}
 OBJECT_NAME_LIMIT = 64
 
 READ_TAGS = [
@@ -36,7 +69,7 @@ READ_TAGS = [
     '-Rating', '-Label', '-XMP-photomech:ColorClass', '-XMP-photomech:Tagged',
     '-DateTimeOriginal', '-SubSecTimeOriginal', '-Orientation',
     '-GPSLatitude', '-GPSLongitude',
-]
+] + sorted({f'-{name}' for names in RIGHTS_READ.values() for name in names})
 
 
 class WriteError(RuntimeError):
@@ -60,6 +93,9 @@ def validate(meta: Metadata):
     check('Beschreibung', meta.caption, LIMITS['caption'])
     check('Stadt', meta.city, LIMITS['city'])
     check('Ort', meta.sublocation, LIMITS['sublocation'])
+    for name, label in LABELS.items():
+        if name in LIMITS:
+            check(label, getattr(meta, name), LIMITS[name])
     for keyword in meta.keywords:
         check(f'Tag "{keyword}"', keyword, LIMITS['keyword'])
     return problems
@@ -101,7 +137,19 @@ def meta_from_record(record):
         label=_first(record, 'Label'),
         color_class=_int(record.get('ColorClass'), 0, 8),
         tagged=record.get('Tagged') in (True, 'True', 'true', 1),
+        **{name: _text(record, tags) for name, tags in RIGHTS_READ.items()},
     )
+
+
+def _text(record, tags):
+    """Erster nicht leerer Wert; Listen (dc:creator) mit '; ' verbunden."""
+    for tag in tags:
+        value = record.get(tag)
+        if isinstance(value, list):
+            value = '; '.join(str(v) for v in value if str(v).strip())
+        if value not in (None, ''):
+            return str(value).strip()
+    return ''
 
 
 def _gps(record):
@@ -163,6 +211,12 @@ def apply_records(item: Item, by_path):
     gps = next((g for g in (_gps(r) for r in candidates if r) if g), None)
     if gps:
         item.meta.latitude, item.meta.longitude = gps
+    # Ebenso Ort und Rechte, z. B. Fotograf/Copyright, die die Kamera in RAW/JPG schreibt:
+    # sonst wuerde das naechste Speichern sie im Sidecar/JPG leeren
+    for name, tags in RIGHTS_READ.items():
+        if not getattr(item.meta, name):
+            value = next((v for v in (_text(r, tags) for r in candidates if r) if v), '')
+            setattr(item.meta, name, value)
     item.meta_loaded = True
 
 
@@ -183,6 +237,10 @@ def _xmp_args(meta: Metadata):
     args += [f'-XMP-dc:Subject={k}' for k in meta.keywords] or ['-XMP-dc:Subject=']
     if meta.gps_changed and meta.latitude is not None and meta.longitude is not None:
         args += [f'-XMP-exif:GPSLatitude={meta.latitude:.7f}', f'-XMP-exif:GPSLongitude={meta.longitude:.7f}']
+    for name, (xmp, _, _) in RIGHTS_TAGS.items():
+        args.append(f'-{xmp}={getattr(meta, name)}')
+    if meta.copyright:
+        args.append('-XMP-xmpRights:Marked=True')  # Lightroom: "Copyright-Status: Geschützt"
     return args
 
 
@@ -198,6 +256,12 @@ def _embedded_args(meta: Metadata):
         f'-IPTC:Sub-location={meta.sublocation}',
     ]
     args += [f'-IPTC:Keywords={k}' for k in meta.keywords] or ['-IPTC:Keywords=']
+    for name, (_, iptc, exif) in RIGHTS_TAGS.items():
+        value = getattr(meta, name)
+        if iptc:
+            args.append(f'-{iptc}={truncate_bytes(value, LIMITS[name])}')
+        if exif:
+            args.append(f'-{exif}={value}')
     if meta.gps_changed and meta.latitude is not None and meta.longitude is not None:
         args += [f'-EXIF:GPSLatitude={abs(meta.latitude):.7f}',
                  f'-EXIF:GPSLatitudeRef={"S" if meta.latitude < 0 else "N"}',

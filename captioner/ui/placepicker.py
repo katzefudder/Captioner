@@ -110,7 +110,11 @@ class PlacePickerDialog(QDialog):
     # --- Ergebnis -------------------------------------------------------------
 
     def place(self):
-        return geo.Place(self.city.text().strip(), self.sublocation.text().strip(), self.latitude, self.longitude)
+        place = geo.Place(self.city.text().strip(), self.sublocation.text().strip(), self.latitude, self.longitude)
+        found = getattr(self, '_found_place', None)
+        if found is not None:
+            place.state, place.country = found.state, found.country
+        return place
 
     def _set_point(self, lat, lon, zoom=None):
         self.latitude, self.longitude = lat, lon
@@ -127,6 +131,7 @@ class PlacePickerDialog(QDialog):
                                      '<small>(nur in Bilder ohne GPS der Kamera)</small>')
 
     def _fill(self, place):
+        self._found_place = place
         if place.city:
             self.city.setText(place.city)
         # Ohne Hallen-/Ortsnamen bleibt ein eingetippter Ort stehen

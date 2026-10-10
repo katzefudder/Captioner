@@ -23,6 +23,15 @@ class Metadata:
     keywords: list = field(default_factory=list)
     city: str = ''
     sublocation: str = ''
+    state: str = ''              # Bundesland (photoshop:State / IPTC Province-State)
+    country: str = ''            # photoshop:Country / IPTC Country-PrimaryLocationName
+    # Urheber und Rechte (siehe metadata.RIGHTS_TAGS)
+    creator: str = ''            # dc:creator / IPTC By-line / EXIF Artist
+    authors_position: str = ''   # photoshop:AuthorsPosition / IPTC By-lineTitle
+    caption_writer: str = ''     # photoshop:CaptionWriter / IPTC Writer-Editor
+    copyright: str = ''          # dc:rights / IPTC CopyrightNotice / EXIF Copyright
+    web_statement: str = ''      # xmpRights:WebStatement (URL zu Nutzungsbedingungen)
+    source: str = ''             # photoshop:Source / IPTC Source
     rating: int = 0
     label: str = ''
     # Farbklasse 1-8 (XMP-photomech:ColorClass) und Tag (XMP-photomech:Tagged),

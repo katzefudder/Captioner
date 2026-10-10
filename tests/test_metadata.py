@@ -192,3 +192,49 @@ def test_gps_is_not_rewritten_unless_changed(tool, tmp_path):
     metadata.write_item(tool, item, Metadata(headline='x', latitude=1.0, longitude=2.0))  # gps_changed=False
     assert read(tool, path, '-EXIF:GPSLatitude')['GPSLatitude'] == before
     assert 'GPSLatitude' not in read(tool, path, '-XMP-exif:all')
+
+
+RIGHTS = dict(state='Hessen', country='Deutschland', creator='Florian Dehn', authors_position='Fotograf',
+              caption_writer='Florian Dehn', copyright='© 2026 Florian Dehn',
+              web_statement='https://example.org/lizenz', source='chuc.de')
+
+
+def test_rights_go_into_xmp_iptc_and_exif(tool, tmp_path):
+    import dataclasses
+    path = make_jpeg(tmp_path / 'a.jpg')
+    item = scanner.scan(tmp_path)[0]
+    metadata.write_item(tool, item, dataclasses.replace(META, **RIGHTS))
+    record = tool.json('-G', '-charset', 'iptc=UTF8', '-XMP:all', '-IPTC:all', '-EXIF:Artist', '-EXIF:Copyright',
+                       str(path))[0]
+    assert record['XMP:Creator'] == 'Florian Dehn' and record['IPTC:By-line'] == 'Florian Dehn'
+    assert record['EXIF:Artist'] == 'Florian Dehn'
+    assert record['XMP:Rights'] == record['IPTC:CopyrightNotice'] == record['EXIF:Copyright'] == '© 2026 Florian Dehn'
+    assert record['XMP:WebStatement'] == 'https://example.org/lizenz' and record['XMP:Marked'] is True
+    assert record['XMP:AuthorsPosition'] == record['IPTC:By-lineTitle'] == 'Fotograf'
+    assert record['XMP:CaptionWriter'] == record['IPTC:Writer-Editor'] == 'Florian Dehn'
+    assert record['XMP:Source'] == record['IPTC:Source'] == 'chuc.de'
+    assert record['XMP:State'] == record['IPTC:Province-State'] == 'Hessen'
+    assert record['XMP:Country'] == record['IPTC:Country-PrimaryLocationName'] == 'Deutschland'
+    item = scanner.scan(tmp_path)[0]
+    list(metadata.read_items(tool, [item]))
+    assert {name: getattr(item.meta, name) for name in RIGHTS} == RIGHTS
+
+
+def test_camera_artist_and_copyright_survive_saving(tool, tmp_path):
+    """Kamera schreibt Artist/Copyright in RAW und JPG; Speichern ohne Template darf sie nicht leeren."""
+    (tmp_path / 'DSC_0001.NEF').write_bytes(b'raw')
+    jpg = make_jpeg(tmp_path / 'DSC_0001.JPG')
+    tool.execute('-overwrite_original', '-EXIF:Artist=Kamera Fotograf', '-EXIF:Copyright=Kamera ©', str(jpg))
+    item = scanner.scan(tmp_path)[0]
+    list(metadata.read_items(tool, [item]))
+    assert (item.meta.creator, item.meta.copyright) == ('Kamera Fotograf', 'Kamera ©')
+    import dataclasses
+    metadata.write_item(tool, item, dataclasses.replace(item.meta, headline='Titel'))
+    assert read(tool, jpg, '-EXIF:Artist')['Artist'] == 'Kamera Fotograf'
+    sidecar = read(tool, tmp_path / 'DSC_0001.xmp', '-XMP:all')
+    assert sidecar['Creator'] == 'Kamera Fotograf' and sidecar['Rights'] == 'Kamera ©'
+
+
+def test_rights_limits_are_checked():
+    problems = metadata.validate(Metadata(creator='x' * 33, copyright='© ' + 'y' * 140))
+    assert any(p.startswith('Fotograf') for p in problems) and any(p.startswith('Copyright') for p in problems)

@@ -214,6 +214,10 @@ class CaptionEditor(QWidget):
         city_row.addWidget(self.map_button)
         self.gps_hint = QLabel()
         self.gps_hint.setStyleSheet('color: gray;')
+        # Was das Template an Ort/Urheber/Rechten in jedes Bild schreibt
+        self.rights_hint = QLabel()
+        self.rights_hint.setWordWrap(True)
+        self.rights_hint.setStyleSheet('color: gray;')
 
         form.addRow('Titel', self.headline)
         form.addRow('', self.headline_hint)
@@ -223,6 +227,7 @@ class CaptionEditor(QWidget):
         form.addRow('Stadt', city_row)
         form.addRow('Ort', self.sublocation)
         form.addRow('', self.gps_hint)
+        form.addRow('', self.rights_hint)
         layout.addLayout(form)
 
         self.limits = QLabel()
@@ -450,6 +455,10 @@ class CaptionEditor(QWidget):
         self.save_button.setEnabled(not blocked and self.headline.isEnabled())
         self.next_button.setEnabled(not blocked and self.headline.isEnabled())
         self._update_gps_hint(item)
+        values = self.template.fixed_values() if self.template else {}
+        self.rights_hint.setText('<small>Aus dem Template: ' + html.escape(' · '.join(
+            f'{metadata.LABELS[name]} {value}' for name, value in values.items())) + '</small>' if values else '')
+        self.rights_hint.setVisible(bool(values))
 
     def _update_gps_hint(self, item):
         book = getattr(self, 'place_book', None)

@@ -4,7 +4,7 @@ from captioner.templates import MatchTemplate, TemplateStore, format_date
 
 
 def template(**kwargs):
-    values = dict(name='BN-BI', occasion='DEL 2', home='EC Bad Nauheim', away='Bietigheim Steelers',
+    values = dict(name='BN-BI', headline='DEL 2 - EC Bad Nauheim gegen Bietigheim Steelers',
                   city='Bad Nauheim', sublocation='Colonel-Knight-Stadion', extra_tags=['Eishockey', 'DEL2'])
     values.update(kwargs)
     return MatchTemplate(**values)
@@ -19,8 +19,9 @@ def test_headline_has_the_format_recognition_parses():
     assert match.group('away') == 'Bietigheim Steelers'
 
 
-def test_headline_empty_until_complete():
-    assert template(away='').headline == ''
+def test_teams_come_from_the_headline():
+    assert template().teams == ['EC Bad Nauheim', 'Bietigheim Steelers']
+    assert template(headline='').teams == [] and template(headline='Training').teams == []
 
 
 def test_keywords():
@@ -70,7 +71,7 @@ def test_file_with_umlauts_and_without_name(tmp_path):
     path = tmp_path / 'Regensburg.toml'
     path.write_text('occasion = "DEL 2"\nhome = "EC Bad Nauheim"\naway = "Eisbären Regensburg"\n', encoding='utf-8')
     loaded = templates.load_file(path)
-    assert loaded.away == 'Eisbären Regensburg'
+    assert loaded.headline == 'DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg'  # Version 1 umgerechnet
     assert loaded.name == 'Regensburg'
 
 
@@ -137,7 +138,7 @@ def test_bad_coordinates_are_rejected(tmp_path, lines):
         templates.load_file(path)
 
 
-def test_home_and_away_are_optional(tmp_path):
+def test_version_1_without_teams_has_no_headline(tmp_path):
     from captioner import templates
     path = tmp_path / 'DEL2 Heimspiele.toml'
     path.write_text('occasion = "DEL 2"\ncity = "Bad Nauheim"\nextra_tags = ["Eishockey"]\n', encoding='utf-8')
@@ -156,3 +157,47 @@ def test_parse_headline():
     assert parse_headline(template().headline) == ('DEL 2', 'EC Bad Nauheim', 'Bietigheim Steelers')
     assert parse_headline('Training EC Bad Nauheim') is None
     assert parse_headline('') is None
+
+
+RIGHTS = dict(state='Hessen', country='Deutschland', creator='Florian Dehn', authors_position='Fotograf',
+              caption_writer='Florian Dehn', copyright='© 2026 Florian Dehn',
+              web_statement='https://example.org/lizenz', source='chuc.de')
+
+
+def test_rights_and_location_roundtrip(tmp_path):
+    from captioner import templates
+    saved = template(**RIGHTS)
+    path = templates.save_file(saved, tmp_path / 'rechte.toml')
+    text = path.read_text(encoding='utf-8')
+    assert 'version = 2' in text and 'copyright = "© 2026 Florian Dehn"' in text
+    assert 'home' not in text and 'occasion' not in text
+    assert templates.load_file(path) == saved
+    assert saved.fixed_values() == RIGHTS
+    assert template(creator='X').fixed_values() == {'creator': 'X'}  # leere Felder fehlen
+
+
+def test_the_users_version_1_file(tmp_path):
+    """Datei aus Version 1, wie sie im Umlauf ist."""
+    from captioner import templates
+    path = tmp_path / 'EC_Bad_Nauheim_gegen_Kassel_Huskies.toml'
+    path.write_text('''# Captioner Spiel-Template (siehe docs/adr/0001-*.md)
+format = "captioner-template"
+version = 1
+name = "EC Bad Nauheim gegen Kassel Huskies"
+occasion = "DEL 2"
+home = "EC Bad Nauheim"
+away = "EC Kassel Huskies"
+city = "Bad Nauheim"
+sublocation = "Colonel-Knight-Stadion"
+extra_tags = ["del2", "kassel"]
+caption_suffix = ", {headline}, {city}, {sublocation}, {date}"
+''', encoding='utf-8')
+    loaded = templates.load_file(path)
+    assert loaded.headline == 'DEL 2 - EC Bad Nauheim gegen EC Kassel Huskies'
+    assert loaded.teams == ['EC Bad Nauheim', 'EC Kassel Huskies']
+    assert loaded.keywords == ['EC Bad Nauheim', 'EC Kassel Huskies', 'Bad Nauheim', 'del2', 'kassel']
+    # Wieder gespeichert: Version 2 ohne occasion/home/away
+    templates.save_file(loaded, path)
+    text = path.read_text(encoding='utf-8')
+    assert 'version = 2' in text and 'home' not in text
+    assert templates.load_file(path) == loaded

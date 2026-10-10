@@ -1,16 +1,19 @@
 """Template-, Einstellungs- und Grossansicht-Dialog."""
+import html
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeySequence
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
+from PySide6.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox, QFileDialog,
                                QFormLayout, QHBoxLayout, QInputDialog, QLabel, QLineEdit,
                                QListWidget, QPushButton, QSpinBox, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 
-from .. import geo
+from .. import geo, metadata
+from ..scanner import Metadata
 from ..roster import is_url
 from .placepicker import PlacePickerDialog, place_completer, place_for_completion
 from . import keymap
-from ..templates import DEFAULT_CAPTION_SUFFIX, MatchTemplate
+from ..templates import DEFAULT_CAPTION_SUFFIX, MatchTemplate, parse_headline
 
 ROSTER_FILE_FILTER = 'Roster-Dateien (*.txt *.tsv *.csv);;Alle Dateien (*)'
 
@@ -20,29 +23,34 @@ def _split(text):
 
 
 class TemplateDialog(QDialog):
-    def __init__(self, template: MatchTemplate, teams, places=None, parent=None):
+    """Template bearbeiten: Ort, Urheber und Rechte, Tags, Anhang, optional ein fester Titel."""
+
+    def __init__(self, template: MatchTemplate, places=None, parent=None):
         super().__init__(parent)
         self.places = places if places is not None else geo.PlaceBook()
         self.places_changed = False
-        self.setWindowTitle('Spiel-Template')
-        self.setMinimumWidth(520)
+        self.setWindowTitle('Template')
+        self.setMinimumWidth(620)
         template = template or MatchTemplate()
         form = QFormLayout(self)
         # macOS-Standard laesst Felder auf Mindestbreite; hier sollen sie den Dialog fuellen
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
-        self.name = QLineEdit(template.name)
-        self.name.setPlaceholderText('z. B. DEL 2 Heimspiele (leer = Titel)')
-        self.occasion = QLineEdit(template.occasion)
-        self.occasion.setPlaceholderText('DEL 2')
-        self.home = self._team_box(teams, template.home)
-        self.away = self._team_box(teams, template.away)
-        for box in (self.home, self.away):
-            box.lineEdit().setPlaceholderText('optional')
-        self.city = QLineEdit(template.city)
+        def field(value, placeholder=''):
+            edit = QLineEdit(value)
+            edit.setPlaceholderText(placeholder)
+            return edit
+
+        self.name = field(template.name, 'z. B. DEL 2 Heimspiele')
+        self.headline = field(template.headline, 'leer = im Panel eintragen, z. B. DEL 2 - EC Bad Nauheim gegen …')
+        self.headline_hint = QLabel()
+        self.headline_hint.setWordWrap(True)
+        self.city = field(template.city)
         self.city.setCompleter(place_completer(self.places, self))
         self.city.completer().activated.connect(self._known_place_chosen)
-        self.sublocation = QLineEdit(template.sublocation)
+        self.sublocation = field(template.sublocation, 'Halle, Stadion')
+        self.state = field(template.state, 'Hessen')
+        self.country = field(template.country, 'Deutschland')
         map_button = QPushButton('Karte …')
         map_button.setToolTip('Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)')
         map_button.clicked.connect(self.pick_place)
@@ -51,46 +59,53 @@ class TemplateDialog(QDialog):
         city_row.addWidget(map_button)
         # Koordinaten aus der Datei, solange Stadt/Ort nicht geaendert werden
         self._file_place = geo.Place(template.city, template.sublocation, template.latitude, template.longitude)
-        self.extra_tags = QLineEdit(', '.join(template.extra_tags))
-        self.extra_tags.setPlaceholderText('Eishockey, DEL2, Saison 2026/27')
-        self.suffix = QLineEdit(template.caption_suffix)
-        self.suffix.setPlaceholderText(DEFAULT_CAPTION_SUFFIX)
-        self.headline_preview = QLabel()
-        self.headline_preview.setWordWrap(True)
+        self.creator = field(template.creator, 'Vor- und Nachname')
+        self.authors_position = field(template.authors_position, 'Fotograf')
+        self.caption_writer = field(template.caption_writer, 'wer beschriftet')
+        self.copyright = field(template.copyright, '© 2026 Vor- und Nachname')
+        self.web_statement = field(template.web_statement, 'https://… (Nutzungsbedingungen, Lizenz)')
+        self.source = field(template.source, 'Agentur, Redaktion')
+        self.extra_tags = field(', '.join(template.extra_tags), 'Eishockey, DEL2, Saison 2026/27')
+        self.suffix = field(template.caption_suffix, DEFAULT_CAPTION_SUFFIX)
+
+        def section(title):
+            label = QLabel(f'<b>{title}</b>')
+            label.setContentsMargins(0, 10, 0, 0)
+            form.addRow(label)
 
         form.addRow('Name', self.name)
-        form.addRow('Anlass / Liga', self.occasion)
-        form.addRow('Heim', self.home)
-        form.addRow('Gast', self.away)
+        form.addRow('Titel', self.headline)
+        form.addRow('', self.headline_hint)
+        section('Ort')
         form.addRow('Stadt', city_row)
         form.addRow('Ort / Halle', self.sublocation)
+        form.addRow('Bundesland', self.state)
+        form.addRow('Land', self.country)
+        section('Urheber und Rechte')
+        form.addRow('Fotograf', self.creator)
+        form.addRow('Position', self.authors_position)
+        form.addRow('Beschriftet von', self.caption_writer)
+        form.addRow('Copyright', self.copyright)
+        form.addRow('Copyright-URL', self.web_statement)
+        form.addRow('Quelle', self.source)
+        section('Beschreibung und Tags')
         form.addRow('Zusatz-Tags', self.extra_tags)
-        form.addRow('Anhang an Beschreibung', self.suffix)
+        form.addRow('Anhang', self.suffix)
         form.addRow('', QLabel('<small>Platzhalter: {headline}, {city}, {sublocation}, {date}</small>'))
-        form.addRow('Titel', self.headline_preview)
-        note = QLabel('<small>Heim und Gast sind optional. Mit Anlass, Heim und Gast gibt das Template den '
-                      'Titel vor; ohne trägst du ihn pro Bild im Panel ein. Das Format „&lt;Anlass&gt; - '
-                      '&lt;Heim&gt; gegen &lt;Gast&gt;“ bleibt fest: die Personenerkennung liest den '
-                      'Spielkontext daraus.</small>')
+        note = QLabel('<small>Gefüllte Felder gehen beim Speichern in jedes Bild, leere lassen den Wert '
+                      'des Bildes stehen. Heim und Gast stehen im Titel und ergeben sich aus den Codes in '
+                      'der Beschreibung.</small>')
         note.setWordWrap(True)
         form.addRow('', note)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        form.addRow(buttons)
+        self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        form.addRow(self.buttons)
 
-        for widget in (self.occasion, self.home.lineEdit(), self.away.lineEdit()):
-            widget.textChanged.connect(self._update)
+        for edit in self.findChildren(QLineEdit):
+            edit.textChanged.connect(self._update)
         self._update()
-
-    @staticmethod
-    def _team_box(teams, value):
-        box = QComboBox()
-        box.setEditable(True)
-        box.addItems(teams)
-        box.setCurrentText(value)
-        return box
 
     def pick_place(self):
         current = self.places.lookup(self.city.text(), self.sublocation.text()) or self._place()
@@ -99,6 +114,11 @@ class TemplateDialog(QDialog):
             place = dialog.place()
             self.city.setText(place.city)
             self.sublocation.setText(place.sublocation)
+            # Bundesland und Land liefert die Adresssuche gleich mit
+            if place.state:
+                self.state.setText(place.state)
+            if place.country:
+                self.country.setText(place.country)
             self.places.remember(place)
             self.places_changed = True
 
@@ -118,22 +138,44 @@ class TemplateDialog(QDialog):
             return geo.Place(city, sublocation, self._file_place.latitude, self._file_place.longitude)
         return geo.Place(city, sublocation)
 
+    def problems(self):
+        """Zu lange Felder (IPTC-Grenzen) und ein Titel im falschen Format."""
+        template = self.template()
+        problems = metadata.validate(Metadata(headline=template.headline, city=template.city,
+                                              sublocation=template.sublocation, **template.fixed_values()))
+        if template.headline and parse_headline(template.headline) is None:
+            problems.insert(0, 'Titel nicht im Format „<Anlass> - <Heim> gegen <Gast>“ – '
+                               'die Personenerkennung erkennt das Spiel dann nicht')
+        return problems
+
     def _update(self):
-        self.headline_preview.setText(self.template().headline or '<i>kein fester Titel – wird im Panel eingetragen</i>')
+        problems = self.problems()
+        self.headline_hint.setText('<small style="color:#d64541">' + html.escape('; '.join(problems)) + '</small>'
+                                   if problems else '')
+        self.headline_hint.setVisible(bool(problems))
+        # Nur zu lange Felder blockieren; ein abweichender Titel ist erlaubt
+        too_long = any('Bytes' in p for p in problems)
+        self.buttons.button(QDialogButtonBox.StandardButton.Save).setEnabled(not too_long)
 
     def template(self):
         place = self._place()
         return MatchTemplate(
-            latitude=place.latitude,
-            longitude=place.longitude,
             name=self.name.text().strip(),
-            occasion=self.occasion.text().strip(),
-            home=self.home.currentText().strip(),
-            away=self.away.currentText().strip(),
+            headline=self.headline.text().strip(),
             city=self.city.text().strip(),
             sublocation=self.sublocation.text().strip(),
+            state=self.state.text().strip(),
+            country=self.country.text().strip(),
             extra_tags=_split(self.extra_tags.text()),
             caption_suffix=self.suffix.text(),
+            creator=self.creator.text().strip(),
+            authors_position=self.authors_position.text().strip(),
+            caption_writer=self.caption_writer.text().strip(),
+            copyright=self.copyright.text().strip(),
+            web_statement=self.web_statement.text().strip(),
+            source=self.source.text().strip(),
+            latitude=place.latitude,
+            longitude=place.longitude,
         )
 
 

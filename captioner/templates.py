@@ -1,11 +1,14 @@
 """
 Spiel-Templates, der Ersatz fuer das "IPTC Stationery Pad" (ADR 0001, Punkt 6).
 
+Ein Template traegt, was fuer viele Bilder gleich ist: Ort (Stadt, Halle,
+Bundesland, Land), Urheber und Rechte, Zusatz-Tags, den Anhang an die
+Beschreibung und optional einen festen Titel. Heim und Gast stehen im Titel
+bzw. ergeben sich aus den Codes in der Beschreibung.
+
 Die Headline hat das feste Format "<Anlass> - <Heim> gegen <Gast>", weil
-recognition/lib/matches.py den Spielkontext genau daraus liest. Anlass, Heim und
-Gast im Template sind optional: Sind alle drei gesetzt, gibt das Template den
-Titel vor; sonst wird er pro Bild im Panel eingetragen (parse_headline liest
-die Teams daraus).
+recognition/lib/matches.py den Spielkontext genau daraus liest; parse_headline
+liest die Teams daraus (Reihenfolge der Code-Vorschlaege).
 """
 import re
 import tomllib
@@ -29,15 +32,29 @@ def parse_headline(text):
     return (match.group('occasion'), match.group('home'), match.group('away')) if match else None
 
 
+# Felder, die das Template beim Speichern in jedes Bild schreibt, sofern sie gefuellt
+# sind (Namen wie in scanner.Metadata); leere lassen den Wert des Bildes stehen
+FIXED_FIELDS = ('state', 'country', 'creator', 'authors_position', 'caption_writer',
+                'copyright', 'web_statement', 'source')
+
+
 @dataclass
 class MatchTemplate:
     name: str = ''
-    occasion: str = ''  # "in der DEL 2"
-    home: str = ''      # Abschnitt im Roster, z. B. "EC Bad Nauheim"
-    away: str = ''
+    # Optional fester Titel "<Anlass> - <Heim> gegen <Gast>"; leer = im Panel eintragen
+    headline: str = ''
     city: str = ''
     sublocation: str = ''
+    state: str = ''             # Bundesland
+    country: str = ''
     extra_tags: list = field(default_factory=list)  # "Eishockey", "DEL2", "2026/27"
+    # Urheber und Rechte (Lightroom: "IPTC-Copyright" / "IPTC-Ersteller")
+    creator: str = ''           # Fotograf, dc:creator
+    authors_position: str = ''  # "Fotograf", "Pressefotograf"
+    caption_writer: str = ''    # wer beschriftet
+    copyright: str = ''         # "© 2026 Florian Dehn"
+    web_statement: str = ''     # URL zu Nutzungsbedingungen/Lizenz
+    source: str = ''            # Quelle/Agentur
     # Wird an jede Bildunterschrift gehaengt, wie bisher im Workflow-Tool fuer die Auswahl von Fotos:
     # "..., DEL 2 - EC Bad Nauheim gegen Eisbaeren Regensburg, Bad Nauheim, Colonel-Knight-Stadion, 01.03.26"
     caption_suffix: str = DEFAULT_CAPTION_SUFFIX
@@ -49,19 +66,19 @@ class MatchTemplate:
     path: str = field(default='', compare=False, repr=False)
 
     @property
-    def headline(self):
-        if not (self.occasion and self.home and self.away):
-            return ''
-        return f'{self.occasion} - {self.home} gegen {self.away}'
-
-    @property
     def keywords(self):
         """Galerie-Tags ohne Personen; Personen kommen pro Bild dazu."""
-        return unique([self.home, self.away, self.city, *self.extra_tags])
+        return unique([*self.teams, self.city, *self.extra_tags])
 
     @property
     def teams(self):
-        return [team for team in (self.home, self.away) if team]
+        """Heim und Gast aus dem festen Titel, sonst leer."""
+        parsed = parse_headline(self.headline)
+        return list(parsed[1:]) if parsed else []
+
+    def fixed_values(self):
+        """Gefuellte Ort-/Rechte-Felder, die beim Speichern in jedes Bild gehen."""
+        return {name: getattr(self, name) for name in FIXED_FIELDS if getattr(self, name)}
 
     def display_name(self):
         return self.name or self.headline or 'Unbenannt'
@@ -123,19 +140,27 @@ def slug(name):
 # TOML-Datei als Template durchgeht. Beispiel:
 #
 #     format = "captioner-template"
-#     version = 1
-#     name = "BN-BI"
-#     occasion = "DEL 2"
-#     home = "EC Bad Nauheim"
-#     away = "Bietigheim Steelers"
+#     version = 2
+#     name = "DEL 2 Heimspiele"
+#     headline = ""              # optional fester Titel
 #     city = "Bad Nauheim"
 #     sublocation = "Colonel-Knight-Stadion"
+#     state = "Hessen"
+#     country = "Deutschland"
 #     extra_tags = ["Eishockey", "DEL2"]
 #     caption_suffix = ", {headline}, {city}, {sublocation}, {date}"
+#     creator = "Florian Dehn"
+#     authors_position = "Fotograf"
+#     caption_writer = "Florian Dehn"
+#     copyright = "© 2026 Florian Dehn"
+#     web_statement = "https://example.org/lizenz"
+#     source = "chuc.de"
 #     latitude = 50.37255        # optional, vom Karten-Picker
 #     longitude = 8.73845
+#
+# Version 1 hatte occasion/home/away statt headline; load_file rechnet sie um.
 FORMAT_ID = 'captioner-template'
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 FILE_SUFFIX = '.toml'
 SERIALIZED_FIELDS = [name for name in MatchTemplate.__dataclass_fields__ if name != 'path']
 
@@ -159,6 +184,7 @@ def load_file(path):
         raise TemplateError(f'{path.name}: kein Captioner-Template (format = {data.get("format")!r})')
     if int(data.get('version', 1)) > FORMAT_VERSION:
         raise TemplateError(f'{path.name}: Template-Version {data["version"]} ist neuer als diese App')
+    _upgrade_v1(data)
     values = {key: data[key] for key in SERIALIZED_FIELDS if key in data}
     for key, value in values.items():
         expected = {'extra_tags': list, 'latitude': (int, float), 'longitude': (int, float)}.get(key, str)
@@ -172,6 +198,14 @@ def load_file(path):
         template.name = path.stem
     template.path = str(path)
     return template
+
+
+def _upgrade_v1(data):
+    """Version 1: Titel aus occasion/home/away (nur wenn alle drei da sind)."""
+    legacy = [data.pop(key, '') for key in ('occasion', 'home', 'away')]
+    if not data.get('headline') and all(isinstance(v, str) and v.strip() for v in legacy):
+        occasion, home, away = (v.strip() for v in legacy)
+        data['headline'] = f'{occasion} - {home} gegen {away}'
 
 
 def save_file(template, path):

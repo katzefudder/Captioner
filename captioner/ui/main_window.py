@@ -772,7 +772,8 @@ class MainWindow(QMainWindow):
             meta = geo.apply_gps(dataclasses.replace(
                 item.meta, headline=fields['headline'], caption=caption,
                 keywords=unique(fields['keywords'] + persons),
-                city=fields['city'], sublocation=fields['sublocation']), self.places)
+                city=fields['city'], sublocation=fields['sublocation'],
+                **(template.fixed_values() if template else {})), self.places)
             problems = metadata.validate(meta)
             if problems:
                 QMessageBox.warning(self, 'Nicht gespeichert', f'{item.name}: ' + '; '.join(problems))
@@ -818,7 +819,8 @@ class MainWindow(QMainWindow):
             persons = codes.persons_in(caption, self.roster)
             self._enqueue(item, geo.apply_gps(dataclasses.replace(
                 item.meta, headline=headline, caption=caption, city=template.city,
-                sublocation=template.sublocation, keywords=unique(template.keywords + persons)), self.places))
+                sublocation=template.sublocation, keywords=unique(template.keywords + persons),
+                **template.fixed_values()), self.places))
         self.model.refresh([i.key for i in items])
         self._show_selection_in_editor()
         self._update_status()
@@ -1111,7 +1113,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage('Templates nicht geladen: ' + '; '.join(errors), 15000)
 
     def edit_template(self, template):
-        dialog = TemplateDialog(template, self.roster.teams, self.places, self)
+        dialog = TemplateDialog(template, self.places, self)
         accepted = dialog.exec()
         if dialog.places_changed:
             self._save_places()

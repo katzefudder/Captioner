@@ -119,8 +119,8 @@ def test_thumbnail_threads_share_one_exiftool_per_thread(app, tmp_path):
 def test_open_and_save_template_files(window, tmp_path):
     from captioner import templates
     from captioner.templates import MatchTemplate
-    shared = templates.save_file(MatchTemplate(name='Auswärts Kassel', occasion='DEL 2', home='EC Kassel Huskies',
-                                               away='EC Bad Nauheim', city='Kassel'), tmp_path / 'kassel.toml')
+    shared = templates.save_file(MatchTemplate(name='Auswärts Kassel', headline='DEL 2 - EC Kassel Huskies gegen '
+                                               'EC Bad Nauheim', city='Kassel'), tmp_path / 'kassel.toml')
 
     opened = window.open_template_file(str(shared))
     assert window.editor.template.path == str(shared)
@@ -128,7 +128,7 @@ def test_open_and_save_template_files(window, tmp_path):
 
     copy = window.save_template_as(str(tmp_path / 'export' / 'kopie'))
     assert copy.path.endswith('kopie.toml')
-    assert templates.load_file(copy.path).home == 'EC Kassel Huskies'
+    assert templates.load_file(copy.path).teams[0] == 'EC Kassel Huskies'
     assert window.editor.template.path == copy.path
     assert opened.path == str(shared)  # Original bleibt unveraendert verknuepft
 

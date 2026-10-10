@@ -143,13 +143,16 @@ def sections(raw, meta: Metadata, labels=()):
         ('Tags', ', '.join(meta.keywords)),
         ('Stadt', meta.city),
         ('Ort', meta.sublocation),
-        ('Bundesland', _first(raw, 'Province-State', 'State')),
-        ('Land', _first(raw, 'Country-PrimaryLocationName', 'Country')),
-        ('Fotograf', _first(raw, 'By-line', 'Creator', 'Artist')),
+        # Ort und Rechte aus den Metadaten des Bildes: nach dem Speichern sofort aktuell
+        ('Bundesland', meta.state or _first(raw, 'Province-State', 'State')),
+        ('Land', meta.country or _first(raw, 'Country-PrimaryLocationName', 'Country')),
+        ('Fotograf', meta.creator or _first(raw, 'By-line', 'Creator', 'Artist')),
+        ('Position', meta.authors_position),
         ('Credit', _first(raw, 'Credit')),
-        ('Copyright', _first(raw, 'CopyrightNotice', 'Rights', 'Copyright')),
-        ('Quelle', _first(raw, 'Source')),
-        ('Beschrieben von', _first(raw, 'Writer-Editor', 'CaptionWriter')),
+        ('Copyright', meta.copyright or _first(raw, 'CopyrightNotice', 'Rights', 'Copyright')),
+        ('Copyright-URL', meta.web_statement),
+        ('Quelle', meta.source or _first(raw, 'Source')),
+        ('Beschriftet von', meta.caption_writer or _first(raw, 'Writer-Editor', 'CaptionWriter')),
         ('Hinweise', _first(raw, 'SpecialInstructions', 'Instructions')),
     ]
     label = meta.label

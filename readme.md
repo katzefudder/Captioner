@@ -87,10 +87,10 @@ Hardened Runtime braucht.
 1. **Ordner öffnen** (`⌘O`, oder Ordner aufs Fenster ziehen). JPG, NEF und andere RAWs,
    DNG, TIFF. RAW+JPG mit gleichem Namen sind eine Kachel. Jeder Ordner bekommt einen
    eigenen **Tab**, siehe „Mehrere Ordner“.
-2. **Spiel-Template** wählen, mit `+` anlegen oder mit **„Template öffnen …"** eine
-   Template-Datei vom Rechner laden: Name, Stadt, Halle, Zusatz-Tags, Anhang; optional
-   Anlass (`DEL 2`), Heim und Gast. Mit allen dreien gibt das Template den Titel vor.
-   Ohne Heim/Gast taugt ein Template für jedes Spiel in derselben Halle: den **Titel**
+2. **Template** wählen, mit `+` anlegen oder mit **„Template öffnen …"** eine
+   Template-Datei vom Rechner laden: Ort, Urheber und Rechte (Fotograf, Copyright, …),
+   Zusatz-Tags, Anhang und optional ein fester Titel (siehe „Templates als Dateien“).
+   Ohne festen Titel taugt ein Template für jedes Spiel: den **Titel**
    (`DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg`) trägst du im Panel ein, die
    folgenden Bilder übernehmen ihn, und die Code-Vorschläge zeigen die Spieler dieser
    beiden Teams zuerst. Weicht der Titel vom Format ab, warnt das Panel.
@@ -255,16 +255,43 @@ Ein Template ist eine kleine TOML-Datei, lesbar und von Hand editierbar:
 ```toml
 # Captioner Spiel-Template (siehe docs/adr/0001-*.md)
 format = "captioner-template"
-version = 1
-name = "BN-BI"
-occasion = "DEL 2"
-home = "EC Bad Nauheim"
-away = "Bietigheim Steelers"
+version = 2
+name = "DEL 2 Heimspiele"
+headline = ""                     # optional fester Titel, sonst im Panel
 city = "Bad Nauheim"
 sublocation = "Colonel-Knight-Stadion"
+state = "Hessen"
+country = "Deutschland"
 extra_tags = ["Eishockey", "DEL2", "Saison 2026/27"]
 caption_suffix = ", {headline}, {city}, {sublocation}, {date}"
+creator = "Florian Dehn"
+authors_position = "Fotograf"
+caption_writer = "Florian Dehn"
+copyright = "© 2026 Florian Dehn"
+web_statement = "https://example.org/lizenz"
+source = "chuc.de"
 ```
+
+Gefüllte Felder schreibt die App beim Speichern in jedes Bild; leere lassen den Wert des
+Bildes stehen (z. B. Fotograf/Copyright, die die Kamera schon eingetragen hat). Heim und
+Gast gibt es im Template nicht: sie stehen im Titel und ergeben sich aus den Codes in der
+Beschreibung. Bundesland und Land füllt „Karte …“ beim Wählen des Ortes mit.
+
+| Template-Feld | XMP | IPTC | EXIF |
+|---|---|---|---|
+| `headline` (Titel) | `photoshop:Headline`, `dc:title` | `Headline`, `ObjectName` | |
+| `city` · `sublocation` | `photoshop:City` · `Iptc4xmpCore:Location` | `City` · `Sub-location` | |
+| `state` · `country` | `photoshop:State` · `photoshop:Country` | `Province-State` · `Country-PrimaryLocationName` | |
+| `creator` (Fotograf) | `dc:creator` | `By-line` | `Artist` |
+| `authors_position` | `photoshop:AuthorsPosition` | `By-lineTitle` | |
+| `caption_writer` | `photoshop:CaptionWriter` | `Writer-Editor` | |
+| `copyright` | `dc:rights`, dazu `xmpRights:Marked` | `CopyrightNotice` | `Copyright` |
+| `web_statement` | `xmpRights:WebStatement` | | |
+| `source` | `photoshop:Source` | `Source` | |
+
+Bei RAW-Dateien geht alles nur ins XMP-Sidecar. Dateien der Version 1 (mit `occasion`,
+`home`, `away`) werden weiter gelesen; daraus wird der Titel, beim nächsten Speichern
+schreibt die App Version 2.
 
 * **Template öffnen …** lädt eine solche Datei von irgendwo auf dem Rechner (oder die
   Datei aufs Fenster ziehen). Sie bleibt verknüpft: Änderungen über `…` landen wieder
