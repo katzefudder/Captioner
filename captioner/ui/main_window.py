@@ -225,12 +225,12 @@ class MainWindow(QMainWindow):
         self.editor.place_chosen.connect(self.remember_place)
         self.editor.set_place_book(self.places)
 
-        splitter = QSplitter()
-        splitter.addWidget(left)
-        splitter.addWidget(self.editor)
-        splitter.setStretchFactor(0, 1)
-        splitter.setSizes([1080, 420])
-        outer.addWidget(splitter, 1)
+        self.main_splitter = QSplitter()
+        self.main_splitter.addWidget(left)
+        self.main_splitter.addWidget(self.editor)
+        self.main_splitter.setStretchFactor(0, 1)
+        self.main_splitter.setSizes([1080, 420])
+        outer.addWidget(self.main_splitter, 1)
         self.setCentralWidget(central)
 
         self.status_label = QLabel()
@@ -661,6 +661,9 @@ class MainWindow(QMainWindow):
         if page != self.page:
             self.page = page
         self.show_page(focus_key=item.key)
+        # Beim Beschriften in der Grossansicht (Cmd+N/B) zeigt sie das neue Bild
+        if self.viewer is not None and self.viewer.isVisible() and self.viewer.key != item.key:
+            self._show_in_viewer(item)
 
     # --- Bewertung und Beschriftung ---------------------------------------------
 
@@ -738,9 +741,12 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f'Beschriftung in {len(items)} Bild(er) eingefügt', 5000)
 
     def save_and_close(self):
-        """Wie "Save Changes and Close Dialog": speichern, zurueck in die Galerie."""
+        """Wie "Save Changes and Close Dialog": speichern, zurueck in die Galerie bzw. aufs Bild."""
         if self.editor.submit(0):
-            self.view.setFocus()
+            if self._editor_in_viewer():
+                self.viewer.zoom.setFocus()
+            else:
+                self.view.setFocus()
 
     def save_caption(self, fields, step):
         items = self._focused_first(self._selected_items())
@@ -778,6 +784,10 @@ class MainWindow(QMainWindow):
             self.last_raw_caption = fields['raw_caption']
         self.model.refresh([item.key for item, _ in planned])
         self._update_status()
+        if self.viewer is not None and self.viewer.isVisible():
+            shown = next((item for item, _ in planned if item.key == self.viewer.key), None)
+            if shown is not None:
+                self.viewer.show_item(shown, self.viewer._image)
         if step:
             self._advance(items, step)
 
@@ -981,12 +991,55 @@ class MainWindow(QMainWindow):
                 handlers[f'viewer_color_{n}'] = lambda n=n: self._in_viewer(lambda: self.set_color_class(n))
             for n in range(0, 6):
                 handlers[f'viewer_rating_{n}'] = lambda n=n: self._in_viewer(lambda: self.set_rating(n))
+            handlers['viewer_caption'] = self._caption_in_viewer
+            handlers['viewer_snapshot_take'] = lambda: self._in_viewer(self.take_snapshot)
+            handlers['viewer_snapshot_paste'] = lambda: self._in_viewer(self.paste_snapshot)
             self._bind(handlers, self.viewer, Qt.ShortcutContext.WindowShortcut)
+            self.viewer.caption_toggled.connect(self._on_viewer_caption_toggled)
+            self.viewer.finished.connect(lambda _: self._move_editor(into_viewer=False))
         self.select_only(item)
         self._show_in_viewer(item)
         self.viewer.show()
         self.viewer.raise_()
         self.viewer.activateWindow()
+        self.viewer.set_caption_visible(self.settings.viewer_caption_panel)
+        self.viewer.zoom.setFocus()
+
+    # Das Beschriftungs-Panel gibt es nur einmal: es wandert in die Grossansicht und zurueck,
+    # samt Inhalt, Kuerzeln (haengen am Panel) und Template-Auswahl.
+
+    def _editor_in_viewer(self):
+        return self.viewer is not None and self.editor.parent() is self.viewer.caption_slot
+
+    def _move_editor(self, into_viewer):
+        if into_viewer == self._editor_in_viewer():
+            return
+        if into_viewer:
+            self._editor_sizes = self.main_splitter.sizes()
+            self.viewer.caption_slot.layout().addWidget(self.editor)
+        else:
+            had_focus = self.editor.isAncestorOf(QApplication.focusWidget())
+            self.main_splitter.insertWidget(1, self.editor)
+            self.main_splitter.setSizes(getattr(self, '_editor_sizes', [1080, 420]))
+            if had_focus:
+                self.view.setFocus()
+        self.editor.show()
+
+    def _on_viewer_caption_toggled(self, visible):
+        self._move_editor(into_viewer=visible)
+        if self.settings.viewer_caption_panel != visible:
+            self.settings.viewer_caption_panel = visible
+            self.settings.save()
+
+    def _caption_in_viewer(self):
+        """I: Panel einblenden und in die Beschreibung des angezeigten Bildes."""
+        item = self.by_key.get(self.viewer.key)
+        if item is None:
+            return
+        if self.selected_keys != {item.key}:
+            self.select_only(item)
+        self.viewer.set_caption_visible(True)
+        self.editor.focus_caption()
 
     def _show_in_viewer(self, item):
         self.last_previewed_key = item.key

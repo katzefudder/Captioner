@@ -173,7 +173,15 @@ Im Beschriftungs-Panel:
 | Template anwenden | `⌘⌥C` | `Strg+Alt+C` |
 
 In der Großansicht: `←`/`→` blättern, `T`, Farbklassen und Sterne wie oben, `Esc`/`⌘W`
-schließt. **Zoom:** `Z` oder `*` schaltet zwischen eingepasst und 100 % um, `+`/`-` zoomen
+schließt.
+
+**Beschriften in der Großansicht:** `I` (oder „Beschriften“ unten) holt das
+Beschriftungs-Panel neben das Bild und setzt den Cursor in die Beschreibung. Es ist dasselbe
+Panel wie im Hauptfenster, mit Template, Code-Vervollständigung und Karte. `Enter` speichert,
+`⌘N`/`⌘B` speichern und zeigen das nächste/vorige Foto groß, `⌘⇧C`/`⌘⇧V` kopieren und
+fügen die Beschriftung ein. Beim Tippen lösen Ziffern, `T`, `Z`, `+`, `-` und die Leertaste
+nichts aus; ein Klick aufs Bild (oder `⌘Enter`) gibt die Tasten wieder an die Großansicht.
+Ob das Panel beim Öffnen dabei ist, merkt sich die App. **Zoom:** `Z` oder `*` schaltet zwischen eingepasst und 100 % um, `+`/`-` zoomen
 stufenweise (50, 75, 100, 150, 200, 300, 400 %), der **Slider** unten stufenlos von 50 % bis
 400 %; daneben „Einpassen" und „100 %". `⌥`+Mausrad oder Doppelklick zoomt an der
 Mausposition, `⌘`+Klick zoomt auf die Stelle und holt sie in die Mitte. Im Zoom wird der

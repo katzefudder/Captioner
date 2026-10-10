@@ -295,6 +295,7 @@ class Viewer(QDialog):
     """
     navigate = Signal(int)
     info_toggled = Signal(bool)
+    caption_toggled = Signal(bool)   # Beschriftungs-Panel ein/aus; das Hauptfenster haengt es ein
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -304,15 +305,25 @@ class Viewer(QDialog):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self.zoom = ZoomView()
+        # Fokus aufs Bild, sonst bekaeme ihn das erste Feld des Panels und Ziffern
+        # landeten dort statt als Sterne
+        self.zoom.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.info = QLabel()
         self.info.setWordWrap(True)
         self.info.setContentsMargins(12, 6, 12, 10)
         self.info_panel = InfoPanel()
+        # Platz fuer das Beschriftungs-Panel des Hauptfensters (wird hierher umgehaengt)
+        self.caption_slot = QWidget()
+        self.caption_slot.setMinimumWidth(380)
+        self.caption_slot.setStyleSheet('background: palette(window); color: palette(window-text);')
+        QVBoxLayout(self.caption_slot).setContentsMargins(8, 8, 8, 8)
+        self.caption_slot.hide()
         self.splitter = QSplitter()
         self.splitter.addWidget(self.zoom)
+        self.splitter.addWidget(self.caption_slot)
         self.splitter.addWidget(self.info_panel)
         self.splitter.setStretchFactor(0, 1)
-        self.splitter.setSizes([1060, 340])
+        self.splitter.setSizes([1060, 420, 340])
         layout.addWidget(self.splitter, 1)
         layout.addLayout(self._zoom_bar())
         layout.addWidget(self.info)
@@ -360,8 +371,25 @@ class Viewer(QDialog):
         self.info_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.info_button.setToolTip('EXIF/IPTC rechts ein-/ausblenden')
         self.info_button.toggled.connect(self.set_info_visible)
+        self.caption_button = QPushButton('Beschriften')
+        self.caption_button.setCheckable(True)
+        self.caption_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.caption_button.setToolTip('Beschriftungs-Panel ein-/ausblenden (I)')
+        self.caption_button.toggled.connect(self.set_caption_visible)
+        bar.addWidget(self.caption_button)
         bar.addWidget(self.info_button)
         return bar
+
+    def set_caption_visible(self, visible):
+        self.caption_slot.setVisible(visible)
+        if self.caption_button.isChecked() != visible:
+            self.caption_button.setChecked(visible)
+        if not visible:
+            self.zoom.setFocus()
+        self.caption_toggled.emit(visible)
+
+    def caption_visible(self):
+        return self.caption_button.isChecked()
 
     def set_info_visible(self, visible):
         self.info_panel.setVisible(visible)

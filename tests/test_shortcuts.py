@@ -15,8 +15,9 @@ from captioner.ui import keymap  # noqa: E402
 
 
 # Welche Kontexte gleichzeitig aktiv sein koennen: das Fenster-Kontext-Kuerzel
-# gilt immer, dazu entweder Galerie oder Panel, oder die Grossansicht allein
-ACTIVE_TOGETHER = [{'gallery', 'window'}, {'editor', 'window'}, {'viewer'}]
+# gilt immer, dazu entweder Galerie oder Panel; in der Grossansicht deren Kuerzel
+# und das dorthin umgehaengte Panel
+ACTIVE_TOGETHER = [{'gallery', 'window'}, {'editor', 'window'}, {'viewer', 'editor'}]
 
 
 @pytest.mark.parametrize('mac', [True, False], ids=['macOS', 'Windows'])
@@ -239,3 +240,52 @@ def test_next_and_previous_image_in_gallery(window):
     assert window._selected_items() == [window.filtered[2]] and window.page == 1
     press(window.view, Qt.Key.Key_B, CMD)
     assert window._selected_items() == [window.filtered[1]] and window.page == 0
+
+
+@requires_exiftool
+def test_caption_in_viewer_with_copy_paste(window):
+    first, second = window.filtered[0], window.filtered[1]
+    window.view.setCurrentIndex(window.model.index(0))
+    window.open_viewer()
+    QtWidgets.QApplication.processEvents()        # Grossansicht wird aktives Fenster
+    viewer = window.viewer
+    assert not window._editor_in_viewer()  # Standard: Panel bleibt im Hauptfenster
+
+    press(viewer.zoom, Qt.Key.Key_I)              # Panel in die Grossansicht, Fokus in die Beschreibung
+    assert window._editor_in_viewer() and viewer.caption_slot.isVisible()
+    caption = window.editor.caption
+    assert caption.hasFocus()
+
+    # Tippen loest keine Grossansicht-Kuerzel aus (Ziffern, T, Z, +, -, Leertaste)
+    QTest.keyClicks(caption, 'Tor 3 T+Z-')
+    QtWidgets.QApplication.processEvents()
+    assert caption.toPlainText() == 'Tor 3 T+Z-'
+    assert viewer.isVisible() and first.meta.rating == 0 and not first.meta.tagged
+    assert viewer.zoom.zoom is None
+
+    window.editor.headline.setText('DEL 2 - A gegen B')
+    press(caption, Qt.Key.Key_C, CMD | SHIFT)     # kopieren
+    press(caption, Qt.Key.Key_N if keymap.MAC else Qt.Key.Key_M, CMD)   # speichern, weiter
+    assert first.meta.caption == 'Tor 3 T+Z-'
+    assert viewer.key == second.key                # Grossansicht zeigt das naechste Bild
+    press(caption, Qt.Key.Key_V, CMD | SHIFT)     # einfuegen
+    assert second.meta.caption == 'Tor 3 T+Z-' and second.meta.headline == 'DEL 2 - A gegen B'
+
+    # Auf dem Bild wirken die Kuerzel wieder
+    viewer.zoom.setFocus()
+    press(viewer.zoom, Qt.Key.Key_4)
+    assert second.meta.rating == 4
+    assert window.settings.viewer_caption_panel
+
+    # Schliessen: Panel zurueck ins Hauptfenster
+    press(viewer.zoom, Qt.Key.Key_Escape)
+    assert not viewer.isVisible() and not window._editor_in_viewer()
+    assert window.main_splitter.indexOf(window.editor) == 1
+
+    # Naechstes Oeffnen: Panel wieder dabei (Einstellung gemerkt)
+    window.open_viewer()
+    QtWidgets.QApplication.processEvents()
+    assert window._editor_in_viewer() and viewer.zoom.hasFocus()
+    viewer.caption_button.click()
+    assert not window._editor_in_viewer() and not window.settings.viewer_caption_panel
+    viewer.close()

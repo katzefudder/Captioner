@@ -60,6 +60,7 @@ class Settings:
     # falls eine Lightroom-Version sie im Drop nicht akzeptiert.
     drag_include_sidecars: bool = True
     viewer_info_panel: bool = True   # EXIF/IPTC rechts in der Grossansicht
+    viewer_caption_panel: bool = False  # Beschriftungs-Panel in der Grossansicht
     exiftool_path: str = ''
     last_folder: str = ''
     last_template: str = ''      # Pfad des zuletzt gewaehlten Templates

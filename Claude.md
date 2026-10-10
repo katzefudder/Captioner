@@ -60,6 +60,17 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   Cache kommt; Stadt/Ort und Vorschläge funktionieren weiter.
 - Templates: `latitude`/`longitude` optional, ohne Wert nicht in der Datei (TOML hat kein None).
 
+## Großansicht mit Beschriftung
+
+- Das `CaptionEditor` gibt es nur einmal. Es wird in `Viewer.caption_slot` umgehängt und beim
+  Schließen (`finished`) bzw. Ausblenden zurück in `main_splitter` (`_move_editor`). Inhalt,
+  Template und die am Panel hängenden Kürzel wandern mit.
+- Viewer-Kürzel sind `WindowShortcut`. Beim Tippen lösen sie nicht aus, weil Textfelder
+  druckbare Tasten ohne Cmd/Strg per `ShortcutOverride` beanspruchen; deshalb dürfen
+  Viewer- und Panel-Kürzel sich nicht überschneiden (`ACTIVE_TOGETHER` im Test).
+- `ZoomView` hat `StrongFocus` und bekommt beim Öffnen den Fokus, sonst landeten Ziffern im Panel.
+- `select_only` zeigt das Bild auch in der offenen Großansicht (Cmd+N/B aus dem Panel).
+
 ## Tabs und Kopieren
 
 - Ordner-Zustand (`folder`, `all_items`, `filtered`, `page`, `selected_keys`, `model`, `view`, …)
@@ -162,7 +173,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 141 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 142 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

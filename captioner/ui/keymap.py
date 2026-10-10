@@ -101,6 +101,11 @@ def _bindings(mac):
     add('viewer_zoom_toggle', 'viewer', ['Z', '*'], 'Zoom an/aus (100 %)')
     add('viewer_zoom_in', 'viewer', ['+'], 'Heranzoomen')
     add('viewer_zoom_out', 'viewer', ['-'], 'Herauszoomen')
+    # Beschriften in der Grossansicht. Ziffern, T, Z, +, -, Leertaste loesen beim Tippen
+    # nicht aus: Textfelder beanspruchen druckbare Tasten ohne Cmd/Strg (ShortcutOverride)
+    add('viewer_caption', 'viewer', ['I'], 'Beschriften (Panel zeigen, in die Beschreibung)')
+    add('viewer_snapshot_take', 'viewer', ['Ctrl+Shift+C'], 'Beschriftung kopieren (IPTC-Snapshot)')
+    add('viewer_snapshot_paste', 'viewer', ['Ctrl+Shift+V'], 'Beschriftung einfügen')
     return b
 
 
