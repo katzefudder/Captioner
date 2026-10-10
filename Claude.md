@@ -65,6 +65,9 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   liegt in `FolderTab`; `MainWindow` reicht diese Namen per Property an den aktiven Tab
   durch (`_tab_attribute`). Scan-Signale gehen an den Tab des sendenden Workers
   (`_scanning_tab`), nie an den aktiven.
+- `open_folders()` ist der Einstieg für Dialog, Drop und Kommandozeile: ein Ordner ohne eigene
+  Bilder wird über `scanner.image_folders()` in seine Bild-Unterordner aufgelöst (Karte →
+  `DCIM/100…`), außer bei `Settings.recursive`. Mehr als `MANY_FOLDERS` nur nach Rückfrage.
 - Galerie-Kürzel hängen am `QTabWidget` (gelten in jedem Tab), nicht an einer Galerie.
 - **Kopieren, nie verschieben.** Drop auf Reiter oder Galerie eines anderen Tabs kopiert die
   beim Drag-Start gemerkten Items (`_drag_items`, nach `build_drag_mime`, also nach
@@ -150,7 +153,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 132 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 136 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

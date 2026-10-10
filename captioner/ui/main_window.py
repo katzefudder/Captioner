@@ -103,8 +103,10 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self.refresh_templates(settings.last_template)
         self.load_roster()
-        if folder:
-            self.open_folder(folder)
+        # Ein Ordner (str/Path) oder eine Liste, z. B. von der Kommandozeile
+        folders = [folder] if isinstance(folder, (str, Path)) else list(folder or [])
+        if folders:
+            self.open_folders(folders)
 
     # --- Aufbau ---------------------------------------------------------------
 
@@ -303,7 +305,31 @@ class MainWindow(QMainWindow):
         start = self.folder or self.settings.last_folder or str(Path.home())
         folder = QFileDialog.getExistingDirectory(self, 'Ordner öffnen', start)
         if folder:
-            self.open_folder(folder, new_tab=new_tab)
+            self.open_folders([folder], new_tab=new_tab)
+
+    # Mehr Tabs auf einmal nur nach Rueckfrage (z. B. versehentlich ~/Pictures gewaehlt)
+    MANY_FOLDERS = 8
+
+    def open_folders(self, folders, new_tab=False):
+        """
+        Jeder Ordner ein Tab. Ein Ordner ohne eigene Bilder (Karte, DCIM) oeffnet seine
+        Unterordner mit Bildern, ausser "Unterordner mit einlesen" ist an.
+        """
+        expanded = []
+        for folder in folders:
+            found = [] if self.settings.recursive else scanner.image_folders(folder)
+            expanded += [str(f) for f in found] or [str(folder)]
+        if len(expanded) > self.MANY_FOLDERS:
+            answer = QMessageBox.question(
+                self, 'Viele Ordner', f'{len(expanded)} Ordner mit Bildern gefunden. Alle in Tabs öffnen?\n\n'
+                + '\n'.join(expanded[:10]) + ('\n…' if len(expanded) > 10 else ''))
+            if answer != QMessageBox.StandardButton.Yes:
+                return []
+        tabs = [self.open_folder(folder, new_tab=new_tab and position == 0)
+                for position, folder in enumerate(expanded)]
+        if tabs:
+            self.tabs.setCurrentWidget(tabs[0])
+        return tabs
 
     def open_folder(self, folder, new_tab=False):
         """In einem neuen Tab; ein leerer aktueller Tab wird benutzt. Schon offen: dorthin wechseln."""
@@ -809,8 +835,7 @@ class MainWindow(QMainWindow):
     def dropEvent(self, event):
         paths = [Path(u.toLocalFile()) for u in event.mimeData().urls() if u.isLocalFile()]
         if paths and all(p.is_dir() for p in paths):
-            for path in paths:
-                self.open_folder(path, new_tab=True)
+            self.open_folders(paths)
             return
         for path in paths:
             if path.suffix.lower() == '.toml':
@@ -1159,10 +1184,10 @@ def run(argv):
     except ExifToolError as e:
         QMessageBox.critical(None, 'ExifTool fehlt', str(e))
         return 1
-    folder = argv[1] if len(argv) > 1 else None
+    folders = [arg for arg in argv[1:] if arg]  # make run ohne FOLDER uebergibt ""
     from .resources import app_icon
     app.setWindowIcon(app_icon())
-    window = MainWindow(settings, folder)
+    window = MainWindow(settings, folders)
     app.aboutToQuit.connect(window.shutdown)
     window.show()
     return app.exec()

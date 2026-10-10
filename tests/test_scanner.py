@@ -54,3 +54,17 @@ def test_sort_by_capture_time_with_subseconds():
     items = [a, c, b]
     scanner.sort_items(items)
     assert [i.key for i in items] == ['b', 'a', 'c']
+
+
+def test_image_folders_on_a_card(tmp_path):
+    card = tmp_path / 'NIKON Z 9'
+    for sub in ('DCIM/101NCZ_9', 'DCIM/100NCZ_9', '.Trashes/501'):
+        (card / sub).mkdir(parents=True)
+        make_jpeg(card / sub / 'DSC_0001.JPG')
+    (card / 'MISC').mkdir()
+    (card / 'MISC' / 'readme.txt').write_text('x')
+    (card / 'DCIM' / '100NCZ_9' / 'DSC_0002.NEF').write_bytes(b'raw')
+    assert scanner.image_folders(card) == [card / 'DCIM' / '100NCZ_9', card / 'DCIM' / '101NCZ_9']
+    assert scanner.image_folders(card / 'DCIM' / '100NCZ_9') == [card / 'DCIM' / '100NCZ_9']
+    assert scanner.image_folders(card / 'MISC') == []
+    assert scanner.image_folders(tmp_path / 'fehlt') == []

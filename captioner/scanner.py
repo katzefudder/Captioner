@@ -122,6 +122,46 @@ def scan(folder, recursive=False):
     return items
 
 
+def has_images(folder):
+    """Liegt direkt in diesem Ordner mindestens eine Bilddatei?"""
+    try:
+        with os.scandir(folder) as entries:
+            return any(not e.name.startswith('.') and e.is_file()
+                       and os.path.splitext(e.name)[1].lower() in IMAGE_EXTENSIONS for e in entries)
+    except OSError:
+        return False
+
+
+def image_folders(root, max_depth=3):
+    """
+    Ordner mit Bildern unter root: root selbst, wenn es Bilder enthaelt, sonst die
+    Unterordner mit Bildern (z. B. Karte -> DCIM/100NCZ_9, DCIM/101NCZ_9), sortiert.
+    Versteckte Ordner (.Trashes, .Spotlight-V100) werden uebersprungen.
+    """
+    root = Path(root)
+    if has_images(root):
+        return [root]
+    found = []
+
+    def walk(directory, depth):
+        if depth > max_depth:
+            return
+        try:
+            with os.scandir(directory) as entries:
+                subdirs = sorted((e.path for e in entries if e.is_dir() and not e.name.startswith('.')),
+                                 key=str.casefold)
+        except OSError:
+            return
+        for path in subdirs:
+            if has_images(path):
+                found.append(Path(path))
+            else:
+                walk(path, depth + 1)
+
+    walk(root, 1)
+    return found
+
+
 def sort_items(items):
     """Nach Aufnahmezeit inkl. Subsekunden; ohne Zeit ans Ende, dann nach Name."""
     items.sort(key=lambda i: (i.taken_at == '', i.taken_at, i.name.lower()))

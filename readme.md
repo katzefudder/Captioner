@@ -109,9 +109,16 @@ Hardened Runtime braucht.
 ## Mehrere Ordner (Tabs)
 
 Jeder geöffnete Ordner bekommt einen Tab, z. B. je Ordner auf zwei Speicherkarten
-(„NIKON Z 9 › 100NCZ_9“). Neuer Tab: `+` rechts neben den Reitern, `⌘O` oder mehrere
-Ordner aus dem Finder aufs Fenster ziehen. Ein schon offener Ordner wird nur in den
-Vordergrund geholt. Jeder Tab hat eigene Seite und Auswahl; Filter und Beschriftungs-Panel
+(„NIKON Z 9 › 100NCZ_9“). Neuer Tab: `+` rechts neben den Reitern oder `⌘O`. Mehrere
+Ordner auf einmal: im Finder markieren und aufs Fenster ziehen, oder auf der
+Kommandozeile `python -m captioner <ordner> <ordner> …`.
+
+**Ganze Karte öffnen:** Enthält der gewählte oder gezogene Ordner selbst keine Bilder,
+aber Unterordner mit Bildern (die Karte oder `DCIM`), öffnet jeder dieser Unterordner einen
+eigenen Tab. Zwei Karten aus dem Finder aufs Fenster ziehen öffnet also alle Bildordner
+beider Karten. Ab mehr als 8 Ordnern fragt die App vorher. Ist „Unterordner mit einlesen“
+eingeschaltet, wird der Ordner stattdessen als ein Tab mit allen Unterordnern geöffnet.
+Ein schon offener Ordner wird nur in den Vordergrund geholt. Jeder Tab hat eigene Seite und Auswahl; Filter und Beschriftungs-Panel
 gelten für den aktiven Tab.
 
 **Kopieren zwischen Tabs:** Bilder aus der Galerie auf den Reiter eines anderen Tabs ziehen

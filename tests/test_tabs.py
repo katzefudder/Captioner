@@ -1,6 +1,7 @@
 """Ordner in Tabs, Kopieren per Drop auf einen anderen Tab (offscreen)."""
 import os
 import time
+from pathlib import Path
 
 import pytest
 
@@ -157,3 +158,61 @@ def test_drop_on_own_folder_does_nothing(window, cards):
     window.build_drag_mime()
     window.copy_dragged_to(source)
     assert window.copy_worker is None
+
+
+def two_cards(tmp_path):
+    cards = []
+    for card, subs in (('NIKON Z 9', ('100NCZ_9', '101NCZ_9')), ('NIKON Z 8', ('100NCZ_8',))):
+        for sub in subs:
+            folder = tmp_path / card / 'DCIM' / sub
+            folder.mkdir(parents=True)
+            make_jpeg(folder / 'DSC_0001.JPG')
+        cards.append(tmp_path / card)
+    return cards
+
+
+def drop_folders(window, widget, folders):
+    from PySide6.QtCore import QMimeData, QPointF, QUrl, Qt
+    from PySide6.QtGui import QDragEnterEvent, QDropEvent
+    mime = QMimeData()
+    mime.setUrls([QUrl.fromLocalFile(str(f)) for f in folders])
+    point = widget.rect().center()
+    enter = QDragEnterEvent(point, Qt.DropAction.CopyAction, mime, Qt.MouseButton.LeftButton,
+                            Qt.KeyboardModifier.NoModifier)
+    QtWidgets.QApplication.sendEvent(widget, enter)
+    assert enter.isAccepted()
+    drop = QDropEvent(QPointF(point), Qt.DropAction.CopyAction, mime, Qt.MouseButton.LeftButton,
+                      Qt.KeyboardModifier.NoModifier)
+    window.dropEvent(drop)
+
+
+def test_dropping_two_cards_opens_their_image_folders(window, tmp_path):
+    cards = two_cards(tmp_path)
+    window.show()
+    # auf die Galerie fallen gelassen: die reicht Ordner ans Fenster weiter
+    drop_folders(window, window.view.viewport(), cards)
+    folders = [Path(window.tabs.widget(i).folder) for i in range(window.tabs.count())]
+    # je Bildordner ein Tab, kein leerer Tab bleibt stehen, der erste ist aktiv
+    assert [(f.parent.parent.name, f.name) for f in folders] == [
+        ('NIKON Z 9', '100NCZ_9'), ('NIKON Z 9', '101NCZ_9'), ('NIKON Z 8', '100NCZ_8')]
+    assert window.tab.folder == str(folders[0])
+
+
+def test_recursive_setting_opens_the_card_as_one_tab(window, tmp_path):
+    cards = two_cards(tmp_path)
+    window.settings.recursive = True
+    window.open_folders(cards[:1])
+    assert window.tabs.count() == 1 and window.folder == str(cards[0])
+    assert scanned(window.tab) and len(window.all_items) == 2
+
+
+def test_many_folders_ask_first(window, tmp_path, monkeypatch):
+    root = tmp_path / 'Bilder'
+    for n in range(window.MANY_FOLDERS + 1):
+        (root / f'{n:02d}').mkdir(parents=True)
+        make_jpeg(root / f'{n:02d}' / 'a.jpg')
+    asked = []
+    monkeypatch.setattr(QtWidgets.QMessageBox, 'question',
+                        lambda *args: asked.append(args[2]) or QtWidgets.QMessageBox.StandardButton.No)
+    assert window.open_folders([root]) == []
+    assert asked and window.tabs.count() == 1 and window.folder is None
