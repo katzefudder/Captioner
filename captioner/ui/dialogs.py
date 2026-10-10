@@ -189,6 +189,7 @@ class SettingsDialog(QDialog):
         self.setMinimumWidth(620)
         self.settings = settings
         form = QFormLayout(self)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         self.sources = RosterSourceList(settings.roster_sources)
         self.ttl = QSpinBox(minimum=0, maximum=24 * 60, value=settings.roster_cache_ttl_minutes, suffix=' min')

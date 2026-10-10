@@ -177,6 +177,8 @@ class CaptionEditor(QWidget):
         layout.addWidget(self.apply_button)
 
         form = QFormLayout()
+        # macOS laesst Felder sonst auf Mindestbreite (Titel, Stadt, Ort waren abgeschnitten)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         self.headline = QLineEdit()
         self.headline.setPlaceholderText('DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg')
         # Teams fuer die Code-Vorschlaege, wenn das Template keine vorgibt

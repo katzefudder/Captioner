@@ -81,6 +81,7 @@ class PlacePickerDialog(QDialog):
         layout.addWidget(self.status)
 
         form = QFormLayout()
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         self.city = QLineEdit(place.city if place else '')
         self.sublocation = QLineEdit(place.sublocation if place else '')
         self.city.setCompleter(place_completer(book, self))

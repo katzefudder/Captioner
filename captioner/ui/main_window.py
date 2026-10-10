@@ -1018,16 +1018,17 @@ class MainWindow(QMainWindow):
     # samt Inhalt, Kuerzeln (haengen am Panel) und Template-Auswahl.
 
     def _editor_in_viewer(self):
-        return self.viewer is not None and self.editor.parent() is self.viewer.caption_slot
+        return self.viewer is not None and self.viewer.caption_slot.widget() is self.editor
 
     def _move_editor(self, into_viewer):
         if into_viewer == self._editor_in_viewer():
             return
         if into_viewer:
             self._editor_sizes = self.main_splitter.sizes()
-            self.viewer.caption_slot.layout().addWidget(self.editor)
+            self.viewer.caption_slot.setWidget(self.editor)
         else:
             had_focus = self.editor.isAncestorOf(QApplication.focusWidget())
+            self.viewer.caption_slot.takeWidget()   # sonst loescht die Scrollflaeche das Panel mit
             self.main_splitter.insertWidget(1, self.editor)
             self.main_splitter.setSizes(getattr(self, '_editor_sizes', [1080, 420]))
             if had_focus:

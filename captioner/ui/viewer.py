@@ -15,8 +15,8 @@ from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPixmap
 import html
 
-from PySide6.QtWidgets import (QDialog, QHBoxLayout, QLabel, QPushButton, QSlider, QSplitter,
-                               QTextBrowser, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QSlider,
+                               QSplitter, QTextBrowser, QVBoxLayout, QWidget)
 
 from .. import details as details_module
 
@@ -323,18 +323,21 @@ class Viewer(QDialog):
         self.info.setWordWrap(True)
         self.info.setContentsMargins(12, 6, 12, 10)
         self.info_panel = InfoPanel()
-        # Platz fuer das Beschriftungs-Panel des Hauptfensters (wird hierher umgehaengt)
-        self.caption_slot = QWidget()
-        self.caption_slot.setMinimumWidth(380)
+        # Platz fuer das Beschriftungs-Panel des Hauptfensters (wird hierher umgehaengt).
+        # Scrollbar statt Quetschen: das Panel ist oft hoeher als die Grossansicht
+        self.caption_slot = QScrollArea()
+        self.caption_slot.setWidgetResizable(True)
+        self.caption_slot.setFrameShape(QFrame.Shape.NoFrame)
+        self.caption_slot.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.caption_slot.setMinimumWidth(420)
         self.caption_slot.setStyleSheet('background: palette(window); color: palette(window-text);')
-        QVBoxLayout(self.caption_slot).setContentsMargins(8, 8, 8, 8)
         self.caption_slot.hide()
         self.splitter = QSplitter()
         self.splitter.addWidget(self.zoom)
         self.splitter.addWidget(self.caption_slot)
         self.splitter.addWidget(self.info_panel)
         self.splitter.setStretchFactor(0, 1)
-        self.splitter.setSizes([1060, 420, 340])
+        self.splitter.setSizes([1000, 480, 340])
         layout.addWidget(self.splitter, 1)
         layout.addLayout(self._zoom_bar())
         layout.addWidget(self.info)
