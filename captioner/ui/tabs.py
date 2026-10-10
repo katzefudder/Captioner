@@ -4,9 +4,9 @@ Ziehen von Bildern auf einen anderen Tab (Reiter oder Galerie) kopiert sie dorth
 """
 from pathlib import Path
 
-from PySide6.QtCore import QThread, Qt, Signal
-from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton, QTabBar,
-                               QToolButton, QVBoxLayout, QWidget)
+from PySide6.QtCore import QObject, QThread, Qt, Signal
+from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton,
+                               QStackedWidget, QTabBar, QToolButton, QVBoxLayout, QWidget)
 
 from .. import transfer
 from .gallery import GalleryModel, GalleryView, TileDelegate
@@ -104,6 +104,79 @@ class FolderTabBar(QTabBar):
             self.files_dropped.emit(index)
         else:
             super().dropEvent(event)
+
+
+class FolderTabs(QObject):
+    """
+    Reiter und Galerien getrennt, damit die Reiter oben ueber die ganze Fensterbreite
+    laufen koennen (QTabWidget klebt sie an die Galerie). API wie QTabWidget, soweit
+    gebraucht.
+    """
+    currentChanged = Signal(int)
+    tabCloseRequested = Signal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.bar = FolderTabBar()
+        self.stack = QStackedWidget()
+        self.bar.currentChanged.connect(self._on_current_changed)
+        self.bar.tabCloseRequested.connect(self.tabCloseRequested)
+        self.bar.tabMoved.connect(self._on_tab_moved)
+
+    def _on_current_changed(self, index):
+        if 0 <= index < self.stack.count():
+            self.stack.setCurrentIndex(index)
+        self.currentChanged.emit(index)
+
+    def _on_tab_moved(self, source, target):
+        widget = self.stack.widget(source)
+        current = self.stack.currentWidget()
+        self.stack.removeWidget(widget)
+        self.stack.insertWidget(target, widget)
+        self.stack.setCurrentWidget(current)
+
+    def addTab(self, widget, title):
+        self.stack.addWidget(widget)
+        return self.bar.addTab(title)
+
+    def removeTab(self, index):
+        widget = self.stack.widget(index)
+        self.stack.removeWidget(widget)
+        self.bar.removeTab(index)
+        if self.bar.currentIndex() >= 0:
+            self.stack.setCurrentIndex(self.bar.currentIndex())
+
+    def count(self):
+        return self.stack.count()
+
+    def widget(self, index):
+        return self.stack.widget(index)
+
+    def currentWidget(self):
+        return self.stack.widget(self.bar.currentIndex())
+
+    def currentIndex(self):
+        return self.bar.currentIndex()
+
+    def indexOf(self, widget):
+        return self.stack.indexOf(widget)
+
+    def setCurrentIndex(self, index):
+        self.bar.setCurrentIndex(index)
+
+    def setCurrentWidget(self, widget):
+        index = self.indexOf(widget)
+        if index >= 0:
+            self.bar.setCurrentIndex(index)
+
+    def setTabText(self, index, text):
+        self.bar.setTabText(index, text)
+
+    def setTabToolTip(self, index, text):
+        self.bar.setTabToolTip(index, text)
+
+    def tabText(self, index):
+        return self.bar.tabText(index)
 
 
 class ConflictDialog(QDialog):

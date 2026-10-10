@@ -68,7 +68,12 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - `open_folders()` ist der Einstieg für Dialog, Drop und Kommandozeile: ein Ordner ohne eigene
   Bilder wird über `scanner.image_folders()` in seine Bild-Unterordner aufgelöst (Karte →
   `DCIM/100…`), außer bei `Settings.recursive`. Mehr als `MANY_FOLDERS` nur nach Rückfrage.
-- Galerie-Kürzel hängen am `QTabWidget` (gelten in jedem Tab), nicht an einer Galerie.
+- Reiter (`FolderTabs.bar`) laufen oben über die ganze Fensterbreite, die Galerien liegen im
+  `FolderTabs.stack` darunter; `FolderTabs` bietet die nötige `QTabWidget`-API.
+- Galerie-Kürzel hängen am `FolderTabs.stack` (gelten in jedem Tab), nicht an einer Galerie.
+- Finder → App: Ordner aufs Dock-Symbol bzw. „Öffnen mit“ kommen als `QFileOpenEvent`
+  (`main_window.OpenRequests`, vor dem Fenster installiert, sammelt 250 ms) und gehen an
+  `open_paths()`. Dafür `CFBundleDocumentTypes` (`public.folder`, `public.volume`) in der Spec.
 - **Kopieren, nie verschieben.** Drop auf Reiter oder Galerie eines anderen Tabs kopiert die
   beim Drag-Start gemerkten Items (`_drag_items`, nach `build_drag_mime`, also nach
   `writer.flush()`), immer mit Sidecar. Über `.<name>.captioner-part` + `os.replace`.
@@ -153,7 +158,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 136 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 137 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

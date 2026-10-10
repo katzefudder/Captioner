@@ -216,3 +216,26 @@ def test_many_folders_ask_first(window, tmp_path, monkeypatch):
                         lambda *args: asked.append(args[2]) or QtWidgets.QMessageBox.StandardButton.No)
     assert window.open_folders([root]) == []
     assert asked and window.tabs.count() == 1 and window.folder is None
+
+
+def test_folders_from_finder_open_as_tabs(window, cards, app):
+    """Finder/Dock schicken je Ordner ein QFileOpenEvent an die Application."""
+    from PySide6.QtGui import QFileOpenEvent
+    from captioner.ui.main_window import OpenRequests
+    requests = OpenRequests(app)
+    try:
+        for folder in cards:  # kommen vor dem Fenster an: werden gepuffert
+            QtWidgets.QApplication.sendEvent(app, QFileOpenEvent(str(folder)))
+        assert window.tabs.count() == 1 and window.folder is None
+        requests.set_handler(window.open_paths)
+        assert wait_until(lambda: window.tabs.count() == 2, timeout=5)
+        assert [window.tabs.widget(i).folder for i in range(2)] == [str(f) for f in cards]
+        assert window.tabs.tabText(1) == '100NCZ_9'
+
+        # ein Bild statt eines Ordners: dessen Ordner, schon offen -> kein neuer Tab
+        QtWidgets.QApplication.sendEvent(app, QFileOpenEvent(str(cards[1] / 'DSC_0005.JPG')))
+        assert wait_until(lambda: window.tab is window.tabs.widget(1), timeout=5)
+        assert window.tabs.count() == 2
+    finally:
+        app.removeEventFilter(requests)
+        requests.deleteLater()

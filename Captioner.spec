@@ -89,5 +89,13 @@ app = BUNDLE(
         'NSHighResolutionCapable': True,
         'NSHumanReadableCopyright': 'Florian Dehn',
         'CFBundleDevelopmentRegion': 'de',
+        # Ordner und Karten aus dem Finder: aufs Dock-Symbol ziehen, "Oeffnen mit".
+        # Kommen als QFileOpenEvent an (main_window.OpenRequests), je Ordner ein Tab.
+        'CFBundleDocumentTypes': [{
+            'CFBundleTypeName': 'Ordner',
+            'CFBundleTypeRole': 'Viewer',
+            'LSHandlerRank': 'Alternate',
+            'LSItemContentTypes': ['public.folder', 'public.volume'],
+        }],
     },
 )

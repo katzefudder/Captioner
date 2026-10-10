@@ -6,11 +6,11 @@ import logging
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QItemSelection, QItemSelectionModel, QMimeData, Qt, QUrl
+from PySide6.QtCore import QEvent, QItemSelection, QItemSelectionModel, QMimeData, QObject, Qt, QTimer, QUrl
 from PySide6.QtGui import QAction, QColor, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QHBoxLayout,
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
-                               QTabWidget, QToolButton, QVBoxLayout, QWidget)
+                               QToolButton, QVBoxLayout, QWidget)
 
 from .. import codes, config, geo, metadata, scanner, transfer
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
@@ -23,7 +23,7 @@ from .dialogs import ROSTER_FILE_FILTER, SettingsDialog, ShortcutsDialog, Templa
 from .editor import CaptionEditor
 from .viewer import Viewer
 from .gallery import CLASS_COLORS, ItemRole
-from .tabs import CopyWorker, FolderTab, FolderTabBar, ask_conflicts, tab_title
+from .tabs import CopyWorker, FolderTab, FolderTabs, ask_conflicts, tab_title
 from .workers import MetadataWriter, RosterWorker, ScanWorker, ThumbnailLoader
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,44 @@ class RawCaptionStore:
             self.path.write_text(json.dumps(self.data, ensure_ascii=False), encoding='utf-8')
         except OSError as e:
             logger.warning('Rohtexte nicht gespeichert: %s', e)
+
+
+class OpenRequests(QObject):
+    """
+    macOS: Ordner aus dem Finder (aufs Dock-Symbol gezogen, "Oeffnen mit") kommen als
+    QFileOpenEvent an der Application an, je Ordner eins, beim Start auch vor dem
+    Fenster. Sie werden kurz gesammelt und dann gemeinsam uebergeben.
+    """
+    DELAY_MS = 250
+
+    def __init__(self, app):
+        super().__init__(app)
+        self.paths = []
+        self.handler = None
+        self.timer = QTimer(self)
+        self.timer.setSingleShot(True)
+        self.timer.setInterval(self.DELAY_MS)
+        self.timer.timeout.connect(self.deliver)
+        app.installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.Type.FileOpen:
+            if event.file():
+                self.paths.append(event.file())
+                self.timer.start()
+            return True
+        return False
+
+    def set_handler(self, handler):
+        self.handler = handler
+        if self.paths:
+            self.timer.start()
+
+    def deliver(self):
+        if self.handler is None or not self.paths:
+            return
+        paths, self.paths = self.paths, []
+        self.handler(paths)
 
 
 def _tab_attribute(name):
@@ -150,24 +188,26 @@ class MainWindow(QMainWindow):
         self.tag_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
         self.uncaptioned_filter.toggled.connect(lambda: self.apply_filter(True))
 
-        self.tabs = QTabWidget()
-        tab_bar = FolderTabBar()
-        tab_bar.files_dropped.connect(lambda index: self.copy_dragged_to(self.tabs.widget(index)))
-        self.tabs.setTabBar(tab_bar)
-        self.tabs.setDocumentMode(True)
+        # Reiter oben ueber die ganze Fensterbreite, Galerien darunter links
+        self.tabs = FolderTabs(self)
+        self.tabs.bar.files_dropped.connect(lambda index: self.copy_dragged_to(self.tabs.widget(index)))
         self.tabs.tabCloseRequested.connect(self.close_tab)
         self.tabs.currentChanged.connect(self._on_tab_changed)
         new_tab_button = QToolButton(text='+')
         new_tab_button.setToolTip('Ordner in neuem Tab öffnen')
         new_tab_button.clicked.connect(lambda: self.choose_folder(new_tab=True))
-        self.tabs.setCornerWidget(new_tab_button, Qt.Corner.TopRightCorner)
+        tab_row = QHBoxLayout()
+        tab_row.setSpacing(4)
+        tab_row.addWidget(self.tabs.bar, 1)
+        tab_row.addWidget(new_tab_button)
+        outer.addLayout(tab_row)
         self.new_tab()
 
         left = QWidget()
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.addLayout(filters)
-        left_layout.addWidget(self.tabs, 1)
+        left_layout.addWidget(self.tabs.stack, 1)
 
         self.editor = CaptionEditor()
         self.editor.setMinimumWidth(380)
@@ -257,7 +297,7 @@ class MainWindow(QMainWindow):
         }
         widget_ctx = Qt.ShortcutContext.WidgetWithChildrenShortcut
         # Galerie-Kuerzel gelten in jedem Tab (Fokus in einer der Galerien oder auf den Reitern)
-        self._bind(g, self.tabs, widget_ctx)
+        self._bind(g, self.tabs.stack, widget_ctx)
         self._bind(w, self, Qt.ShortcutContext.WindowShortcut)
         self._bind(e, self.editor, widget_ctx)
 
@@ -306,6 +346,19 @@ class MainWindow(QMainWindow):
         folder = QFileDialog.getExistingDirectory(self, 'Ordner öffnen', start)
         if folder:
             self.open_folders([folder], new_tab=new_tab)
+
+    def open_paths(self, paths):
+        """Vom Finder: Ordner werden Tabs, bei Bilddateien wird ihr Ordner geoeffnet."""
+        folders = []
+        for path in map(Path, paths):
+            folder = path if path.is_dir() else path.parent if path.suffix.lower() in scanner.IMAGE_EXTENSIONS else None
+            if folder is not None and str(folder) not in folders:
+                folders.append(str(folder))
+        if folders:
+            self.open_folders(folders)
+        self.showNormal() if self.isMinimized() else None
+        self.raise_()
+        self.activateWindow()
 
     # Mehr Tabs auf einmal nur nach Rueckfrage (z. B. versehentlich ~/Pictures gewaehlt)
     MANY_FOLDERS = 8
@@ -1163,6 +1216,7 @@ def run(argv):
 
     reap_orphans()
     app = QApplication(argv)
+    open_requests = OpenRequests(app)  # vor allem anderen, der Finder schickt sofort
     # Qt-eigene Texte (Schliessen, Abbrechen, Dateidialoge) in der Systemsprache
     from PySide6.QtCore import QLibraryInfo, QLocale, QTranslator
     translator = QTranslator(app)
@@ -1188,6 +1242,7 @@ def run(argv):
     from .resources import app_icon
     app.setWindowIcon(app_icon())
     window = MainWindow(settings, folders)
+    open_requests.set_handler(window.open_paths)
     app.aboutToQuit.connect(window.shutdown)
     window.show()
     return app.exec()
