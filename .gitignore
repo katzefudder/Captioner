@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Poetry-Venv (poetry.toml: in-project = true)
+.venv/
+
+# Tests und Werkzeuge
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# PyInstaller und Installer (make bundle / make installer)
+# Captioner.spec ist Quelltext und bleibt eingecheckt.
+build/
+dist/
+*.dmg
+*.pkg
+
+# ExifTool, von make heruntergeladen (make clean entfernt es)
+vendor/
+
+# Icon-Zwischenstand von iconutil (die erzeugten Icons sind eingecheckt)
+*.iconset/
+
+# macOS
+.DS_Store
+._*
+
+# Editoren
+.idea/
+.vscode/
+*.swp
+*~
+
+# Lokale Claude-Code-Einstellungen
+.claude/settings.local.json
+
+# Logs
+*.log

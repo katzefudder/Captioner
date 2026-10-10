@@ -1,0 +1,124 @@
+"""
+Tastenkuerzel wie in einem Workflow-Tool fuer die Auswahl von Fotos.
+
+Die Windows-Belegung ist keine reine Uebersetzung von Cmd nach Strg (Sterne auf Alt,
+"Speichern und weiter" auf Alt+] bzw. Strg+M), deshalb zwei Tabellen.
+
+Qt-Schreibweise: Auf macOS ist "Ctrl" die Command-Taste, "Meta" die Control-Taste
+und "Alt" die Option-Taste. Auf Windows bedeuten sie, was draufsteht.
+
+Kontexte:
+  gallery  - nur wenn die Galerie den Fokus hat (Einzeltasten wie T, I, +, -
+             duerfen beim Tippen im Beschreibungsfeld nicht ausloesen)
+  editor   - im Beschriftungs-Panel
+  window   - im ganzen Fenster
+  viewer   - in der Grossansicht ("Preview Window")
+"""
+import sys
+from dataclasses import dataclass
+
+MAC = sys.platform == 'darwin'
+
+
+@dataclass(frozen=True)
+class Binding:
+    command: str
+    context: str
+    keys: tuple
+    label: str
+
+
+def _bindings(mac):
+    rating = 'Meta' if mac else 'Alt'
+    b = []
+
+    def add(command, context, keys, label):
+        b.append(Binding(command, context, tuple(keys), label))
+
+    # Kontaktbogen / Galerie
+    for n in range(1, 9):
+        add(f'color_{n}', 'gallery', [f'Ctrl+{n}'], f'Farbklasse {n}')
+    add('color_0', 'gallery', ['Ctrl+0'], 'Farbklasse entfernen')
+    for n in range(1, 6):
+        add(f'rating_{n}', 'gallery', [f'{rating}+{n}'], f'{n} Stern' + ('e' if n > 1 else ''))
+    add('rating_0', 'gallery', [f'{rating}+0'], 'Sterne entfernen')
+    add('tag_toggle', 'gallery', ['T'], 'Tag an/aus')
+    add('tag_on', 'gallery', ['+'], 'Tag an')
+    add('tag_off', 'gallery', ['-'], 'Tag aus')
+    add('preview', 'gallery', ['Space'], 'Großansicht')
+    add('info', 'gallery', ['I', 'Return'], 'Beschriftung bearbeiten (IPTC Info)')
+    add('last_previewed', 'gallery', ['L'], 'Zuletzt angesehenes Bild auswählen')
+    add('select_all', 'gallery', ['Ctrl+A'], 'Alle auswählen (alle Seiten)')
+    add('deselect_all', 'gallery', ['Ctrl+D'], 'Auswahl aufheben')
+    add('select_tagged', 'gallery', ['Ctrl+T'], 'Getaggte auswählen')
+    add('home', 'gallery', ['Home'], 'Zum ersten Bild')
+    add('end', 'gallery', ['End'], 'Zum letzten Bild')
+    add('page_prev', 'gallery', ['PgUp', 'Ctrl+Shift+[' if mac else 'Ctrl+Left'], 'Vorherige Seite')
+    add('page_next', 'gallery', ['PgDown', 'Ctrl+Shift+]' if mac else 'Ctrl+Right'], 'Nächste Seite')
+    add('snapshot_take', 'gallery', ['Ctrl+Alt+C' if mac else 'Alt+C'], 'IPTC-Snapshot nehmen')
+    add('snapshot_paste', 'gallery', ['Ctrl+Alt+V' if mac else 'Alt+V'], 'IPTC-Snapshot in Auswahl einfügen')
+    # Unter Windows liegt "Set Code Replacements" auf Strg+Alt+C, das im Panel
+    # "Template anwenden" ist; deshalb nur im Galerie-Kontext
+    add('roster_settings', 'gallery', ['Ctrl+Meta+C' if mac else 'Ctrl+Alt+C'], 'Roster-Quellen einstellen')
+
+    # Ansicht / Template / Datei
+    add('view_tagged', 'window', ['F3'], 'Nur getaggte zeigen')
+    add('view_untagged', 'window', ['F4'], 'Nur nicht getaggte zeigen')
+    add('template_load', 'window', ['Ctrl+Alt+L'], 'Template öffnen')
+    add('template_save', 'window', ['Ctrl+Alt+S'], 'Template speichern unter')
+    add('template_apply', 'window', ['Ctrl+Alt+A'], 'Template auf Auswahl anwenden')
+    add('roster_reload', 'window', ['Ctrl+Meta+Shift+C' if mac else 'Ctrl+Alt+Shift+C'], 'Roster neu laden')
+    add('shortcuts', 'window', ['F1'], 'Diese Übersicht')
+
+    # Beschriftungs-Panel (Metadata (IPTC) Info)
+    add('save_next', 'editor', ['Ctrl+]', 'Ctrl+N'] if mac else ['Alt+]', 'Ctrl+M'], 'Speichern und nächstes Bild')
+    add('save_prev', 'editor', ['Ctrl+[', 'Ctrl+B'] if mac else ['Alt+[', 'Alt+B'], 'Speichern und vorheriges Bild')
+    add('save_close', 'editor', ['Ctrl+Return'], 'Speichern und zurück zur Galerie')
+    add('next_nosave', 'editor', ['Ctrl+Shift+]', 'Ctrl+Shift+N'] if mac else ['Alt+Shift+]', 'Ctrl+Shift+N'],
+        'Nächstes Bild ohne Speichern')
+    add('prev_nosave', 'editor', ['Ctrl+Shift+[', 'Ctrl+Shift+B'] if mac else ['Alt+Shift+[', 'Ctrl+Shift+B'],
+        'Vorheriges Bild ohne Speichern')
+    add('editor_apply_template', 'editor', ['Ctrl+Alt+C'], 'Template anwenden')
+
+    # Grossansicht (Preview Window)
+    add('viewer_close', 'viewer', ['Esc', 'Ctrl+W' if mac else 'Alt+W', 'Space'], 'Großansicht schließen')
+    for n in range(1, 9):
+        add(f'viewer_color_{n}', 'viewer', [f'Ctrl+{n}'], f'Farbklasse {n}')
+    add('viewer_color_0', 'viewer', ['Ctrl+0'], 'Farbklasse entfernen')
+    for n in range(1, 6):
+        add(f'viewer_rating_{n}', 'viewer', [f'{rating}+{n}'], f'{n} Stern' + ('e' if n > 1 else ''))
+    add('viewer_rating_0', 'viewer', [f'{rating}+0'], 'Sterne entfernen')
+    add('viewer_tag_toggle', 'viewer', ['T'], 'Tag an/aus')
+    add('viewer_zoom_toggle', 'viewer', ['Z', '*'], 'Zoom an/aus (100 %)')
+    add('viewer_zoom_in', 'viewer', ['+'], 'Heranzoomen')
+    add('viewer_zoom_out', 'viewer', ['-'], 'Herauszoomen')
+    return b
+
+
+BINDINGS = _bindings(MAC)
+BY_COMMAND = {binding.command: binding for binding in BINDINGS}
+
+# Einzeltasten 0-8 je nach Einstellung: aus, fuer
+# Sterne (0-5) oder fuer Farbklassen (0-8). Gilt in Galerie und Grossansicht.
+NUMBER_KEY_MODES = {'off': 'aus', 'rating': 'Sterne (0–5)', 'color': 'Farbklassen (0–8)'}
+
+
+def keys(command):
+    return BY_COMMAND[command].keys
+
+
+def number_key_action(digit, mode):
+    """('rating'|'color', n) fuer eine Ziffer ohne Modifier, oder None."""
+    if mode == 'rating' and 0 <= digit <= 5:
+        return ('rating', digit)
+    if mode == 'color' and 0 <= digit <= 8:
+        return ('color', digit)
+    return None
+
+
+CONTEXT_TITLES = {
+    'gallery': 'Galerie (Kontaktbogen)',
+    'editor': 'Beschriftung (IPTC Info)',
+    'window': 'Überall',
+    'viewer': 'Großansicht',
+}

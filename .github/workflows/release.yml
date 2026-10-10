@@ -1,0 +1,75 @@
+# Baut bei jedem Push auf main die macOS-App (arm64), testet sie und veroeffentlicht
+# DMG und PKG als GitHub-Release. Versionsnummer: <major>.<minor> aus pyproject.toml
+# plus fortlaufende Laufnummer des Workflows, z. B. 0.1.17 (Tag v0.1.17).
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', '.gitignore']
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # Apple Silicon; PySide6 6.12 verlangt ohnehin macOS 26 (siehe Claude.md, Paketierung)
+    runs-on: macos-26
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versionsnummer
+        id: version
+        run: |
+          base=$(python3 -c "import tomllib; v = tomllib.load(open('pyproject.toml', 'rb'))['project']['version']; print('.'.join(v.split('.')[:2]))")
+          version="$base.${{ github.run_number }}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "CAPTIONER_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Captioner $version"
+
+      - uses: actions/setup-python@v5
+        id: python
+        with:
+          python-version: '3.11'
+
+      - name: Poetry und ExifTool
+        run: |
+          pipx install poetry
+          brew install exiftool
+
+      - name: Poetry-Venv aus dem Cache
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ runner.arch }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Gebuendeltes ExifTool aus dem Cache
+        uses: actions/cache@v4
+        with:
+          path: vendor/exiftool
+          key: exiftool-${{ hashFiles('Makefile') }}
+
+      - run: make install
+      - run: make test
+      - run: make installer
+
+      - name: Release veroeffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          min_os=$(plutil -extract LSMinimumSystemVersion raw dist/Captioner.app/Contents/Info.plist)
+          gh release create "v$VERSION" \
+            dist/Captioner-$VERSION-arm64.dmg \
+            dist/Captioner-$VERSION-arm64.pkg \
+            --target "$GITHUB_SHA" \
+            --title "Captioner $VERSION" \
+            --generate-notes \
+            --notes "Mac mit Apple Silicon, macOS $min_os oder neuer. Ad-hoc signiert: nach dem Download einmal Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“, oder \`xattr -dr com.apple.quarantine /Applications/Captioner.app\`."
