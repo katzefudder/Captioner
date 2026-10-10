@@ -290,12 +290,10 @@ class InfoPanel(QTextBrowser):
 
 class Viewer(QDialog):
     """
-    Grossansicht. Pfeiltasten blaettern, Option/Alt+Pfeile verschieben, Ziffern je
-    nach Einstellung; die uebrigen Kuerzel haengt das Hauptfenster als QShortcut an.
+    Grossansicht. Pfeiltasten blaettern, Option/Alt+Pfeile verschieben; die uebrigen Kuerzel haengt das Hauptfenster als QShortcut an.
     Rechts das Info-Panel mit EXIF/IPTC.
     """
     navigate = Signal(int)
-    digit_pressed = Signal(int)
     info_toggled = Signal(bool)
 
     def __init__(self, parent=None):
@@ -427,7 +425,6 @@ class Viewer(QDialog):
             self.zoom.set_image(image, provisional=False)
 
     def keyPressEvent(self, event):
-        from .gallery import plain_digit
         key = event.key()
         modifiers = event.modifiers()
         if key in (Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down) \
@@ -438,12 +435,9 @@ class Viewer(QDialog):
             dy = {Qt.Key.Key_Up: step, Qt.Key.Key_Down: -step}.get(key, 0)
             self.zoom.pan(dx, dy)
             return
-        digit = plain_digit(event)
         if key == Qt.Key.Key_Right:
             self.navigate.emit(1)
         elif key == Qt.Key.Key_Left:
             self.navigate.emit(-1)
-        elif digit is not None:
-            self.digit_pressed.emit(digit)
         else:
             super().keyPressEvent(event)

@@ -139,7 +139,6 @@ class MainWindow(QMainWindow):
         self.view.setItemDelegate(TileDelegate(self.loader, self.writer, self.view))
         self.view.mime_factory = self.build_drag_mime
         self.view.selectionModel().selectionChanged.connect(self._on_selection_changed)
-        self.view.digit_pressed.connect(self.on_digit)
         self._update_empty_text()
 
         pager = QHBoxLayout()
@@ -259,17 +258,7 @@ class MainWindow(QMainWindow):
                 self._shortcuts.append(shortcut)
 
     def show_shortcuts(self):
-        ShortcutsDialog(self.settings.number_keys, self).exec()
-
-    def on_digit(self, digit):
-        action = keymap.number_key_action(digit, self.settings.number_keys)
-        if action is None:
-            return
-        kind, n = action
-        if kind == 'rating':
-            self.set_rating(n)
-        else:
-            self.set_color_class(n)
+        ShortcutsDialog(self).exec()
 
     # --- Ordner ---------------------------------------------------------------
 
@@ -734,7 +723,6 @@ class MainWindow(QMainWindow):
         if self.viewer is None:
             self.viewer = Viewer(self)
             self.viewer.navigate.connect(self._viewer_navigate)
-            self.viewer.digit_pressed.connect(lambda digit: self._in_viewer(lambda: self.on_digit(digit)))
             self.loader.full_ready.connect(self.viewer.set_image)
             self.loader.details_ready.connect(self.viewer.set_details)
             self.viewer.labels = self.settings.labels

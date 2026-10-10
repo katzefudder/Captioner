@@ -3,7 +3,7 @@ Galerie: eine Seite Kacheln, Tastaturbedienung wie in einem
 Workflow-Tool fuer die Auswahl von Fotos,
 Drag & Drop nach Lightroom (ADR 0001, Punkte 3 und 7).
 """
-from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, Qt, Signal
+from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, Qt
 from PySide6.QtGui import QBrush, QColor, QDrag, QFont, QPainter, QPen
 from PySide6.QtWidgets import QAbstractItemView, QListView, QStyle, QStyledItemDelegate
 
@@ -168,10 +168,7 @@ class TileDelegate(QStyledItemDelegate):
 
 
 class GalleryView(QListView):
-    # Ziffer ohne Modifier; ob sie Sterne oder Farbklassen setzt, entscheidet die
-    # Einstellung (number_keys). Alle anderen Kuerzel
-    # haengen als QShortcut am View, siehe keymap.py.
-    digit_pressed = Signal(int)
+    # Alle Kuerzel haengen als QShortcut am View, siehe keymap.py.
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -225,20 +222,3 @@ class GalleryView(QListView):
             drag.setPixmap(QPixmap.fromImage(image.scaled(
                 120, 120, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)))
         drag.exec(Qt.DropAction.CopyAction, Qt.DropAction.CopyAction)
-
-    def keyPressEvent(self, event):
-        digit = plain_digit(event)
-        if digit is not None:
-            self.digit_pressed.emit(digit)
-            return
-        super().keyPressEvent(event)
-
-
-def plain_digit(event):
-    """Ziffer 0-9 ohne Strg/Cmd/Alt/Control, sonst None."""
-    modifiers = event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier & ~Qt.KeyboardModifier.ShiftModifier
-    if modifiers != Qt.KeyboardModifier.NoModifier:
-        return None
-    if Qt.Key.Key_0 <= event.key() <= Qt.Key.Key_9:
-        return event.key() - Qt.Key.Key_0
-    return None

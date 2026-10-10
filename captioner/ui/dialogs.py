@@ -104,10 +104,6 @@ class SettingsDialog(QDialog):
         self.recursive = QCheckBox('Unterordner mit einlesen')
         self.recursive.setChecked(settings.recursive)
         self.labels = QLineEdit(', '.join(settings.labels))
-        self.number_keys = QComboBox()
-        for value, text in keymap.NUMBER_KEY_MODES.items():
-            self.number_keys.addItem(text, value)
-        self.number_keys.setCurrentIndex(max(0, self.number_keys.findData(settings.number_keys)))
         self.drag_sidecars = QCheckBox('XMP-Sidecars mit in den Drag legen')
         self.drag_sidecars.setChecked(settings.drag_include_sidecars)
         self.exiftool = QLineEdit(settings.exiftool_path)
@@ -124,7 +120,6 @@ class SettingsDialog(QDialog):
                             'oder „Rot“ (deutsches Lightroom). Klassen ohne Eintrag bekommen kein Label.</small>')
         label_hint.setWordWrap(True)
         form.addRow('', label_hint)
-        form.addRow('Ziffern ohne Modifier setzen', self.number_keys)
         form.addRow('', self.drag_sidecars)
         form.addRow('ExifTool', self.exiftool)
 
@@ -141,7 +136,6 @@ class SettingsDialog(QDialog):
         s.page_size = self.page_size.value()
         s.recursive = self.recursive.isChecked()
         s.labels = _split(self.labels.text()) or s.labels
-        s.number_keys = self.number_keys.currentData()
         s.drag_include_sidecars = self.drag_sidecars.isChecked()
         s.exiftool_path = self.exiftool.text().strip()
         return s
@@ -217,7 +211,7 @@ class RosterSourceList(QWidget):
 class ShortcutsDialog(QDialog):
     """Uebersicht aller Kuerzel, erzeugt aus keymap.BINDINGS - kann nicht veralten."""
 
-    def __init__(self, number_keys, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Tastenkürzel')
         self.resize(640, 720)
@@ -231,9 +225,7 @@ class ShortcutsDialog(QDialog):
                 text = '  oder  '.join(QKeySequence(k).toString(QKeySequence.SequenceFormat.NativeText)
                                        for k in binding.keys)
                 rows.append((binding.label, text))
-        mode = keymap.NUMBER_KEY_MODES.get(number_keys, 'aus')
-        rows.append(('Ziffern ohne Modifier', None))
-        rows.append((f'0–8 in Galerie und Großansicht: {mode}', 'Einstellungen'))
+        rows.append(('Weitere', None))
         rows.append(('Großansicht blättern', '←  →'))
         alt = QKeySequence('Alt+Left').toString(QKeySequence.SequenceFormat.NativeText).replace('←', '').strip()
         rows.append(('Großansicht: Ausschnitt verschieben (mit ⇧ schneller)',

@@ -34,25 +34,17 @@ def test_no_ambiguous_shortcuts(mac):
                 seen[normalized] = binding.command
 
 
-def test_platform_tables_follow_camera_bits():
+def test_platform_tables():
     mac = {b.command: b.keys for b in keymap._bindings(True)}
     win = {b.command: b.keys for b in keymap._bindings(False)}
-    # Farbklasse: Cmd bzw. Strg + Ziffer; Sterne: Control (Mac) bzw. Alt (Windows)
+    # Farbklasse: Cmd bzw. Strg + Ziffer; Sterne: Ziffer ohne Modifier
     assert mac['color_3'] == ('Ctrl+3',) and win['color_3'] == ('Ctrl+3',)
-    assert mac['rating_4'] == ('Meta+4',) and win['rating_4'] == ('Alt+4',)
+    assert mac['rating_4'] == ('4',) and win['rating_4'] == ('4',)
     assert mac['save_next'] == ('Ctrl+]', 'Ctrl+N') and win['save_next'] == ('Alt+]', 'Ctrl+M')
     assert win['snapshot_take'] == ('Alt+C',) and mac['snapshot_take'] == ('Ctrl+Alt+C',)
 
 
-def test_number_key_modes():
-    assert keymap.number_key_action(3, 'off') is None
-    assert keymap.number_key_action(3, 'rating') == ('rating', 3)
-    assert keymap.number_key_action(7, 'rating') is None
-    assert keymap.number_key_action(7, 'color') == ('color', 7)
-
-
 pytestmark_gui = requires_exiftool
-RATING = Qt.KeyboardModifier.MetaModifier if keymap.MAC else Qt.KeyboardModifier.AltModifier
 CMD = Qt.KeyboardModifier.ControlModifier
 
 
@@ -109,23 +101,21 @@ def test_color_class_and_rating(window):
     assert item.meta.color_class == 7 and item.meta.label == ''  # kein Lightroom-Label fuer Klasse 7
     press(window.view, Qt.Key.Key_0, CMD)
     assert item.meta.color_class == 0
-    press(window.view, Qt.Key.Key_4, RATING)
+    press(window.view, Qt.Key.Key_4)
     assert item.meta.rating == 4
-    press(window.view, Qt.Key.Key_0, RATING)
+    press(window.view, Qt.Key.Key_0)
     assert item.meta.rating == 0
 
 
 @requires_exiftool
-def test_single_digit_keys_follow_setting(window):
+def test_digits_set_rating_only(window):
     item = window.filtered[0]
     press(window.view, Qt.Key.Key_3)
-    assert item.meta.rating == 0 and item.meta.color_class == 0  # Default "aus"
-    window.settings.number_keys = 'rating'
-    press(window.view, Qt.Key.Key_3)
+    assert item.meta.rating == 3 and item.meta.color_class == 0
+    press(window.view, Qt.Key.Key_7)  # 6-9 ohne Modifier sind nicht belegt
+    assert item.meta.rating == 3 and item.meta.color_class == 0
+    press(window.view, Qt.Key.Key_5, Qt.KeyboardModifier.MetaModifier)  # Control-Ziffer setzt keine Sterne mehr
     assert item.meta.rating == 3
-    window.settings.number_keys = 'color'
-    press(window.view, Qt.Key.Key_2)
-    assert item.meta.color_class == 2 and item.meta.rating == 3
 
 
 @requires_exiftool

@@ -1,8 +1,9 @@
 """
 Tastenkuerzel wie in einem Workflow-Tool fuer die Auswahl von Fotos.
 
-Die Windows-Belegung ist keine reine Uebersetzung von Cmd nach Strg (Sterne auf Alt,
-"Speichern und weiter" auf Alt+] bzw. Strg+M), deshalb zwei Tabellen.
+Sterne liegen auf den Ziffern 1-5 ohne Modifier (0 entfernt sie), Farbklassen auf
+Cmd/Strg + 1-8. Die Windows-Belegung ist keine reine Uebersetzung von Cmd nach Strg
+("Speichern und weiter" auf Alt+] bzw. Strg+M), deshalb zwei Tabellen.
 
 Qt-Schreibweise: Auf macOS ist "Ctrl" die Command-Taste, "Meta" die Control-Taste
 und "Alt" die Option-Taste. Auf Windows bedeuten sie, was draufsteht.
@@ -29,7 +30,6 @@ class Binding:
 
 
 def _bindings(mac):
-    rating = 'Meta' if mac else 'Alt'
     b = []
 
     def add(command, context, keys, label):
@@ -40,8 +40,8 @@ def _bindings(mac):
         add(f'color_{n}', 'gallery', [f'Ctrl+{n}'], f'Farbklasse {n}')
     add('color_0', 'gallery', ['Ctrl+0'], 'Farbklasse entfernen')
     for n in range(1, 6):
-        add(f'rating_{n}', 'gallery', [f'{rating}+{n}'], f'{n} Stern' + ('e' if n > 1 else ''))
-    add('rating_0', 'gallery', [f'{rating}+0'], 'Sterne entfernen')
+        add(f'rating_{n}', 'gallery', [f'{n}'], f'{n} Stern' + ('e' if n > 1 else ''))
+    add('rating_0', 'gallery', ['0'], 'Sterne entfernen')
     add('tag_toggle', 'gallery', ['T'], 'Tag an/aus')
     add('tag_on', 'gallery', ['+'], 'Tag an')
     add('tag_off', 'gallery', ['-'], 'Tag aus')
@@ -86,8 +86,8 @@ def _bindings(mac):
         add(f'viewer_color_{n}', 'viewer', [f'Ctrl+{n}'], f'Farbklasse {n}')
     add('viewer_color_0', 'viewer', ['Ctrl+0'], 'Farbklasse entfernen')
     for n in range(1, 6):
-        add(f'viewer_rating_{n}', 'viewer', [f'{rating}+{n}'], f'{n} Stern' + ('e' if n > 1 else ''))
-    add('viewer_rating_0', 'viewer', [f'{rating}+0'], 'Sterne entfernen')
+        add(f'viewer_rating_{n}', 'viewer', [f'{n}'], f'{n} Stern' + ('e' if n > 1 else ''))
+    add('viewer_rating_0', 'viewer', ['0'], 'Sterne entfernen')
     add('viewer_tag_toggle', 'viewer', ['T'], 'Tag an/aus')
     add('viewer_zoom_toggle', 'viewer', ['Z', '*'], 'Zoom an/aus (100 %)')
     add('viewer_zoom_in', 'viewer', ['+'], 'Heranzoomen')
@@ -98,22 +98,9 @@ def _bindings(mac):
 BINDINGS = _bindings(MAC)
 BY_COMMAND = {binding.command: binding for binding in BINDINGS}
 
-# Einzeltasten 0-8 je nach Einstellung: aus, fuer
-# Sterne (0-5) oder fuer Farbklassen (0-8). Gilt in Galerie und Grossansicht.
-NUMBER_KEY_MODES = {'off': 'aus', 'rating': 'Sterne (0–5)', 'color': 'Farbklassen (0–8)'}
-
 
 def keys(command):
     return BY_COMMAND[command].keys
-
-
-def number_key_action(digit, mode):
-    """('rating'|'color', n) fuer eine Ziffer ohne Modifier, oder None."""
-    if mode == 'rating' and 0 <= digit <= 5:
-        return ('rating', digit)
-    if mode == 'color' and 0 <= digit <= 8:
-        return ('color', digit)
-    return None
 
 
 CONTEXT_TITLES = {

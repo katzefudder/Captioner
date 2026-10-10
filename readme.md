@@ -95,7 +95,7 @@ Hardened Runtime braucht.
 
    `Enter` speichert, `⌘N` bzw. `⌘]` speichert und springt weiter. Unbekannte Codes sind
    rot und verhindern das Speichern. Die Namen der Personen kommen automatisch in die Tags.
-5. **Bewerten und taggen:** `⌘1`–`⌘8` Farbklasse, `Control-1`–`5`
+5. **Bewerten und taggen:** `⌘1`–`⌘8` Farbklasse, `1`–`5`
    Sterne, `T` Tag. Filter oben (oder `F3`/`F4`) zeigen nur die Auswahl.
 6. **In Lightroom ziehen.** Die Auswahl (auch über mehrere Seiten) per Drag & Drop
    ins Lightroom-Raster; Lightroom öffnet den Import-Dialog.
@@ -108,7 +108,7 @@ Belegung wie in einem Workflow-Tool für die Auswahl von Fotos. `F1` (oder
 | Aktion | macOS | Windows |
 |---|---|---|
 | Farbklasse 1–8 / entfernen | `⌘1`–`⌘8` / `⌘0` | `Strg+1`–`8` / `Strg+0` |
-| Sterne 1–5 / entfernen | `Control-1`–`5` / `Control-0` | `Alt+1`–`5` / `Alt+0` |
+| Sterne 1–5 / entfernen | `1`–`5` / `0` | `1`–`5` / `0` |
 | Tag an/aus · an · aus | `T` · `+` · `-` | `T` · `+` · `-` |
 | Großansicht | `Leertaste` | `Leertaste` |
 | Beschriftung bearbeiten | `I` oder `Enter` | `I` oder `Enter` |
@@ -146,8 +146,7 @@ Fotograf, Copyright; Sterne, Farbklasse, Tag und die zugehörigen Dateien. Der T
 markierbar. „Infos" unten rechts blendet das Panel aus, die App merkt sich das. Kamerawerte
 kommen bei RAW+JPG aus der RAW-Datei; die Beschriftung zeigt immer den aktuellen Stand,
 auch direkt nach dem Speichern. 100 % ist
-die volle Auflösung des eingebetteten JPEGs, bei Nikon-NEFs die volle Sensorauflösung. **Ziffern ohne Modifier** sind standardmäßig aus und
-lassen sich in den Einstellungen auf Sterne (0–5) oder Farbklassen (0–8) legen.
+die volle Auflösung des eingebetteten JPEGs, bei Nikon-NEFs die volle Sensorauflösung.
 
 Auf deutschen Tastaturen liegen `[` und `]` auf `⌥5`/`⌥6`; dafür gibt es die
 Alternativen mit Buchstaben (`⌘N`, `⌘B`).

@@ -60,6 +60,8 @@ Kern (`roster`, `codes`, `templates`, `scanner`, `metadata`, `previews`) importi
   nicht auslösen), `editor`, `window`, `viewer`. Zwei gleichzeitig aktive gleiche Kürzel
   löst Qt gar nicht aus; `tests/test_shortcuts.py::test_no_ambiguous_shortcuts` prüft das
   für beide Plattform-Tabellen.
+- Sterne auf `1`–`5` ohne Modifier (`0` entfernt), in Galerie und Großansicht; keine
+  Einstellung dafür. Farbklassen auf `⌘1`–`⌘8` bzw. `Strg+1`–`8`.
 - Farbklasse 1–8 → `XMP-photomech:ColorClass` + `xmp:Label` aus `Settings.labels`; Tag →
   `XMP-photomech:Tagged` (`Yes`/`No`). Lightroom liest nur das Label.
 
@@ -115,7 +117,7 @@ Kern (`roster`, `codes`, `templates`, `scanner`, `metadata`, `previews`) importi
 ## Entwicklung
 
 ```bash
-make install && make test            # 91 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 90 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

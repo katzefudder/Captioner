@@ -59,8 +59,6 @@ class Settings:
     # .xmp-URLs zusaetzlich in den Drag legen (ADR 0001, Punkt 7). Abschaltbar,
     # falls eine Lightroom-Version sie im Drop nicht akzeptiert.
     drag_include_sidecars: bool = True
-    # Ziffern ohne Modifier: 'off' (Default), 'rating' (0-5) oder 'color' (0-8)
-    number_keys: str = 'off'
     viewer_info_panel: bool = True   # EXIF/IPTC rechts in der Grossansicht
     exiftool_path: str = ''
     last_folder: str = ''
