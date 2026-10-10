@@ -1,6 +1,11 @@
-# Captioner
+<p align="center">
+  <img src="captioner/resources/logo.svg" alt="Captioner-Logo" width="200">
+</p>
 
-Fotos sichten, bewerten und beschriften, bevor sie in Lightroom importiert werden.
+<h1 align="center">Captioner</h1>
+
+<p align="center">Fotos sichten, bewerten und beschriften, bevor sie in Lightroom importiert werden.</p>
+
 Workflow-Tool für die Auswahl von Fotos, mit Code-Replacement aus den Roster-Dateien.
 Entscheidungen und Begründung: [ADR 0001](../../docs/adr/0001-bildbeschriftung-mit-code-replacement.md).
 
