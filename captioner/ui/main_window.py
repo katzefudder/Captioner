@@ -268,8 +268,8 @@ class MainWindow(QMainWindow):
             'end': lambda: self.jump_to(-1),
             'page_prev': lambda: self.go_to_page(self.page - 1),
             'page_next': lambda: self.go_to_page(self.page + 1),
-            'snapshot_take': self.take_snapshot,
-            'snapshot_paste': self.paste_snapshot,
+            'next_image': lambda: self.step_selection(1),
+            'prev_image': lambda: self.step_selection(-1),
             'roster_settings': self.edit_settings,
         }
         for n in range(0, 9):
@@ -284,6 +284,8 @@ class MainWindow(QMainWindow):
             'template_apply': self.apply_template,
             'roster_reload': lambda: self.load_roster(force=True),
             'shortcuts': self.show_shortcuts,
+            'snapshot_take': self.take_snapshot,
+            'snapshot_paste': self.paste_snapshot,
             'close_tab': lambda: self.close_tab(self.tabs.currentIndex()),
             'tab_next': lambda: self.tabs.setCurrentIndex((self.tabs.currentIndex() + 1) % self.tabs.count()),
             'tab_prev': lambda: self.tabs.setCurrentIndex((self.tabs.currentIndex() - 1) % self.tabs.count()),
@@ -706,27 +708,34 @@ class MainWindow(QMainWindow):
         if self.tag_filter.currentData() is not None:
             self.apply_filter(False)
 
-    SNAPSHOT_FIELDS = ('headline', 'caption', 'keywords', 'city', 'sublocation')
-
     def take_snapshot(self):
-        """IPTC-Snapshot: Beschriftung des Bildes unter dem Cursor merken."""
+        """
+        Beschriftung kopieren: was im Panel steht (das Bild unter dem Cursor), auch
+        ungespeicherte Aenderungen. Die Beschreibung als Rohtext mit Codes.
+        """
         items = self._focused_first(self._selected_items())
         if not items:
             return
-        self.snapshot = {name: getattr(items[0].meta, name) for name in self.SNAPSHOT_FIELDS}
-        self.statusBar().showMessage(f'IPTC-Snapshot von {items[0].name} genommen', 5000)
+        self.snapshot = self.editor.current_fields()
+        self.statusBar().showMessage(f'Beschriftung von {items[0].name} kopiert', 5000)
 
     def paste_snapshot(self):
+        """
+        In alle ausgewaehlten Bilder einfuegen und speichern. Gerechnet wird wie beim
+        Speichern, je Bild: Codes aufloesen, Anhang mit dessen Datum, Personen-Tags, GPS.
+        """
         snapshot = getattr(self, 'snapshot', None)
         items = self._selected_items()
         if not snapshot or not items:
             return
-        for item in items:
-            self._enqueue(item, geo.apply_gps(dataclasses.replace(item.meta, **snapshot), self.places))
-        self.model.refresh([i.key for i in items])
+        resolution = codes.resolve(snapshot['raw_caption'], self.roster, self.settings.code_delimiter)
+        if resolution.unknown:
+            QMessageBox.warning(self, 'Nicht eingefügt', 'Unbekannte Codes in der kopierten Beschreibung: '
+                                + ', '.join(resolution.unknown))
+            return
+        self.save_caption(dict(snapshot, resolution=resolution, caption_modified=True), 0)
         self._show_selection_in_editor()
-        self._update_status()
-        self.statusBar().showMessage(f'IPTC-Snapshot in {len(items)} Bild(er) eingefügt', 5000)
+        self.statusBar().showMessage(f'Beschriftung in {len(items)} Bild(er) eingefügt', 5000)
 
     def save_and_close(self):
         """Wie "Save Changes and Close Dialog": speichern, zurueck in die Galerie."""

@@ -41,7 +41,9 @@ def test_platform_tables():
     assert mac['color_3'] == ('Ctrl+3',) and win['color_3'] == ('Ctrl+3',)
     assert mac['rating_4'] == ('4',) and win['rating_4'] == ('4',)
     assert mac['save_next'] == ('Ctrl+]', 'Ctrl+N') and win['save_next'] == ('Alt+]', 'Ctrl+M')
-    assert win['snapshot_take'] == ('Alt+C',) and mac['snapshot_take'] == ('Ctrl+Alt+C',)
+    assert mac['snapshot_take'] == win['snapshot_take'] == ('Ctrl+Shift+C',)
+    assert mac['snapshot_paste'] == win['snapshot_paste'] == ('Ctrl+Shift+V',)
+    assert mac['next_image'] == ('Ctrl+]', 'Ctrl+N') and mac['prev_image'] == ('Ctrl+[', 'Ctrl+B')
 
 
 pytestmark_gui = requires_exiftool
@@ -196,3 +198,44 @@ def test_snapshot_copy_paste(window):
     window.view.setFocus()
     press(window.view, paste[0].key(), paste[0].keyboardModifiers())
     assert other.meta.caption == 'Jubel' and other.meta.headline == 'DEL 2 - A gegen B'
+
+
+SHIFT = Qt.KeyboardModifier.ShiftModifier
+
+
+@requires_exiftool
+def test_copy_next_paste_while_typing(window):
+    """Beschriften, Cmd+Shift+C, Cmd+N (speichert, weiter), Cmd+Shift+V - alles im Panel."""
+    from captioner.templates import MatchTemplate
+    first, second = window.filtered[0], window.filtered[1]
+    first.taken_at, second.taken_at = '2026:03:01 18:00:00', '2026:03:02 19:00:00'
+    window.editor.template = MatchTemplate(occasion='DEL 2', home='A', away='B', caption_suffix=', {date}')
+    window.editor.headline.setText('DEL 2 - A gegen B')
+    window.editor.city.setText('Bad Nauheim')
+    window.editor.keywords.setPlainText('Eishockey')
+    caption = window.editor.caption
+    caption.setFocus()
+    QTest.keyClicks(caption, 'Jubel')
+    press(caption, Qt.Key.Key_C, CMD | SHIFT)        # kopiert auch Ungespeichertes
+    assert caption.toPlainText() == 'Jubel'
+    press(caption, Qt.Key.Key_N if keymap.MAC else Qt.Key.Key_M, CMD)
+    assert first.meta.caption == 'Jubel, 01.03.26' and window._selected_items() == [second]
+    assert second.meta.caption == ''
+
+    press(caption, Qt.Key.Key_V, CMD | SHIFT)
+    # Anhang mit dem Datum des Zielbildes, nicht des kopierten
+    assert second.meta.caption == 'Jubel, 02.03.26'
+    assert (second.meta.headline, second.meta.city, second.meta.keywords) == (
+        'DEL 2 - A gegen B', 'Bad Nauheim', ['Eishockey'])
+    assert caption.toPlainText() == 'Jubel'  # Panel zeigt das eingefuegte Bild, als Rohtext
+
+
+@requires_exiftool
+def test_next_and_previous_image_in_gallery(window):
+    window.view.setFocus()
+    press(window.view, Qt.Key.Key_N, CMD)
+    assert window._selected_items() == [window.filtered[1]]
+    press(window.view, Qt.Key.Key_N, CMD)            # auf die naechste Seite (2 pro Seite)
+    assert window._selected_items() == [window.filtered[2]] and window.page == 1
+    press(window.view, Qt.Key.Key_B, CMD)
+    assert window._selected_items() == [window.filtered[1]] and window.page == 0

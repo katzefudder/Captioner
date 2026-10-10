@@ -55,8 +55,9 @@ def _bindings(mac):
     add('end', 'gallery', ['End'], 'Zum letzten Bild')
     add('page_prev', 'gallery', ['PgUp', 'Ctrl+Shift+[' if mac else 'Ctrl+Left'], 'Vorherige Seite')
     add('page_next', 'gallery', ['PgDown', 'Ctrl+Shift+]' if mac else 'Ctrl+Right'], 'Nächste Seite')
-    add('snapshot_take', 'gallery', ['Ctrl+Alt+C' if mac else 'Alt+C'], 'IPTC-Snapshot nehmen')
-    add('snapshot_paste', 'gallery', ['Ctrl+Alt+V' if mac else 'Alt+V'], 'IPTC-Snapshot in Auswahl einfügen')
+    # Wie im Panel, nur ohne Speichern (in der Galerie gibt es nichts zu speichern)
+    add('next_image', 'gallery', ['Ctrl+]', 'Ctrl+N'] if mac else ['Alt+]', 'Ctrl+M'], 'Nächstes Bild')
+    add('prev_image', 'gallery', ['Ctrl+[', 'Ctrl+B'] if mac else ['Alt+[', 'Alt+B'], 'Vorheriges Bild')
     # Unter Windows liegt "Set Code Replacements" auf Strg+Alt+C, das im Panel
     # "Template anwenden" ist; deshalb nur im Galerie-Kontext
     add('roster_settings', 'gallery', ['Ctrl+Meta+C' if mac else 'Ctrl+Alt+C'], 'Roster-Quellen einstellen')
@@ -69,6 +70,9 @@ def _bindings(mac):
     add('template_apply', 'window', ['Ctrl+Alt+A'], 'Template auf Auswahl anwenden')
     add('roster_reload', 'window', ['Ctrl+Meta+Shift+C' if mac else 'Ctrl+Alt+Shift+C'], 'Roster neu laden')
     add('shortcuts', 'window', ['F1'], 'Diese Übersicht')
+    # Beschriftung von Bild zu Bild: in der Galerie und beim Tippen im Panel
+    add('snapshot_take', 'window', ['Ctrl+Shift+C'], 'Beschriftung kopieren (IPTC-Snapshot)')
+    add('snapshot_paste', 'window', ['Ctrl+Shift+V'], 'Beschriftung in Auswahl einfügen')
 
     # Ordner-Tabs
     add('close_tab', 'window', ['Ctrl+W'], 'Tab schließen')

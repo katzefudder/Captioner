@@ -448,6 +448,16 @@ class CaptionEditor(QWidget):
         else:
             self.gps_hint.setText('GPS der Kamera bleibt erhalten')
 
+    def current_fields(self):
+        """Was gerade im Panel steht; die Beschreibung als Rohtext mit Codes."""
+        return {
+            'raw_caption': self.caption.toPlainText(),
+            'headline': self.headline.text().strip(),
+            'keywords': self.tags(),
+            'city': self.city.text().strip(),
+            'sublocation': self.sublocation.text().strip(),
+        }
+
     def submit(self, step):
         """Speichern; step +1/-1 springt danach weiter, 0 bleibt. False, wenn blockiert."""
         if not self.save_button.isEnabled():
@@ -455,13 +465,7 @@ class CaptionEditor(QWidget):
         resolution = self.resolve()
         if resolution.unknown:
             return False
-        self.save_requested.emit({
-            'raw_caption': self.caption.toPlainText(),
-            'caption_modified': self.caption.toPlainText() != getattr(self, '_shown_caption', None),
-            'resolution': resolution,
-            'headline': self.headline.text().strip(),
-            'keywords': self.tags(),
-            'city': self.city.text().strip(),
-            'sublocation': self.sublocation.text().strip(),
-        }, step)
+        self.save_requested.emit(dict(
+            self.current_fields(), resolution=resolution,
+            caption_modified=self.caption.toPlainText() != getattr(self, '_shown_caption', None)), step)
         return True

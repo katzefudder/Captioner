@@ -99,8 +99,14 @@ Hardened Runtime braucht.
      DEL 2 - EC Bad Nauheim gegen Bietigheim Steelers, Bad Nauheim, Colonel-Knight-Stadion, 09.10.26
    ```
 
-   `Enter` speichert, `⌘N` bzw. `⌘]` speichert und springt weiter. Unbekannte Codes sind
-   rot und verhindern das Speichern. Die Namen der Personen kommen automatisch in die Tags.
+   `Enter` speichert, `⌘N` bzw. `⌘]` speichert und springt weiter, `⌘B` bzw. `⌘[` zurück.
+   Unbekannte Codes sind rot und verhindern das Speichern. Die Namen der Personen kommen
+   automatisch in die Tags.
+
+   **Von Foto zu Foto übertragen:** `⌘⇧C` kopiert Titel, Beschreibung, Tags, Stadt und Ort
+   aus dem Panel (auch noch nicht Gespeichertes), `⌘N` weiter, `⌘⇧V` fügt ein und speichert.
+   Die Beschreibung wird mit den Codes kopiert und je Foto neu aufgelöst; das Datum im Anhang
+   ist das des Zielfotos. Mit mehreren ausgewählten Fotos fügt `⌘⇧V` in alle ein.
 5. **Bewerten und taggen:** `⌘1`–`⌘8` Farbklasse, `1`–`5`
    Sterne, `T` Tag. Filter oben (oder `F3`/`F4`) zeigen nur die Auswahl.
 6. **In Lightroom ziehen.** Die Auswahl (auch über mehrere Seiten) per Drag & Drop
@@ -148,7 +154,8 @@ Belegung wie in einem Workflow-Tool für die Auswahl von Fotos. `F1` (oder
 | Beschriftung bearbeiten | `I` oder `Enter` | `I` oder `Enter` |
 | Alle auswählen (alle Seiten) · Auswahl aufheben · Getaggte auswählen | `⌘A` · `⌘D` · `⌘T` | `Strg+A` · `Strg+D` · `Strg+T` |
 | Nur getaggte · nur nicht getaggte (nochmal: alle) | `F3` · `F4` | `F3` · `F4` |
-| IPTC-Snapshot nehmen · einfügen | `⌘⌥C` · `⌘⌥V` | `Alt+C` · `Alt+V` |
+| Beschriftung kopieren · in Auswahl einfügen (auch im Panel) | `⌘⇧C` · `⌘⇧V` | `Strg+⇧C` · `Strg+⇧V` |
+| Nächstes · vorheriges Bild | `⌘N`/`⌘]` · `⌘B`/`⌘[` | `Strg+M`/`Alt+]` · `Alt+B`/`Alt+[` |
 | Template öffnen · speichern · anwenden | `⌘⌥L` · `⌘⌥S` · `⌘⌥A` | `Strg+Alt+L` · `S` · `A` |
 | Seite zurück/vor | `Bild↑`/`Bild↓`, `⌘⇧[`/`⌘⇧]` | `Bild↑`/`Bild↓`, `Strg+←`/`→` |
 | Erstes/letztes Bild · zuletzt angesehenes | `Pos1`/`Ende` · `L` | `Pos1`/`Ende` · `L` |
