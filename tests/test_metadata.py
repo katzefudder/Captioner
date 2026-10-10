@@ -148,3 +148,47 @@ def test_color_class_and_tag(tool, tmp_path):
     metadata.write_item(tool, item, Metadata())
     record = read(tool, tmp_path / 'DSC_0001.xmp', '-n', '-XMP:all')
     assert 'ColorClass' not in record and record['Tagged'] is False
+
+
+def test_gps_is_written_embedded_and_read_back_with_sign(tool, tmp_path):
+    path = make_jpeg(tmp_path / 'a.jpg')
+    item = scanner.scan(tmp_path)[0]
+    meta = Metadata(city='Sydney', latitude=-33.8568, longitude=151.2153, gps_changed=True)
+    metadata.write_item(tool, item, meta)
+    record = read(tool, path, '-n', '-EXIF:GPSLatitudeRef', '-EXIF:GPSLongitudeRef', '-XMP-exif:all')
+    assert record['GPSLatitudeRef'] == 'S' and record['GPSLongitudeRef'] == 'E'
+    item = scanner.scan(tmp_path)[0]
+    list(metadata.read_items(tool, [item]))
+    assert (item.meta.latitude, item.meta.longitude) == pytest.approx((-33.8568, 151.2153))
+    assert not item.meta.gps_changed
+
+
+def test_gps_in_sidecar_and_camera_gps_in_raw_counts(tool, tmp_path):
+    (tmp_path / 'DSC_0001.NEF').write_bytes(b'raw')
+    item = scanner.scan(tmp_path)[0]
+    metadata.write_item(tool, item, Metadata(headline='x', latitude=50.36335, longitude=-8.74107, gps_changed=True))
+    record = read(tool, tmp_path / 'DSC_0001.xmp', '-n', '-GPSLatitude', '-GPSLongitude')
+    assert (record['GPSLatitude'], record['GPSLongitude']) == pytest.approx((50.36335, -8.74107))
+
+    # Kamera-GPS im JPG eines RAW+JPG-Paares, Beschriftung im Sidecar: GPS wird trotzdem erkannt
+    make_jpeg(tmp_path / 'DSC_0002.JPG')
+    tool.execute('-overwrite_original', '-EXIF:GPSLatitude=48.1', '-EXIF:GPSLatitudeRef=N',
+                 '-EXIF:GPSLongitude=11.5', '-EXIF:GPSLongitudeRef=E', str(tmp_path / 'DSC_0002.JPG'))
+    (tmp_path / 'DSC_0002.NEF').write_bytes(b'raw')
+    tool.execute('-XMP-photoshop:Headline=Titel', '-o', str(tmp_path / 'DSC_0002.xmp'))
+    item = next(i for i in scanner.scan(tmp_path) if i.name.startswith('DSC_0002'))
+    list(metadata.read_items(tool, [item]))
+    assert item.meta.headline == 'Titel'
+    assert (item.meta.latitude, item.meta.longitude) == pytest.approx((48.1, 11.5))
+
+
+def test_gps_is_not_rewritten_unless_changed(tool, tmp_path):
+    path = make_jpeg(tmp_path / 'a.jpg')
+    tool.execute('-overwrite_original', '-EXIF:GPSLatitude=48.123456789', '-EXIF:GPSLatitudeRef=N',
+                 '-EXIF:GPSLongitude=11.5', '-EXIF:GPSLongitudeRef=E', str(path))
+    before = read(tool, path, '-EXIF:GPSLatitude')['GPSLatitude']
+    item = scanner.scan(tmp_path)[0]
+    list(metadata.read_items(tool, [item]))
+    metadata.write_item(tool, item, Metadata(headline='x', latitude=1.0, longitude=2.0))  # gps_changed=False
+    assert read(tool, path, '-EXIF:GPSLatitude')['GPSLatitude'] == before
+    assert 'GPSLatitude' not in read(tool, path, '-XMP-exif:all')

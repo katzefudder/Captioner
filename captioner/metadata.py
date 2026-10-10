@@ -35,6 +35,7 @@ READ_TAGS = [
     '-City', '-Sub-location', '-Location',
     '-Rating', '-Label', '-XMP-photomech:ColorClass', '-XMP-photomech:Tagged',
     '-DateTimeOriginal', '-SubSecTimeOriginal', '-Orientation',
+    '-GPSLatitude', '-GPSLongitude',
 ]
 
 
@@ -103,6 +104,14 @@ def meta_from_record(record):
     )
 
 
+def _gps(record):
+    """(Breite, Laenge) mit Vorzeichen (-n liefert die Composite-Werte), sonst None."""
+    lat, lon = record.get('GPSLatitude'), record.get('GPSLongitude')
+    if isinstance(lat, (int, float)) and isinstance(lon, (int, float)) and not (lat == 0 and lon == 0):
+        return float(lat), float(lon)
+    return None
+
+
 def _int(value, low, high):
     try:
         number = int(value)
@@ -149,6 +158,11 @@ def apply_records(item: Item, by_path):
                     or meta.color_class or meta.tagged):
                 item.meta = meta
                 break
+    # GPS aus irgendeiner der Dateien, Sidecar zuerst: Kamera-GPS in der RAW zaehlt
+    # auch, wenn die Beschriftung aus dem Sidecar kommt
+    gps = next((g for g in (_gps(r) for r in candidates if r) if g), None)
+    if gps:
+        item.meta.latitude, item.meta.longitude = gps
     item.meta_loaded = True
 
 
@@ -167,6 +181,8 @@ def _xmp_args(meta: Metadata):
         f'-XMP-photomech:Tagged={"Yes" if meta.tagged else "No"}',
     ]
     args += [f'-XMP-dc:Subject={k}' for k in meta.keywords] or ['-XMP-dc:Subject=']
+    if meta.gps_changed and meta.latitude is not None and meta.longitude is not None:
+        args += [f'-XMP-exif:GPSLatitude={meta.latitude:.7f}', f'-XMP-exif:GPSLongitude={meta.longitude:.7f}']
     return args
 
 
@@ -182,6 +198,11 @@ def _embedded_args(meta: Metadata):
         f'-IPTC:Sub-location={meta.sublocation}',
     ]
     args += [f'-IPTC:Keywords={k}' for k in meta.keywords] or ['-IPTC:Keywords=']
+    if meta.gps_changed and meta.latitude is not None and meta.longitude is not None:
+        args += [f'-EXIF:GPSLatitude={abs(meta.latitude):.7f}',
+                 f'-EXIF:GPSLatitudeRef={"S" if meta.latitude < 0 else "N"}',
+                 f'-EXIF:GPSLongitude={abs(meta.longitude):.7f}',
+                 f'-EXIF:GPSLongitudeRef={"W" if meta.longitude < 0 else "E"}']
     return args
 
 

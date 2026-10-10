@@ -11,6 +11,8 @@ from pathlib import Path
 
 import tomli_w
 
+from .geo import valid_coordinates
+
 
 DEFAULT_CAPTION_SUFFIX = ', {headline}, {city}, {sublocation}, {date}'
 
@@ -27,6 +29,10 @@ class MatchTemplate:
     # Wird an jede Bildunterschrift gehaengt, wie bisher im Workflow-Tool fuer die Auswahl von Fotos:
     # "..., DEL 2 - EC Bad Nauheim gegen Eisbaeren Regensburg, Bad Nauheim, Colonel-Knight-Stadion, 01.03.26"
     caption_suffix: str = DEFAULT_CAPTION_SUFFIX
+    # Koordinaten des Ortes (Karten-Picker), damit sie mit der Datei weitergegeben
+    # werden; fehlen in der Datei, solange keine gesetzt sind
+    latitude: float = None
+    longitude: float = None
     # Woher das Template stammt; wird nicht in die Datei geschrieben
     path: str = field(default='', compare=False, repr=False)
 
@@ -114,6 +120,8 @@ def slug(name):
 #     sublocation = "Colonel-Knight-Stadion"
 #     extra_tags = ["Eishockey", "DEL2"]
 #     caption_suffix = ", {headline}, {city}, {sublocation}, {date}"
+#     latitude = 50.37255        # optional, vom Karten-Picker
+#     longitude = 8.73845
 FORMAT_ID = 'captioner-template'
 FORMAT_VERSION = 1
 FILE_SUFFIX = '.toml'
@@ -141,9 +149,12 @@ def load_file(path):
         raise TemplateError(f'{path.name}: Template-Version {data["version"]} ist neuer als diese App')
     values = {key: data[key] for key in SERIALIZED_FIELDS if key in data}
     for key, value in values.items():
-        expected = list if key == 'extra_tags' else str
-        if not isinstance(value, expected):
+        expected = {'extra_tags': list, 'latitude': (int, float), 'longitude': (int, float)}.get(key, str)
+        if not isinstance(value, expected) or isinstance(value, bool):
             raise TemplateError(f'{path.name}: Feld {key!r} hat den falschen Typ')
+    if ('latitude' in values) != ('longitude' in values) or \
+            ('latitude' in values and not valid_coordinates(values['latitude'], values['longitude'])):
+        raise TemplateError(f'{path.name}: latitude/longitude unvollständig oder außerhalb des gültigen Bereichs')
     template = MatchTemplate(**values)
     if not template.headline:
         raise TemplateError(f'{path.name}: Anlass, Heim und Gast fehlen')
@@ -159,7 +170,8 @@ def save_file(template, path):
     if not template.name:
         template.name = template.headline or path.stem
     data = {'format': FORMAT_ID, 'version': FORMAT_VERSION}
-    data.update({key: getattr(template, key) for key in SERIALIZED_FIELDS})
+    # TOML kennt kein None: fehlende Koordinaten werden weggelassen
+    data.update({key: getattr(template, key) for key in SERIALIZED_FIELDS if getattr(template, key) is not None})
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_name(f'.{path.name}.tmp')
     temp.write_text('# Captioner Spiel-Template (siehe docs/adr/0001-*.md)\n' + tomli_w.dumps(data),

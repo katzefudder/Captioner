@@ -171,6 +171,34 @@ keine Tags; die dienen zum Auswählen vor dem Drag.
 Lightroom übernimmt beim Import Titel, Beschreibung, Stichwörter, Sterne und Farbe. Die
 Farbnamen müssen zum Label-Set in Lightroom passen, siehe Einstellungen.
 
+## Ort und Karte
+
+**Karte …** neben „Stadt“ (im Beschriftungs-Panel und im Template-Dialog) öffnet eine
+OpenStreetMap-Karte:
+
+* **Suchen:** Adresse, PLZ oder Halle eintippen, z. B. `61231 Bad Nauheim` oder
+  `Colonel-Knight-Stadion`, Enter. Die Karte springt hin und füllt Stadt und Ort/Halle.
+  Bei mehreren Treffern den passenden in der Liste wählen.
+* **Klicken:** Ein Klick auf die Karte setzt den Punkt; Stadt und Ort/Halle werden dazu
+  nachgeschlagen. Ziehen verschiebt, Mausrad oder `+`/`−` zoomt.
+* Stadt und Ort/Halle bleiben editierbar, bevor man mit OK übernimmt.
+
+Jeder gewählte Ort wird gemerkt. Beim Tippen in „Stadt“ schlägt die App gemerkte Orte vor
+(„Bad Nauheim – Colonel-Knight-Stadion“), auch **offline**. Ohne Internet zeigt der Dialog
+statt der Karte den Hinweis „Diese Karte kann nur bei Verbindung mit dem Internet angezeigt
+werden“; Stadt und Ort lassen sich dann trotzdem eintragen. Schon einmal angesehene
+Kartenausschnitte kommen aus dem Cache.
+
+**GPS:** Hat der Ort Koordinaten, schreibt die App sie beim Speichern als GPS-Position
+(EXIF + XMP bzw. ins Sidecar), sichtbar im Karten-Modul von Lightroom. Nur in Bilder ohne
+GPS: Hat die Kamera selbst GPS aufgezeichnet, bleibt es unangetastet. GPS, das von einem
+gemerkten Ort stammt, wird beim Wechsel des Ortes ersetzt. Der Hinweis unter „Ort“ zeigt,
+was passiert. Templates speichern die Koordinaten mit (`latitude`, `longitude`).
+
+Die Karte nutzt die Dienste der OpenStreetMap Foundation (Kacheln und Nominatim) nach
+deren Nutzungsregeln: höchstens eine Suche pro Sekunde, gesucht wird erst auf Enter.
+Dabei gehen der Suchtext bzw. der angeklickte Punkt an openstreetmap.org.
+
 ## Templates als Dateien
 
 Ein Template ist eine kleine TOML-Datei, lesbar und von Hand editierbar:

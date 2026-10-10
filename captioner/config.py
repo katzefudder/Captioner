@@ -65,6 +65,8 @@ class Settings:
     last_template: str = ''      # Pfad des zuletzt gewaehlten Templates
     # Template-Dateien vom Rechner, die ausserhalb des Konfigurationsverzeichnisses liegen
     template_files: list = field(default_factory=list)
+    # Gewaehlte Orte (Stadt, Ort, Koordinaten), neueste zuerst; siehe geo.PlaceBook
+    places: list = field(default_factory=list)
 
     @classmethod
     def path(cls) -> Path:

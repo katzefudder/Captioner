@@ -1,3 +1,5 @@
+import pytest
+
 from captioner.templates import MatchTemplate, TemplateStore, format_date
 
 
@@ -114,3 +116,23 @@ def test_store_saves_back_to_external_file_and_never_deletes_it(tmp_path):
     assert list((tmp_path / 'store').iterdir()) == []
     store.delete(loaded)
     assert external.exists()
+
+
+def test_coordinates_roundtrip_and_are_omitted_when_unset(tmp_path):
+    from captioner import templates
+    path = templates.save_file(template(latitude=50.3725500, longitude=8.7384500), tmp_path / 'a.toml')
+    loaded = templates.load_file(path)
+    assert (loaded.latitude, loaded.longitude) == (50.3725500, 8.7384500)
+    path = templates.save_file(template(), tmp_path / 'b.toml')
+    assert 'latitude' not in path.read_text()
+    assert templates.load_file(path).latitude is None
+
+
+@pytest.mark.parametrize('lines', ['latitude = "50"\nlongitude = 8.7', 'latitude = 50.3', 'latitude = 91.0\nlongitude = 8.7',
+                                   'latitude = true\nlongitude = 8.7'])
+def test_bad_coordinates_are_rejected(tmp_path, lines):
+    from captioner import templates
+    path = tmp_path / 'bad.toml'
+    path.write_text('occasion = "DEL 2"\nhome = "A"\naway = "B"\n' + lines + '\n', encoding='utf-8')
+    with pytest.raises(templates.TemplateError):
+        templates.load_file(path)

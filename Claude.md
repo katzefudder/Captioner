@@ -10,6 +10,7 @@ Bedienung: `readme.md`.
 |---|---|
 | `config.py` | `Settings` (TOML), Konfig-/Cache-Verzeichnisse. `CAPTIONER_HOME` lenkt beide um. |
 | `roster.py` | Roster-Format parsen, Quellen laden (URL/Datei), Cache + letzte gute Version, Konflikte |
+| `geo.py` | `Place`, `PlaceBook` (gemerkte Orte = einzige Quelle für Koordinaten), GPS-Regel `apply_gps`, Nominatim-URLs/-Auswertung, Kachel-Mathematik |
 | `codes.py` | `#code#` auflösen, unbekannte Codes, Personennamen aus Ersetzungen |
 | `templates.py` | `MatchTemplate`: Headline, Tags, Anhang an die Beschreibung; Dateiformat (`load_file`/`save_file`), `TemplateStore` |
 | `scanner.py` | Ordner → `Item` (RAW+JPG-Paar, vorhandenes Sidecar), `Metadata` |
@@ -19,10 +20,12 @@ Bedienung: `readme.md`.
 | `exiftool.py` | `-stay_open`-Prozess, Pool pro OS-Thread, Aufräumen verwaister Prozesse |
 | `ui/viewer.py` | Großansicht mit Zoom (`ZoomView`): eingepasst/100 %/Stufen, Ankerpunkt, Begrenzung des Ausschnitts |
 | `ui/resources.py`, `resources/` | Logo (`logo.svg` = Quelle) und daraus erzeugte Icons; `make icons` / `scripts/make_icons.py` |
+| `ui/mapview.py` | OSM-Karte als QWidget (Kacheln, `QNetworkDiskCache`), `Geocoder` (Nominatim, 1 Anfrage/s) |
+| `ui/placepicker.py` | Dialog „Ort wählen“: Suche, Klick, Offline-Hinweis; Vorschläge aus dem `PlaceBook` |
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
-Kern (`roster`, `codes`, `templates`, `scanner`, `metadata`, `previews`) importiert kein Qt.
+Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`) importiert kein Qt.
 
 ## Regeln, die nicht verletzt werden dürfen
 
@@ -38,6 +41,21 @@ Kern (`roster`, `codes`, `templates`, `scanner`, `metadata`, `previews`) importi
   (`Headline`, `ObjectName`, `Caption-Abstract`, `Keywords`, `City`, `Sub-location`).
 - **Drag erst nach `writer.flush()`.** Eine bearbeitete RAW-Datei ohne Sidecar oder ein
   Bild mit Schreibfehler wird nicht gezogen.
+
+## Orte, Karte, GPS
+
+- **GPS nur, wo keins ist.** `geo.apply_gps` setzt Koordinaten aus dem `PlaceBook` (über
+  Stadt + Ort), wenn das Bild kein GPS hat oder sein GPS selbst von einem gemerkten Ort
+  stammt. Kamera-GPS nie überschreiben. Geschrieben wird GPS nur bei `Metadata.gps_changed`.
+- GPS wird aus Sidecar, eingebetteter Datei **und** RAW gelesen (`-n` → Composite-Werte mit
+  Vorzeichen); auch wenn die Beschriftung aus dem Sidecar kommt.
+- Karte ohne WebEngine/QtLocation (beides zöge QtQuick/QML bzw. Chromium ins Bundle).
+- OSM-Nutzungsregeln: `geo.USER_AGENT`, höchstens 1 Nominatim-Anfrage/s, Suche nur auf
+  Enter, Kacheln mit Plattencache (`<cache>/map`), Attribution sichtbar. Tests gehen nie
+  ins Netz (`tests/test_places_gui.py` lenkt beides auf einen geschlossenen Port).
+- Offline: Dialog zeigt den Hinweis statt der Karte, sobald eine Kachel weder aus Netz noch
+  Cache kommt; Stadt/Ort und Vorschläge funktionieren weiter.
+- Templates: `latitude`/`longitude` optional, ohne Wert nicht in der Datei (TOML hat kein None).
 
 ## Templates und Roster als Dateien
 
@@ -117,7 +135,7 @@ Kern (`roster`, `codes`, `templates`, `scanner`, `metadata`, `previews`) importi
 ## Entwicklung
 
 ```bash
-make install && make test            # 90 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 118 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

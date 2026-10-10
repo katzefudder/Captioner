@@ -4,6 +4,7 @@ Beschriftungs-Panel: Template, Titel, Beschreibung mit Code-Replacement, Tags, O
 Die Beschreibung zeigt live, was aus den Codes wird; unbekannte Codes sind rot
 und blockieren das Speichern (ADR 0001, Punkt 5).
 """
+import dataclasses
 import html
 import re
 from pathlib import Path
@@ -14,8 +15,9 @@ from PySide6.QtWidgets import (QComboBox, QCompleter, QFormLayout, QHBoxLayout, 
                                QLineEdit, QPlainTextEdit, QPushButton, QSizePolicy,
                                QToolButton, QVBoxLayout, QWidget)
 
-from .. import codes, metadata
+from .. import codes, geo, metadata
 from .keymap import keys as binding_keys
+from .placepicker import PlacePickerDialog, place_completer, place_for_completion
 from ..templates import unique
 
 
@@ -119,6 +121,7 @@ class CaptionEditor(QWidget):
     save_template_as_requested = Signal()
     remove_template_requested = Signal(object)
     reload_roster_requested = Signal()
+    place_chosen = Signal(object)         # geo.Place aus Karte oder Vorschlag: merken
     add_roster_file_requested = Signal()
 
     def __init__(self, parent=None):
@@ -190,17 +193,27 @@ class CaptionEditor(QWidget):
         self.keywords.textChanged.connect(self._update_preview)
         self.keywords.submit.connect(lambda: self.submit(0))
         self.city = QLineEdit()
+        self.city.setPlaceholderText('tippen für gemerkte Orte')
         self.sublocation = QLineEdit()
         for field in (self.headline, self.city, self.sublocation):
             field.textChanged.connect(self._update_preview)
             field.returnPressed.connect(lambda: self.submit(0))
+        self.map_button = QPushButton('Karte …')
+        self.map_button.setToolTip('Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)')
+        self.map_button.clicked.connect(self.pick_place)
+        city_row = QHBoxLayout()
+        city_row.addWidget(self.city, 1)
+        city_row.addWidget(self.map_button)
+        self.gps_hint = QLabel()
+        self.gps_hint.setStyleSheet('color: gray;')
 
         form.addRow('Titel', self.headline)
         form.addRow('Beschreibung', self.caption)
         form.addRow('', self.preview)
         form.addRow('Tags', self.keywords)
-        form.addRow('Stadt', self.city)
+        form.addRow('Stadt', city_row)
         form.addRow('Ort', self.sublocation)
+        form.addRow('', self.gps_hint)
         layout.addLayout(form)
 
         self.limits = QLabel()
@@ -247,8 +260,36 @@ class CaptionEditor(QWidget):
 
     def set_enabled(self, enabled):
         for widget in (self.headline, self.caption, self.keywords, self.city, self.sublocation,
-                       self.save_button, self.next_button, self.apply_button):
+                       self.map_button, self.save_button, self.next_button, self.apply_button):
             widget.setEnabled(enabled)
+
+    def set_place_book(self, book):
+        """Gemerkte Orte: Vorschlaege fuer Stadt und Koordinaten fuer den GPS-Hinweis."""
+        self.place_book = book
+        completer = place_completer(book, self)
+        completer.activated.connect(self._known_place_chosen)
+        self.city.setCompleter(completer)
+        self._update_preview()
+
+    def _known_place_chosen(self, text):
+        place = place_for_completion(self.place_book, text)
+        if place:
+            self.city.setText(place.city)
+            self.sublocation.setText(place.sublocation)
+            self.place_chosen.emit(place)
+
+    def pick_place(self):
+        book = getattr(self, 'place_book', None) or geo.PlaceBook()
+        current = book.lookup(self.city.text(), self.sublocation.text()) or \
+            geo.Place(self.city.text().strip(), self.sublocation.text().strip())
+        dialog = PlacePickerDialog(current, book, self)
+        if not dialog.exec():
+            return
+        place = dialog.place()
+        self.city.setText(place.city)
+        self.sublocation.setText(place.sublocation)
+        self.place_chosen.emit(place)
+        self._update_preview()
 
     def set_roster(self, roster, delimiter):
         self.roster = roster
@@ -390,6 +431,22 @@ class CaptionEditor(QWidget):
         blocked = bool(resolution.unknown or problems)
         self.save_button.setEnabled(not blocked and self.headline.isEnabled())
         self.next_button.setEnabled(not blocked and self.headline.isEnabled())
+        self._update_gps_hint(item)
+
+    def _update_gps_hint(self, item):
+        book = getattr(self, 'place_book', None)
+        place = book.lookup(self.city.text(), self.sublocation.text()) if book else None
+        if place is None or not place.has_coordinates:
+            self.gps_hint.setText('')
+            return
+        meta = item.meta if item else metadata.Metadata()
+        result = geo.apply_gps(dataclasses.replace(meta, city=place.city, sublocation=place.sublocation), book)
+        if result.gps_changed:
+            self.gps_hint.setText(f'GPS wird gesetzt: {place.latitude:.5f}, {place.longitude:.5f}')
+        elif meta.latitude is not None and book.is_ours(meta.latitude, meta.longitude):
+            self.gps_hint.setText('GPS des Ortes ist gesetzt')
+        else:
+            self.gps_hint.setText('GPS der Kamera bleibt erhalten')
 
     def submit(self, step):
         """Speichern; step +1/-1 springt danach weiter, 0 bleibt. False, wenn blockiert."""

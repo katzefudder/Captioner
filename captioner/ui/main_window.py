@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
                                QToolButton, QVBoxLayout, QWidget)
 
-from .. import codes, config, metadata, scanner
+from .. import codes, config, geo, metadata, scanner
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
 from ..roster import Roster, RosterLoader
@@ -71,6 +71,7 @@ class MainWindow(QMainWindow):
         self.roster = Roster()
         self.template_store = TemplateStore(config.templates_dir())
         self.raw_captions = RawCaptionStore(config.cache_dir() / 'raw_captions.json')
+        self.places = geo.PlaceBook(settings.places)
 
         self.folder = None
         self.all_items = []
@@ -174,6 +175,8 @@ class MainWindow(QMainWindow):
         self.editor.reload_roster_requested.connect(lambda: self.load_roster(force=True))
         self.editor.add_roster_file_requested.connect(self.add_roster_file)
         self.editor.navigate_requested.connect(self.step_selection)
+        self.editor.place_chosen.connect(self.remember_place)
+        self.editor.set_place_book(self.places)
 
         splitter = QSplitter()
         splitter.addWidget(left)
@@ -540,7 +543,7 @@ class MainWindow(QMainWindow):
         if not snapshot or not items:
             return
         for item in items:
-            self._enqueue(item, dataclasses.replace(item.meta, **snapshot))
+            self._enqueue(item, geo.apply_gps(dataclasses.replace(item.meta, **snapshot), self.places))
         self.model.refresh([i.key for i in items])
         self._show_selection_in_editor()
         self._update_status()
@@ -570,10 +573,10 @@ class MainWindow(QMainWindow):
             else:
                 caption = item.meta.caption
                 persons = codes.persons_in(caption, self.roster)
-            meta = dataclasses.replace(
+            meta = geo.apply_gps(dataclasses.replace(
                 item.meta, headline=fields['headline'], caption=caption,
                 keywords=unique(fields['keywords'] + persons),
-                city=fields['city'], sublocation=fields['sublocation'])
+                city=fields['city'], sublocation=fields['sublocation']), self.places)
             problems = metadata.validate(meta)
             if problems:
                 QMessageBox.warning(self, 'Nicht gespeichert', f'{item.name}: ' + '; '.join(problems))
@@ -608,9 +611,9 @@ class MainWindow(QMainWindow):
         for item in items:
             caption = template.compose_caption(item.meta.caption, item.taken_at) if item.meta.caption else ''
             persons = codes.persons_in(caption, self.roster)
-            self._enqueue(item, dataclasses.replace(
+            self._enqueue(item, geo.apply_gps(dataclasses.replace(
                 item.meta, headline=template.headline, caption=caption, city=template.city,
-                sublocation=template.sublocation, keywords=unique(template.keywords + persons)))
+                sublocation=template.sublocation, keywords=unique(template.keywords + persons)), self.places))
         self.model.refresh([i.key for i in items])
         self._show_selection_in_editor()
         self._update_status()
@@ -782,15 +785,37 @@ class MainWindow(QMainWindow):
         self.settings.last_template = template.path if template else ''
         self.settings.save()
 
+    def remember_place(self, place):
+        self.places.remember(place)
+        self._save_places()
+
+    def _save_places(self):
+        self.settings.places = self.places.to_list()
+        self.settings.save()
+        self.editor.set_place_book(self.places)
+
     def refresh_templates(self, active_path=''):
         templates, errors = self.template_store.list(self.settings.template_files)
+        # Koordinaten aus Template-Dateien (z. B. von einem anderen Rechner) mitlernen
+        learned = False
+        for template in templates:
+            known = self.places.lookup(template.city, template.sublocation)
+            if template.latitude is not None and not (known and known.has_coordinates):
+                self.places.remember(geo.Place(template.city, template.sublocation,
+                                               template.latitude, template.longitude))
+                learned = True
+        if learned:
+            self._save_places()
         self.editor.set_templates(templates, active_path)
         if errors:
             self.statusBar().showMessage('Templates nicht geladen: ' + '; '.join(errors), 15000)
 
     def edit_template(self, template):
-        dialog = TemplateDialog(template, self.roster.teams, self)
-        if not dialog.exec():
+        dialog = TemplateDialog(template, self.roster.teams, self.places, self)
+        accepted = dialog.exec()
+        if dialog.places_changed:
+            self._save_places()
+        if not accepted:
             return
         new = dialog.template()
         if not new.headline:

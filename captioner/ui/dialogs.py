@@ -6,7 +6,9 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
                                QListWidget, QPushButton, QSpinBox, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 
+from .. import geo
 from ..roster import is_url
+from .placepicker import PlacePickerDialog, place_completer, place_for_completion
 from . import keymap
 from ..templates import DEFAULT_CAPTION_SUFFIX, MatchTemplate
 
@@ -18,8 +20,10 @@ def _split(text):
 
 
 class TemplateDialog(QDialog):
-    def __init__(self, template: MatchTemplate, teams, parent=None):
+    def __init__(self, template: MatchTemplate, teams, places=None, parent=None):
         super().__init__(parent)
+        self.places = places if places is not None else geo.PlaceBook()
+        self.places_changed = False
         self.setWindowTitle('Spiel-Template')
         self.setMinimumWidth(520)
         template = template or MatchTemplate()
@@ -32,7 +36,17 @@ class TemplateDialog(QDialog):
         self.home = self._team_box(teams, template.home)
         self.away = self._team_box(teams, template.away)
         self.city = QLineEdit(template.city)
+        self.city.setCompleter(place_completer(self.places, self))
+        self.city.completer().activated.connect(self._known_place_chosen)
         self.sublocation = QLineEdit(template.sublocation)
+        map_button = QPushButton('Karte …')
+        map_button.setToolTip('Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)')
+        map_button.clicked.connect(self.pick_place)
+        city_row = QHBoxLayout()
+        city_row.addWidget(self.city, 1)
+        city_row.addWidget(map_button)
+        # Koordinaten aus der Datei, solange Stadt/Ort nicht geaendert werden
+        self._file_place = geo.Place(template.city, template.sublocation, template.latitude, template.longitude)
         self.extra_tags = QLineEdit(', '.join(template.extra_tags))
         self.extra_tags.setPlaceholderText('Eishockey, DEL2, Saison 2026/27')
         self.suffix = QLineEdit(template.caption_suffix)
@@ -44,7 +58,7 @@ class TemplateDialog(QDialog):
         form.addRow('Anlass / Liga', self.occasion)
         form.addRow('Heim', self.home)
         form.addRow('Gast', self.away)
-        form.addRow('Stadt', self.city)
+        form.addRow('Stadt', city_row)
         form.addRow('Ort / Halle', self.sublocation)
         form.addRow('Zusatz-Tags', self.extra_tags)
         form.addRow('Anhang an Beschreibung', self.suffix)
@@ -72,11 +86,40 @@ class TemplateDialog(QDialog):
         box.setCurrentText(value)
         return box
 
+    def pick_place(self):
+        current = self.places.lookup(self.city.text(), self.sublocation.text()) or self._place()
+        dialog = PlacePickerDialog(current, self.places, self)
+        if dialog.exec():
+            place = dialog.place()
+            self.city.setText(place.city)
+            self.sublocation.setText(place.sublocation)
+            self.places.remember(place)
+            self.places_changed = True
+
+    def _known_place_chosen(self, text):
+        place = place_for_completion(self.places, text)
+        if place:
+            self.city.setText(place.city)
+            self.sublocation.setText(place.sublocation)
+
+    def _place(self):
+        """Stadt/Ort aus den Feldern, Koordinaten aus dem Ortsbuch oder der Datei."""
+        city, sublocation = self.city.text().strip(), self.sublocation.text().strip()
+        known = self.places.lookup(city, sublocation)
+        if known and known.has_coordinates:
+            return geo.Place(city, sublocation, known.latitude, known.longitude)
+        if self._file_place.key() == geo.Place(city, sublocation).key():
+            return geo.Place(city, sublocation, self._file_place.latitude, self._file_place.longitude)
+        return geo.Place(city, sublocation)
+
     def _update(self):
         self.headline_preview.setText(self.template().headline or '<i>Anlass, Heim und Gast ausfüllen</i>')
 
     def template(self):
+        place = self._place()
         return MatchTemplate(
+            latitude=place.latitude,
+            longitude=place.longitude,
             name=self.name.text().strip(),
             occasion=self.occasion.text().strip(),
             home=self.home.currentText().strip(),

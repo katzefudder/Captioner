@@ -30,6 +30,12 @@ class Metadata:
     # geschrieben, weil Lightroom nur das Label kennt.
     color_class: int = 0
     tagged: bool = False
+    # GPS mit Vorzeichen (Sued/West negativ), aus Sidecar, eingebettet oder RAW.
+    # gps_changed: von Captioner gesetzt (geo.apply_gps), muss geschrieben werden;
+    # sonst wird GPS nie angefasst, Kamera-GPS bleibt, wie es ist.
+    latitude: float = None
+    longitude: float = None
+    gps_changed: bool = False
 
     @property
     def is_captioned(self):
