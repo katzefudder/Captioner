@@ -161,7 +161,7 @@ def test_parse_headline():
 
 RIGHTS = dict(state='Hessen', country='Deutschland', creator='Florian Dehn', authors_position='Fotograf',
               caption_writer='Florian Dehn', copyright='© 2026 Florian Dehn',
-              web_statement='https://example.org/lizenz', source='chuc.de')
+              web_statement='https://example.org/lizenz', source='chuc.de', category='Sport')
 
 
 def test_rights_and_location_roundtrip(tmp_path):

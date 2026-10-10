@@ -152,6 +152,7 @@ def sections(raw, meta: Metadata, labels=()):
         ('Copyright', meta.copyright or _first(raw, 'CopyrightNotice', 'Rights', 'Copyright')),
         ('Copyright-URL', meta.web_statement),
         ('Quelle', meta.source or _first(raw, 'Source')),
+        ('Kategorie', meta.category),
         ('Beschriftet von', meta.caption_writer or _first(raw, 'Writer-Editor', 'CaptionWriter')),
         ('Hinweise', _first(raw, 'SpecialInstructions', 'Instructions')),
     ]

@@ -32,6 +32,7 @@ class Metadata:
     copyright: str = ''          # dc:rights / IPTC CopyrightNotice / EXIF Copyright
     web_statement: str = ''      # xmpRights:WebStatement (URL zu Nutzungsbedingungen)
     source: str = ''             # photoshop:Source / IPTC Source
+    category: str = ''           # photoshop:Category ("Sport"); IPTC Category nur bis 3 Zeichen
     rating: int = 0
     label: str = ''
     # Farbklasse 1-8 (XMP-photomech:ColorClass) und Tag (XMP-photomech:Tagged),

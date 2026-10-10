@@ -270,6 +270,7 @@ caption_writer = "Florian Dehn"
 copyright = "© 2026 Florian Dehn"
 web_statement = "https://example.org/lizenz"
 source = "chuc.de"
+category = "Sport"
 ```
 
 Gefüllte Felder schreibt die App beim Speichern in jedes Bild; leere lassen den Wert des
@@ -288,6 +289,7 @@ Beschreibung. Bundesland und Land füllt „Karte …“ beim Wählen des Ortes 
 | `copyright` | `dc:rights`, dazu `xmpRights:Marked` | `CopyrightNotice` | `Copyright` |
 | `web_statement` | `xmpRights:WebStatement` | | |
 | `source` | `photoshop:Source` | `Source` | |
+| `category` | `photoshop:Category` | `Category` (nur bis 3 Zeichen, z. B. `SPO`) | |
 
 Bei RAW-Dateien geht alles nur ins XMP-Sidecar. Dateien der Version 1 (mit `occasion`,
 `home`, `away`) werden weiter gelesen; daraus wird der Titel, beim nächsten Speichern

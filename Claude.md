@@ -105,10 +105,12 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   `parse_headline` daraus. Ohne Titel kommt er aus dem Panel und `apply_template` lässt den
   Titel des Bildes stehen.
 - Ort/Rechte (`templates.FIXED_FIELDS`: state, country, creator, authors_position,
-  caption_writer, copyright, web_statement, source) schreibt das Template beim Speichern,
+  caption_writer, copyright, web_statement, source, category) schreibt das Template beim Speichern,
   Einfügen und Anwenden in jedes Bild, aber nur gefüllte (`fixed_values()`). Zuordnung zu
   XMP/IPTC/EXIF in `metadata.RIGHTS_TAGS`. Gelesen werden sie aus **allen** Dateien eines
-  Bildes (wie GPS), damit Kamera-Artist/Copyright beim Speichern nicht verloren gehen. Ohne Titel im Template übernimmt ein unbeschriftetes Bild den
+  Bildes (wie GPS), damit Kamera-Artist/Copyright beim Speichern nicht verloren gehen.
+- `category` (photoshop:Category): IPTC-IIM `Category` hat nur 3 Zeichen; Längeres steht nur
+  im XMP, das IIM-Feld wird dann geleert statt abgeschnitten. Ohne Titel im Template übernimmt ein unbeschriftetes Bild den
   zuletzt gespeicherten (`last_headline`); Code-Vorschläge nehmen die Teams dann aus dem
   Titel (`templates.parse_headline`, gleiches Muster wie `matches.py`).
 - Templates werden über ihren **Pfad** identifiziert (`Settings.last_template`), nicht
@@ -184,7 +186,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 152 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 153 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

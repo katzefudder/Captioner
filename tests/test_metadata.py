@@ -196,7 +196,7 @@ def test_gps_is_not_rewritten_unless_changed(tool, tmp_path):
 
 RIGHTS = dict(state='Hessen', country='Deutschland', creator='Florian Dehn', authors_position='Fotograf',
               caption_writer='Florian Dehn', copyright='© 2026 Florian Dehn',
-              web_statement='https://example.org/lizenz', source='chuc.de')
+              web_statement='https://example.org/lizenz', source='chuc.de', category='Sport')
 
 
 def test_rights_go_into_xmp_iptc_and_exif(tool, tmp_path):
@@ -215,6 +215,7 @@ def test_rights_go_into_xmp_iptc_and_exif(tool, tmp_path):
     assert record['XMP:Source'] == record['IPTC:Source'] == 'chuc.de'
     assert record['XMP:State'] == record['IPTC:Province-State'] == 'Hessen'
     assert record['XMP:Country'] == record['IPTC:Country-PrimaryLocationName'] == 'Deutschland'
+    assert record['XMP:Category'] == 'Sport' and 'IPTC:Category' not in record  # IIM nur 3 Zeichen
     item = scanner.scan(tmp_path)[0]
     list(metadata.read_items(tool, [item]))
     assert {name: getattr(item.meta, name) for name in RIGHTS} == RIGHTS
@@ -238,3 +239,11 @@ def test_camera_artist_and_copyright_survive_saving(tool, tmp_path):
 def test_rights_limits_are_checked():
     problems = metadata.validate(Metadata(creator='x' * 33, copyright='© ' + 'y' * 140))
     assert any(p.startswith('Fotograf') for p in problems) and any(p.startswith('Copyright') for p in problems)
+
+
+def test_short_category_also_goes_into_iptc(tool, tmp_path):
+    path = make_jpeg(tmp_path / 'a.jpg')
+    item = scanner.scan(tmp_path)[0]
+    metadata.write_item(tool, item, Metadata(headline='x', category='SPO'))
+    record = tool.json('-G', '-XMP-photoshop:Category', '-IPTC:Category', str(path))[0]
+    assert record['XMP:Category'] == record['IPTC:Category'] == 'SPO'

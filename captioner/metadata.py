@@ -45,7 +45,11 @@ RIGHTS_TAGS = {
     'copyright': ('XMP-dc:Rights', 'IPTC:CopyrightNotice', 'EXIF:Copyright'),
     'web_statement': ('XMP-xmpRights:WebStatement', None, None),
     'source': ('XMP-photoshop:Source', 'IPTC:Source', None),
+    'category': ('XMP-photoshop:Category', 'IPTC:Category', None),
 }
+# IPTC-IIM Category erlaubt nur 3 Zeichen ("SPO"). Laengeres ("Sport") steht nur im XMP,
+# statt abgeschnitten ("Spo") im IIM
+IPTC_CATEGORY_LIMIT = 3
 RIGHTS_READ = {
     'state': ('State', 'Province-State'),
     'country': ('Country', 'Country-PrimaryLocationName'),
@@ -55,10 +59,11 @@ RIGHTS_READ = {
     'copyright': ('Rights', 'CopyrightNotice', 'Copyright'),
     'web_statement': ('WebStatement',),
     'source': ('Source',),
+    'category': ('Category',),
 }
 LABELS = {'state': 'Bundesland', 'country': 'Land', 'creator': 'Fotograf', 'authors_position': 'Position',
           'caption_writer': 'Beschriftet von', 'copyright': 'Copyright', 'web_statement': 'Copyright-URL',
-          'source': 'Quelle'}
+          'source': 'Quelle', 'category': 'Kategorie'}
 OBJECT_NAME_LIMIT = 64
 
 READ_TAGS = [
@@ -258,7 +263,11 @@ def _embedded_args(meta: Metadata):
     args += [f'-IPTC:Keywords={k}' for k in meta.keywords] or ['-IPTC:Keywords=']
     for name, (_, iptc, exif) in RIGHTS_TAGS.items():
         value = getattr(meta, name)
-        if iptc:
+        if name == 'category':
+            # zu lang: IIM leeren statt abschneiden, das XMP traegt den vollen Wert
+            fits = len(value.encode('utf-8')) <= IPTC_CATEGORY_LIMIT
+            args.append(f'-{iptc}={value if fits else ""}')
+        elif iptc:
             args.append(f'-{iptc}={truncate_bytes(value, LIMITS[name])}')
         if exif:
             args.append(f'-{exif}={value}')

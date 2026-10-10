@@ -66,6 +66,7 @@ class TemplateDialog(QDialog):
         self.web_statement = field(template.web_statement, 'https://… (Nutzungsbedingungen, Lizenz)')
         self.source = field(template.source, 'Agentur, Redaktion')
         self.extra_tags = field(', '.join(template.extra_tags), 'Eishockey, DEL2, Saison 2026/27')
+        self.category = field(template.category, 'Sport')
         self.suffix = field(template.caption_suffix, DEFAULT_CAPTION_SUFFIX)
 
         def section(title):
@@ -89,6 +90,7 @@ class TemplateDialog(QDialog):
         form.addRow('Copyright-URL', self.web_statement)
         form.addRow('Quelle', self.source)
         section('Beschreibung und Tags')
+        form.addRow('Kategorie', self.category)
         form.addRow('Zusatz-Tags', self.extra_tags)
         form.addRow('Anhang', self.suffix)
         form.addRow('', QLabel('<small>Platzhalter: {headline}, {city}, {sublocation}, {date}</small>'))
@@ -174,6 +176,7 @@ class TemplateDialog(QDialog):
             copyright=self.copyright.text().strip(),
             web_statement=self.web_statement.text().strip(),
             source=self.source.text().strip(),
+            category=self.category.text().strip(),
             latitude=place.latitude,
             longitude=place.longitude,
         )
