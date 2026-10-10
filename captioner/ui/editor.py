@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (QComboBox, QCompleter, QFormLayout, QHBoxLayout, 
 from .. import codes, geo, metadata
 from .keymap import keys as binding_keys
 from .placepicker import PlacePickerDialog, place_completer, place_for_completion
-from ..templates import unique
+from ..templates import parse_headline, unique
 
 
 def shortcut_text(command):
@@ -178,6 +178,14 @@ class CaptionEditor(QWidget):
 
         form = QFormLayout()
         self.headline = QLineEdit()
+        self.headline.setPlaceholderText('DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg')
+        # Teams fuer die Code-Vorschlaege, wenn das Template keine vorgibt
+        self.headline.textChanged.connect(self._update_completions)
+        self.headline_hint = QLabel('<small>Format „&lt;Anlass&gt; - &lt;Heim&gt; gegen &lt;Gast&gt;“, '
+                                    'sonst erkennt die Personenerkennung das Spiel nicht</small>')
+        self.headline_hint.setStyleSheet('color: #d64541;')
+        self.headline_hint.setWordWrap(True)
+        self.headline_hint.hide()
         self.caption = CodeTextEdit()
         self.caption.setPlaceholderText('Zweikampf #bi99# gegen #bn23#')
         self.caption.setMinimumHeight(90)
@@ -208,6 +216,7 @@ class CaptionEditor(QWidget):
         self.gps_hint.setStyleSheet('color: gray;')
 
         form.addRow('Titel', self.headline)
+        form.addRow('', self.headline_hint)
         form.addRow('Beschreibung', self.caption)
         form.addRow('', self.preview)
         form.addRow('Tags', self.keywords)
@@ -333,11 +342,17 @@ class CaptionEditor(QWidget):
             self.caption.set_completions([])
             return
         teams = self.template.teams if self.template else []
+        if not teams:
+            parsed = parse_headline(self.headline.text())
+            teams = list(parsed[1:]) if parsed else []
+        if teams == getattr(self, '_completion_teams', None) and self.roster is getattr(self, '_completion_roster', None):
+            return
+        self._completion_teams, self._completion_roster = teams, self.roster
         first = [e for team in teams for e in self.roster.codes_for_team(team)]
         rest = [e for e in self.roster.entries.values() if e not in first]
         self.caption.set_completions(first + rest)
 
-    def show_items(self, items, carry_over_raw=None, raw_lookup=None):
+    def show_items(self, items, carry_over_raw=None, raw_lookup=None, carry_over_headline=None):
         """Felder aus dem ersten ausgewaehlten Item fuellen."""
         self.set_enabled(bool(items))
         if not items:
@@ -352,7 +367,8 @@ class CaptionEditor(QWidget):
             f'<b>{html.escape(item.name)}</b>' if count == 1
             else f'<b>{count} Bilder ausgewählt</b> – Speichern schreibt in alle')
         meta = item.meta
-        headline = meta.headline or (self.template.headline if self.template else '')
+        # Ohne festen Titel im Template: der zuletzt gespeicherte, damit man ihn nicht je Bild tippt
+        headline = meta.headline or (self.template.headline if self.template else '') or carry_over_headline or ''
         city = meta.city or (self.template.city if self.template else '')
         sublocation = meta.sublocation or (self.template.sublocation if self.template else '')
         keywords = meta.keywords or (self.template.keywords if self.template else [])
@@ -398,6 +414,8 @@ class CaptionEditor(QWidget):
         return [t.strip() for t in re.split(r'[,\n]', self.keywords.text()) if t.strip()]
 
     def _update_preview(self):
+        headline = self.headline.text().strip()
+        self.headline_hint.setVisible(bool(headline) and parse_headline(headline) is None)
         raw = self.caption.toPlainText()
         resolution = self.resolve()
         text = metadata.single_line(resolution.text)

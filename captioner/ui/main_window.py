@@ -133,6 +133,7 @@ class MainWindow(QMainWindow):
 
         self.edited_keys = set()   # ueber alle Tabs; Keys sind Pfade
         self.last_raw_caption = ''
+        self.last_headline = ''    # fuer Bilder ohne Titel, wenn das Template keinen vorgibt
         self.roster_worker = None
         self.copy_worker = None
         self._drag_items = []
@@ -602,7 +603,8 @@ class MainWindow(QMainWindow):
     def _show_selection_in_editor(self):
         items = self._focused_first(self._selected_items())
         carry = self.last_raw_caption if len(items) == 1 and not items[0].meta.is_captioned else None
-        self.editor.show_items(items, carry_over_raw=carry, raw_lookup=self.raw_captions.get)
+        self.editor.show_items(items, carry_over_raw=carry, raw_lookup=self.raw_captions.get,
+                               carry_over_headline=self.last_headline)
 
     def select_all_filtered(self):
         """Alle, nicht nur die sichtbare Seite."""
@@ -782,6 +784,8 @@ class MainWindow(QMainWindow):
                 self.raw_captions.set(item, fields['raw_caption'])
         if apply_caption and fields['raw_caption'].strip():
             self.last_raw_caption = fields['raw_caption']
+        if fields['headline']:
+            self.last_headline = fields['headline']
         self.model.refresh([item.key for item, _ in planned])
         self._update_status()
         if self.viewer is not None and self.viewer.isVisible():
@@ -807,10 +811,13 @@ class MainWindow(QMainWindow):
             return
         items = self._selected_items()
         for item in items:
-            caption = template.compose_caption(item.meta.caption, item.taken_at) if item.meta.caption else ''
+            # Ohne Heim/Gast gibt das Template keinen Titel vor: der des Bildes bleibt
+            headline = template.headline or item.meta.headline
+            caption = template.compose_caption(item.meta.caption, item.taken_at, headline=headline) \
+                if item.meta.caption else ''
             persons = codes.persons_in(caption, self.roster)
             self._enqueue(item, geo.apply_gps(dataclasses.replace(
-                item.meta, headline=template.headline, caption=caption, city=template.city,
+                item.meta, headline=headline, caption=caption, city=template.city,
                 sublocation=template.sublocation, keywords=unique(template.keywords + persons)), self.places))
         self.model.refresh([i.key for i in items])
         self._show_selection_in_editor()
@@ -1111,8 +1118,8 @@ class MainWindow(QMainWindow):
         if not accepted:
             return
         new = dialog.template()
-        if not new.headline:
-            QMessageBox.warning(self, 'Template unvollständig', 'Anlass, Heim und Gast sind Pflicht.')
+        if not (new.name or new.headline):
+            QMessageBox.warning(self, 'Template unvollständig', 'Bitte einen Namen eingeben.')
             return
         if template and template.path:
             if self.template_store.is_internal(template) and \

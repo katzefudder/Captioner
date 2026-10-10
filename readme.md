@@ -88,8 +88,12 @@ Hardened Runtime braucht.
    DNG, TIFF. RAW+JPG mit gleichem Namen sind eine Kachel. Jeder Ordner bekommt einen
    eigenen **Tab**, siehe „Mehrere Ordner“.
 2. **Spiel-Template** wählen, mit `+` anlegen oder mit **„Template öffnen …"** eine
-   Template-Datei vom Rechner laden: Anlass (`DEL 2`), Heim, Gast (aus dem Roster),
-   Stadt, Halle, Zusatz-Tags.
+   Template-Datei vom Rechner laden: Name, Stadt, Halle, Zusatz-Tags, Anhang; optional
+   Anlass (`DEL 2`), Heim und Gast. Mit allen dreien gibt das Template den Titel vor.
+   Ohne Heim/Gast taugt ein Template für jedes Spiel in derselben Halle: den **Titel**
+   (`DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg`) trägst du im Panel ein, die
+   folgenden Bilder übernehmen ihn, und die Code-Vorschläge zeigen die Spieler dieser
+   beiden Teams zuerst. Weicht der Titel vom Format ab, warnt das Panel.
 3. Bilder auswählen und **„Template auf Auswahl anwenden"**: Titel, Ort und Tags für alle.
 4. Bild für Bild beschreiben. `#bi` öffnet die Liste der Bietigheim-Codes:
 

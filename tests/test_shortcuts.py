@@ -289,3 +289,32 @@ def test_caption_in_viewer_with_copy_paste(window):
     viewer.caption_button.click()
     assert not window._editor_in_viewer() and not window.settings.viewer_caption_panel
     viewer.close()
+
+
+@requires_exiftool
+def test_template_without_teams_keeps_typed_headline(window, roster):
+    from captioner.templates import MatchTemplate
+    editor = window.editor
+    editor.set_roster(roster, '#')
+    editor.template = MatchTemplate(name='DEL2 Heim', occasion='DEL 2', city='Bad Nauheim', caption_suffix='')
+    first, second = window.filtered[0], window.filtered[1]
+
+    # Titel in falschem Format: Hinweis, Speichern geht trotzdem
+    editor.headline.setText('Bad Nauheim gegen Bietigheim')
+    assert editor.headline_hint.isVisibleTo(editor)
+    editor.headline.setText('DEL 2 - Bietigheim Steelers gegen EC Bad Nauheim')
+    assert not editor.headline_hint.isVisibleTo(editor)
+    # Code-Vorschlaege: Teams aus dem Titel zuerst (Heim = Bietigheim)
+    assert editor.caption.model.stringList()[0].startswith('bi')
+    editor.caption.setPlainText('Jubel')
+    editor.submit(1)                                   # speichern, weiter
+    assert first.meta.headline == 'DEL 2 - Bietigheim Steelers gegen EC Bad Nauheim'
+    # naechstes, noch unbeschriftetes Bild bekommt den Titel vorgeschlagen
+    assert window._selected_items() == [second]
+    assert editor.headline.text() == first.meta.headline
+
+    # Template anwenden ueberschreibt den Titel nicht mit einem leeren
+    window.select_only(first)
+    window.apply_template()
+    assert first.meta.headline == 'DEL 2 - Bietigheim Steelers gegen EC Bad Nauheim'
+    assert first.meta.city == 'Bad Nauheim'

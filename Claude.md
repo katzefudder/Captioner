@@ -39,7 +39,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   JPG/DNG.
 - **Kein Code in die Datei.** Aufgelöst wird beim Speichern; unbekannte Codes blockieren.
 - **Headline-Format** `<Anlass> - <Heim> gegen <Gast>`: `app/recognition/lib/matches.py`
-  liest daraus den Spielkontext. Personen als `-23- Name (Team)`.
+  liest daraus den Spielkontext. Das Panel warnt bei abweichendem Titel, blockiert aber nicht. Personen als `-23- Name (Team)`.
 - **Feldnamen** müssen zur IPTC-Map in `app/indexer/lib/indexer.py` passen
   (`Headline`, `ObjectName`, `Caption-Abstract`, `Keywords`, `City`, `Sub-location`).
 - **Drag erst nach `writer.flush()`.** Eine bearbeitete RAW-Datei ohne Sidecar oder ein
@@ -98,8 +98,13 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Templates und Roster als Dateien
 
 - Template-Format: TOML mit `format = "captioner-template"` und `version`. Dateien ohne
-  `format` (erste Version) sind gültig; fremdes `format`, neuere `version`, falsche Typen
-  oder fehlendes Anlass/Heim/Gast → `TemplateError`. `path` wird nie serialisiert.
+  `format` (erste Version) sind gültig; fremdes `format`, neuere `version` oder falsche Typen
+  → `TemplateError`. `path` wird nie serialisiert.
+- Anlass, Heim, Gast sind **optional**. Nur mit allen dreien gibt das Template den Titel vor
+  (`MatchTemplate.headline`); sonst kommt er aus dem Panel und `apply_template` lässt den
+  Titel des Bildes stehen. Ohne Titel im Template übernimmt ein unbeschriftetes Bild den
+  zuletzt gespeicherten (`last_headline`); Code-Vorschläge nehmen die Teams dann aus dem
+  Titel (`templates.parse_headline`, gleiches Muster wie `matches.py`).
 - Templates werden über ihren **Pfad** identifiziert (`Settings.last_template`), nicht
   über den Namen. Externe Dateien stehen in `Settings.template_files`, werden beim
   Bearbeiten in dieselbe Datei zurückgeschrieben und **nie gelöscht**; `TemplateStore.delete`
@@ -173,7 +178,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 142 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 145 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

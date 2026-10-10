@@ -80,7 +80,6 @@ def test_foreign_or_broken_files_are_rejected(tmp_path):
     cases = {
         'other.toml': 'format = "something-else"\noccasion = "x"\nhome = "a"\naway = "b"\n',
         'broken.toml': 'occasion = \n',
-        'incomplete.toml': 'occasion = "DEL 2"\n',
         'types.toml': 'occasion = "DEL 2"\nhome = "a"\naway = "b"\nextra_tags = "Eishockey"\n',
         'future.toml': 'version = 99\noccasion = "DEL 2"\nhome = "a"\naway = "b"\n',
     }
@@ -136,3 +135,24 @@ def test_bad_coordinates_are_rejected(tmp_path, lines):
     path.write_text('occasion = "DEL 2"\nhome = "A"\naway = "B"\n' + lines + '\n', encoding='utf-8')
     with pytest.raises(templates.TemplateError):
         templates.load_file(path)
+
+
+def test_home_and_away_are_optional(tmp_path):
+    from captioner import templates
+    path = tmp_path / 'DEL2 Heimspiele.toml'
+    path.write_text('occasion = "DEL 2"\ncity = "Bad Nauheim"\nextra_tags = ["Eishockey"]\n', encoding='utf-8')
+    loaded = templates.load_file(path)
+    assert loaded.headline == '' and loaded.teams == [] and loaded.name == 'DEL2 Heimspiele'
+    assert loaded.keywords == ['Bad Nauheim', 'Eishockey']
+    # Anhang mit dem Titel des Bildes statt eines festen
+    assert loaded.compose_caption('Jubel', '', headline='DEL 2 - A gegen B', city='Bad Nauheim') == \
+        'Jubel, DEL 2 - A gegen B, Bad Nauheim'
+
+
+def test_parse_headline():
+    from captioner.templates import parse_headline
+    assert parse_headline('DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg') == (
+        'DEL 2', 'EC Bad Nauheim', 'Eisbären Regensburg')
+    assert parse_headline(template().headline) == ('DEL 2', 'EC Bad Nauheim', 'Bietigheim Steelers')
+    assert parse_headline('Training EC Bad Nauheim') is None
+    assert parse_headline('') is None

@@ -28,13 +28,17 @@ class TemplateDialog(QDialog):
         self.setMinimumWidth(520)
         template = template or MatchTemplate()
         form = QFormLayout(self)
+        # macOS-Standard laesst Felder auf Mindestbreite; hier sollen sie den Dialog fuellen
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         self.name = QLineEdit(template.name)
-        self.name.setPlaceholderText('leer = Titel')
+        self.name.setPlaceholderText('z. B. DEL 2 Heimspiele (leer = Titel)')
         self.occasion = QLineEdit(template.occasion)
         self.occasion.setPlaceholderText('DEL 2')
         self.home = self._team_box(teams, template.home)
         self.away = self._team_box(teams, template.away)
+        for box in (self.home, self.away):
+            box.lineEdit().setPlaceholderText('optional')
         self.city = QLineEdit(template.city)
         self.city.setCompleter(place_completer(self.places, self))
         self.city.completer().activated.connect(self._known_place_chosen)
@@ -64,8 +68,10 @@ class TemplateDialog(QDialog):
         form.addRow('Anhang an Beschreibung', self.suffix)
         form.addRow('', QLabel('<small>Platzhalter: {headline}, {city}, {sublocation}, {date}</small>'))
         form.addRow('Titel', self.headline_preview)
-        note = QLabel('<small>Titel-Format „&lt;Anlass&gt; - &lt;Heim&gt; gegen &lt;Gast&gt;“ ist fest: '
-                      'die Personenerkennung liest den Spielkontext daraus.</small>')
+        note = QLabel('<small>Heim und Gast sind optional. Mit Anlass, Heim und Gast gibt das Template den '
+                      'Titel vor; ohne trägst du ihn pro Bild im Panel ein. Das Format „&lt;Anlass&gt; - '
+                      '&lt;Heim&gt; gegen &lt;Gast&gt;“ bleibt fest: die Personenerkennung liest den '
+                      'Spielkontext daraus.</small>')
         note.setWordWrap(True)
         form.addRow('', note)
 
@@ -113,7 +119,7 @@ class TemplateDialog(QDialog):
         return geo.Place(city, sublocation)
 
     def _update(self):
-        self.headline_preview.setText(self.template().headline or '<i>Anlass, Heim und Gast ausfüllen</i>')
+        self.headline_preview.setText(self.template().headline or '<i>kein fester Titel – wird im Panel eingetragen</i>')
 
     def template(self):
         place = self._place()

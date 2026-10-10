@@ -2,7 +2,10 @@
 Spiel-Templates, der Ersatz fuer das "IPTC Stationery Pad" (ADR 0001, Punkt 6).
 
 Die Headline hat das feste Format "<Anlass> - <Heim> gegen <Gast>", weil
-recognition/lib/matches.py den Spielkontext genau daraus liest.
+recognition/lib/matches.py den Spielkontext genau daraus liest. Anlass, Heim und
+Gast im Template sind optional: Sind alle drei gesetzt, gibt das Template den
+Titel vor; sonst wird er pro Bild im Panel eingetragen (parse_headline liest
+die Teams daraus).
 """
 import re
 import tomllib
@@ -15,6 +18,15 @@ from .geo import valid_coordinates
 
 
 DEFAULT_CAPTION_SUFFIX = ', {headline}, {city}, {sublocation}, {date}'
+
+# Wie in app/recognition/lib/matches.py
+HEADLINE_PATTERN = re.compile(r'^(?P<occasion>.+?)\s+-\s+(?P<home>.+?)\s+gegen\s+(?P<away>.+?)$')
+
+
+def parse_headline(text):
+    """'DEL 2 - EC Bad Nauheim gegen Eisbaeren Regensburg' -> (Anlass, Heim, Gast), sonst None."""
+    match = HEADLINE_PATTERN.match((text or '').strip())
+    return (match.group('occasion'), match.group('home'), match.group('away')) if match else None
 
 
 @dataclass
@@ -156,8 +168,6 @@ def load_file(path):
             ('latitude' in values and not valid_coordinates(values['latitude'], values['longitude'])):
         raise TemplateError(f'{path.name}: latitude/longitude unvollständig oder außerhalb des gültigen Bereichs')
     template = MatchTemplate(**values)
-    if not template.headline:
-        raise TemplateError(f'{path.name}: Anlass, Heim und Gast fehlen')
     if not template.name:
         template.name = path.stem
     template.path = str(path)
