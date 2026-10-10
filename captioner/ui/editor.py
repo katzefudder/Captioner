@@ -5,6 +5,7 @@ Die Beschreibung zeigt live, was aus den Codes wird; unbekannte Codes sind rot
 und blockieren das Speichern (ADR 0001, Punkt 5).
 """
 import html
+import re
 from pathlib import Path
 
 from PySide6.QtCore import QStringListModel, Qt, Signal
@@ -23,14 +24,42 @@ def shortcut_text(command):
     return QKeySequence(binding_keys(command)[0]).toString(QKeySequence.SequenceFormat.NativeText)
 
 
-class CodeTextEdit(QPlainTextEdit):
-    """Einzeiliger Text mit Umbruch in der Anzeige und Autovervollstaendigung nach '#'."""
+class WrappingLineEdit(QPlainTextEdit):
+    """Einzeiliger Text, in der Anzeige umgebrochen. Enter speichert, nie ein Zeilenumbruch."""
     submit = Signal()  # Enter: speichern, beim Bild bleiben
 
-    def __init__(self, parent=None):
+    def __init__(self, lines=None, parent=None):
         super().__init__(parent)
-        self.delimiter = '#'
         self.setTabChangesFocus(True)
+        if lines:
+            margins = self.contentsMargins()
+            height = (self.fontMetrics().lineSpacing() * lines + 2 * self.document().documentMargin()
+                      + margins.top() + margins.bottom() + 2 * self.frameWidth())
+            self.setFixedHeight(int(height))
+
+    def text(self):
+        return self.toPlainText()
+
+    def setText(self, text):
+        self.setPlainText(text)
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            # Mit Modifier gehoert die Taste den Kuerzeln (z. B. Cmd/Strg+Enter)
+            if event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
+                event.ignore()
+            else:
+                self.submit.emit()
+            return
+        super().keyPressEvent(event)
+
+
+class CodeTextEdit(WrappingLineEdit):
+    """Beschreibung: umbrechender Einzeiler mit Autovervollstaendigung nach '#'."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.delimiter = '#'
         self.completer = QCompleter(self)
         self.completer.setWidget(self)
         self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
@@ -63,15 +92,9 @@ class CodeTextEdit(QPlainTextEdit):
                                                  Qt.Key.Key_Escape, Qt.Key.Key_Backtab):
             event.ignore()
             return
-        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            # Bildunterschriften sind einzeilig: Enter speichert, mit Modifier
-            # gehoert die Taste den Kuerzeln (z. B. Cmd/Strg+Enter), nie ein Zeilenumbruch
-            if event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
-                event.ignore()
-            else:
-                self.submit.emit()
-            return
         super().keyPressEvent(event)
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            return
         prefix = self._prefix()
         if prefix is None:
             popup.hide()
@@ -161,11 +184,14 @@ class CaptionEditor(QWidget):
         self.preview.setWordWrap(True)
         self.preview.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.preview.setTextFormat(Qt.TextFormat.RichText)
-        self.keywords = QLineEdit()
+        # Tags wie die Beschreibung umgebrochen, aber niedriger
+        self.keywords = WrappingLineEdit(lines=3)
         self.keywords.setPlaceholderText('Tags, kommagetrennt')
+        self.keywords.textChanged.connect(self._update_preview)
+        self.keywords.submit.connect(lambda: self.submit(0))
         self.city = QLineEdit()
         self.sublocation = QLineEdit()
-        for field in (self.headline, self.keywords, self.city, self.sublocation):
+        for field in (self.headline, self.city, self.sublocation):
             field.textChanged.connect(self._update_preview)
             field.returnPressed.connect(lambda: self.submit(0))
 
@@ -327,7 +353,8 @@ class CaptionEditor(QWidget):
         return codes.resolve(self.caption.toPlainText(), self.roster, self.delimiter)
 
     def tags(self):
-        return [t.strip() for t in self.keywords.text().split(',') if t.strip()]
+        # Eingefuegter Text kann Zeilenumbrueche enthalten; sie trennen wie Kommas
+        return [t.strip() for t in re.split(r'[,\n]', self.keywords.text()) if t.strip()]
 
     def _update_preview(self):
         raw = self.caption.toPlainText()

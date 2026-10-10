@@ -170,6 +170,19 @@ def test_save_and_next_from_caption(window):
 
 
 @requires_exiftool
+def test_keywords_field_wraps_and_enter_saves(window):
+    item = window.filtered[0]
+    tags = window.editor.keywords
+    caption_height = window.editor.caption.minimumHeight()
+    assert tags.lineWrapMode() == tags.LineWrapMode.WidgetWidth and tags.height() < caption_height
+    tags.setPlainText('Eishockey, DEL2\n2026/27')  # eingefuegter Umbruch trennt wie ein Komma
+    tags.setFocus()
+    press(tags, Qt.Key.Key_Return)
+    assert tags.toPlainText() == 'Eishockey, DEL2\n2026/27'  # Enter fuegt keinen Umbruch ein
+    assert item.meta.keywords == ['Eishockey', 'DEL2', '2026/27']
+
+
+@requires_exiftool
 def test_snapshot_copy_paste(window):
     first, other = window.filtered[0], window.filtered[2]
     window.editor.headline.setText('DEL 2 - A gegen B')
