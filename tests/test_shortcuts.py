@@ -312,6 +312,10 @@ def test_template_without_teams_keeps_typed_headline(window, roster):
     # naechstes, noch unbeschriftetes Bild bekommt den Titel vorgeschlagen
     assert window._selected_items() == [second]
     assert editor.headline.text() == first.meta.headline
+    # Beschreibung des naechsten Bildes ist markiert: Tippen ueberschreibt sie
+    cursor = editor.caption.textCursor()
+    assert cursor.selectedText() == editor.caption.toPlainText()
+    assert cursor.selectionStart() == 0
 
     # Template anwenden ueberschreibt den Titel nicht mit einem leeren
     window.select_only(first)
