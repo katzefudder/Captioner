@@ -330,7 +330,7 @@ def test_saving_with_template_writes_rights(window):
     item.meta.source = 'vorher'
     editor.headline.setText('DEL 2 - A gegen B')
     editor.caption.setPlainText('Jubel')
-    assert 'Fotograf Florian Dehn' in editor.rights_hint.text()
+    assert 'Fotograf Florian Dehn' in editor.rights_hint.text() and 'Land: Deutschland' in editor.rights_hint.toolTip()
     editor.submit(0)
     assert (item.meta.creator, item.meta.copyright, item.meta.country) == (
         'Florian Dehn', '© 2026 Florian Dehn', 'Deutschland')

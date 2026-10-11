@@ -12,7 +12,7 @@ from pathlib import Path
 from PySide6.QtCore import QStringListModel, Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut, QTextCursor
 from PySide6.QtWidgets import (QComboBox, QCompleter, QFormLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QPlainTextEdit, QPushButton, QSizePolicy,
+                               QLineEdit, QMenu, QPlainTextEdit, QPushButton, QSizePolicy,
                                QToolButton, QVBoxLayout, QWidget)
 
 from .. import codes, geo, metadata
@@ -136,39 +136,35 @@ class CaptionEditor(QWidget):
     def _build(self):
         layout = QVBoxLayout(self)
 
+        # Template: Auswahl, ein sichtbarer Knopf (Bearbeiten), der Rest im Menue "⋯"
         template_row = QHBoxLayout()
         self.template_box = QComboBox()
         self.template_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.template_box.currentIndexChanged.connect(self._template_selected)
-        new_button = QToolButton(text='+')
-        new_button.setToolTip('Neues Template')
-        new_button.clicked.connect(lambda: self.edit_template_requested.emit(None))
-        edit_button = QToolButton(text='…')
-        edit_button.setToolTip('Template bearbeiten')
-        edit_button.clicked.connect(lambda: self.edit_template_requested.emit(self.template))
-        remove_button = QToolButton(text='−')
-        remove_button.setToolTip('Template aus der Liste entfernen')
-        remove_button.clicked.connect(lambda: self.template and self.remove_template_requested.emit(self.template))
-        template_row.addWidget(QLabel('Spiel:'))
+        self.edit_template_button = QPushButton('Bearbeiten …')
+        self.edit_template_button.setToolTip('Gewähltes Template anzeigen und ändern')
+        self.edit_template_button.clicked.connect(lambda: self.edit_template_requested.emit(self.template))
+        self.template_menu = QMenu(self)
+        self.template_menu.addAction('Neues Template …', lambda: self.edit_template_requested.emit(None))
+        self.template_menu.addAction('Template-Datei laden …', self.open_template_requested)
+        self.template_menu.addSeparator()
+        self.save_as_action = self.template_menu.addAction('Speichern unter …', self.save_template_as_requested)
+        self.remove_action = self.template_menu.addAction(
+            'Aus der Liste entfernen', lambda: self.template and self.remove_template_requested.emit(self.template))
+        more_button = QToolButton(text='⋯')
+        more_button.setToolTip('Neues Template, Datei laden, speichern unter, entfernen')
+        more_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        more_button.setMenu(self.template_menu)
+        more_button.setStyleSheet('QToolButton::menu-indicator { image: none; width: 0; }')
+        template_row.addWidget(QLabel('Template:'))
         template_row.addWidget(self.template_box, 1)
-        template_row.addWidget(new_button)
-        template_row.addWidget(edit_button)
-        template_row.addWidget(remove_button)
+        template_row.addWidget(self.edit_template_button)
+        template_row.addWidget(more_button)
         layout.addLayout(template_row)
-
-        file_row = QHBoxLayout()
-        open_button = QPushButton('Template öffnen …')
-        open_button.setToolTip('Template-Datei (.toml) vom Rechner laden')
-        open_button.clicked.connect(self.open_template_requested)
-        self.save_as_button = QPushButton('Speichern unter …')
-        self.save_as_button.setToolTip('Aktuelles Template als Datei speichern, z. B. zum Weitergeben')
-        self.save_as_button.clicked.connect(self.save_template_as_requested)
-        file_row.addWidget(open_button)
-        file_row.addWidget(self.save_as_button)
-        layout.addLayout(file_row)
+        # Nur der Dateiname; der volle Pfad als Tooltip
         self.template_source = QLabel()
         self.template_source.setStyleSheet('color: gray;')
-        self.template_source.setWordWrap(True)
+        self.template_source.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.template_source)
 
         self.apply_button = QPushButton('Template auf Auswahl anwenden')
@@ -344,8 +340,12 @@ class CaptionEditor(QWidget):
 
     def _template_selected(self, index):
         self.template = self.template_box.itemData(index)
-        self.template_source.setText(f'Datei: {self.template.path}' if self.template else '')
-        self.save_as_button.setEnabled(self.template is not None)
+        path = self.template.path if self.template else ''
+        self.template_source.setText(f'<small>{html.escape(Path(path).name)}</small>' if path else '')
+        self.template_source.setToolTip(path)
+        self.template_source.setVisible(bool(path))
+        for widget in (self.save_as_action, self.remove_action, self.edit_template_button):
+            widget.setEnabled(self.template is not None)
         self._update_completions()
         self.template_changed.emit(self.template)
 
@@ -390,6 +390,9 @@ class CaptionEditor(QWidget):
         self.headline.setText(headline)
         self.city.setText(city)
         self.sublocation.setText(sublocation)
+        # Lange Titel vom Anfang zeigen, nicht ans Ende gescrollt ("L 2 - EC Bad …")
+        for field in (self.headline, self.city, self.sublocation):
+            field.setCursorPosition(0)
         self.keywords.setText(', '.join(self._without_persons(keywords, meta.caption)))
         self.caption.setPlainText(raw)
         self._current_item = item
@@ -462,9 +465,22 @@ class CaptionEditor(QWidget):
         self.save_button.setEnabled(not blocked and self.headline.isEnabled())
         self.next_button.setEnabled(not blocked and self.headline.isEnabled())
         self._update_gps_hint(item)
+        self._update_rights_hint()
+
+    # Im Kurztext zuerst, was man am ehesten pruefen will
+    RIGHTS_SUMMARY = ('creator', 'copyright')
+
+    def _update_rights_hint(self):
+        """Eine Zeile mit Fotograf und Copyright, der Rest als Zahl; alles im Tooltip."""
         values = self.template.fixed_values() if self.template else {}
-        self.rights_hint.setText('<small>Aus dem Template: ' + html.escape(' · '.join(
-            f'{metadata.LABELS[name]} {value}' for name, value in values.items())) + '</small>' if values else '')
+        shown = [f'{metadata.LABELS[n]} {values[n]}' if n != 'copyright' else values[n]
+                 for n in self.RIGHTS_SUMMARY if n in values]
+        rest = len(values) - len(shown)
+        if rest:
+            shown.append(f'{rest} weitere' if shown else f'{rest} Felder')
+        self.rights_hint.setText('<small>Aus dem Template: ' + html.escape(' · '.join(shown)) + '</small>'
+                                 if values else '')
+        self.rights_hint.setToolTip('\n'.join(f'{metadata.LABELS[n]}: {v}' for n, v in values.items()))
         self.rights_hint.setVisible(bool(values))
 
     def _update_gps_hint(self, item):

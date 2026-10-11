@@ -87,8 +87,8 @@ Hardened Runtime braucht.
 1. **Ordner öffnen** (`⌘O`, oder Ordner aufs Fenster ziehen). JPG, NEF und andere RAWs,
    DNG, TIFF. RAW+JPG mit gleichem Namen sind eine Kachel. Jeder Ordner bekommt einen
    eigenen **Tab**, siehe „Mehrere Ordner“.
-2. **Template** wählen, mit `+` anlegen oder mit **„Template öffnen …"** eine
-   Template-Datei vom Rechner laden: Ort, Urheber und Rechte (Fotograf, Copyright, …),
+2. **Template** wählen; **„Bearbeiten …“** daneben zeigt und ändert es, unter `⋯` gibt es
+   „Neues Template …“ und **„Template-Datei laden …“** für eine Datei vom Rechner. Ein Template trägt: Ort, Urheber und Rechte (Fotograf, Copyright, …),
    Zusatz-Tags, Anhang und optional ein fester Titel (siehe „Templates als Dateien“).
    Ohne festen Titel taugt ein Template für jedes Spiel: den **Titel**
    (`DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg`) trägst du im Panel ein, die
@@ -167,7 +167,7 @@ Hilfe → „Tastenkürzel“) zeigt alle Kürzel für das aktuelle System.
 | Nur getaggte · nur nicht getaggte (nochmal: alle) | `F3` · `F4` | `F3` · `F4` |
 | Beschriftung kopieren · in Auswahl einfügen (auch im Panel) | `⌘⇧C` · `⌘⇧V` | `Strg+⇧C` · `Strg+⇧V` |
 | Nächstes · vorheriges Bild | `⌘N`/`⌘]` · `⌘B`/`⌘[` | `Strg+M`/`Alt+]` · `Alt+B`/`Alt+[` |
-| Template öffnen · speichern · anwenden | `⌘⌥L` · `⌘⌥S` · `⌘⌥A` | `Strg+Alt+L` · `S` · `A` |
+| Template-Datei laden · speichern unter · anwenden | `⌘⌥L` · `⌘⌥S` · `⌘⌥A` | `Strg+Alt+L` · `S` · `A` |
 | Seite zurück/vor | `Bild↑`/`Bild↓`, `⌘⇧[`/`⌘⇧]` | `Bild↑`/`Bild↓`, `Strg+←`/`→` |
 | Erstes/letztes Bild · zuletzt angesehenes | `Pos1`/`Ende` · `L` | `Pos1`/`Ende` · `L` |
 | Roster einstellen · neu laden | `⌘Control-C` · `⇧⌘Control-C` | `Strg+Alt+C` · `⇧Strg+Alt+C` |
@@ -302,14 +302,17 @@ Bei RAW-Dateien geht alles nur ins XMP-Sidecar. Dateien der Version 1 (mit `occa
 `home`, `away`) werden weiter gelesen; daraus wird der Titel, beim nächsten Speichern
 schreibt die App Version 2.
 
-* **Template öffnen …** lädt eine solche Datei von irgendwo auf dem Rechner (oder die
-  Datei aufs Fenster ziehen). Sie bleibt verknüpft: Änderungen über `…` landen wieder
-  in genau dieser Datei, und sie steht beim nächsten Start wieder in der Liste.
-* **Speichern unter …** schreibt das aktuelle Template in eine neue Datei, z. B. zum
-  Weitergeben oder als Vorlage fürs nächste Heimspiel. Danach wird mit der neuen Datei
-  gearbeitet.
-* Mit `+` angelegte Templates liegen im Konfigurationsordner (siehe unten).
-* `−` nimmt ein Template aus der Liste. Dateien außerhalb des Konfigurationsordners
+Im Panel neben der Template-Auswahl (dieselben Befehle im Menü „Template“):
+
+* **Bearbeiten …** zeigt das gewählte Template und speichert Änderungen zurück in seine Datei.
+* `⋯` → **Template-Datei laden …** lädt eine solche Datei von irgendwo auf dem Rechner (oder
+  die Datei aufs Fenster ziehen). Sie bleibt verknüpft: Änderungen landen wieder in genau
+  dieser Datei, und sie steht beim nächsten Start wieder in der Liste. Unter der Auswahl
+  steht ihr Dateiname, der volle Pfad als Tooltip.
+* `⋯` → **Speichern unter …** schreibt das aktuelle Template in eine neue Datei, z. B. zum
+  Weitergeben. Danach wird mit der neuen Datei gearbeitet.
+* `⋯` → **Neues Template …** legt eines im Konfigurationsordner an (siehe unten).
+* `⋯` → **Aus der Liste entfernen** nimmt ein Template aus der Liste. Dateien außerhalb des Konfigurationsordners
   werden dabei **nie gelöscht**, nur Templates im Konfigurationsordner (mit Rückfrage).
 
 ## Roster-Dateien

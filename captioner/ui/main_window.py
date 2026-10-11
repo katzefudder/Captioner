@@ -184,8 +184,13 @@ class MainWindow(QMainWindow):
         action(file_menu, 'Beenden', self.close, QKeySequence.StandardKey.Quit, role.QuitRole)
 
         template_menu = bar.addMenu('Template')
-        action(template_menu, 'Template öffnen …', self.open_template_file)
+        action(template_menu, 'Neues Template …', lambda: self.edit_template(None))
+        action(template_menu, 'Template bearbeiten …',
+               lambda: self.editor.template and self.edit_template(self.editor.template))
+        template_menu.addSeparator()
+        action(template_menu, 'Template-Datei laden …', self.open_template_file)
         action(template_menu, 'Template speichern unter …', self.save_template_as)
+        template_menu.addSeparator()
         action(template_menu, 'Template auf Auswahl anwenden', self.apply_template)
 
         roster_menu = bar.addMenu('Roster')
@@ -1182,7 +1187,7 @@ class MainWindow(QMainWindow):
     def open_template_file(self, path=None):
         if not path:
             path, _ = QFileDialog.getOpenFileName(
-                self, 'Template öffnen', self.settings.last_folder or str(Path.home()),
+                self, 'Template-Datei laden', self.settings.last_folder or str(Path.home()),
                 'Spiel-Templates (*.toml);;Alle Dateien (*)')
         if not path:
             return None

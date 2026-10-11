@@ -65,7 +65,7 @@ def _bindings(mac):
     # Ansicht / Template / Datei
     add('view_tagged', 'window', ['F3'], 'Nur getaggte zeigen')
     add('view_untagged', 'window', ['F4'], 'Nur nicht getaggte zeigen')
-    add('template_load', 'window', ['Ctrl+Alt+L'], 'Template öffnen')
+    add('template_load', 'window', ['Ctrl+Alt+L'], 'Template-Datei laden')
     add('template_save', 'window', ['Ctrl+Alt+S'], 'Template speichern unter')
     add('template_apply', 'window', ['Ctrl+Alt+A'], 'Template auf Auswahl anwenden')
     add('roster_reload', 'window', ['Ctrl+Meta+Shift+C' if mac else 'Ctrl+Alt+Shift+C'], 'Roster neu laden')
