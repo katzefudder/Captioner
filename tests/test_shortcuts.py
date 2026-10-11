@@ -352,3 +352,59 @@ def test_template_dialog_checks_lengths_and_headline(app):
     dialog.headline.setText('DEL 2 - A gegen B')
     assert save.isEnabled()
     assert dialog.template() == MatchTemplate(name='X', headline='DEL 2 - A gegen B', creator='Florian Dehn')
+
+
+@requires_exiftool
+def test_undo_and_redo(window):
+    from captioner import geo, metadata, scanner
+    from captioner.exiftool import ExifTool, find_exiftool
+    first, second = window.filtered[0], window.filtered[1]
+    window.view.setFocus()
+    press(window.view, Qt.Key.Key_4)
+    window.select_only(second)
+    window.view.setFocus()
+    press(window.view, Qt.Key.Key_3, CMD)
+    assert (first.meta.rating, second.meta.color_class) == (4, 3)
+    assert window.undo_action.text() == 'Rückgängig: Farbklasse'
+
+    press(window.view, Qt.Key.Key_Z, CMD)
+    assert second.meta.color_class == 0 and first.meta.rating == 4
+    press(window.view, Qt.Key.Key_Z, CMD)
+    assert first.meta.rating == 0
+    assert not window.undo_action.isEnabled() and window.redo_action.text() == 'Wiederholen: Bewertung'
+    press(window.view, Qt.Key.Key_Z, CMD | Qt.KeyboardModifier.ShiftModifier)
+    assert first.meta.rating == 4
+
+    # Beschriftung mit GPS: Rueckgaengig nimmt Titel, Rohtext und das gesetzte GPS zurueck
+    window.places.remember(geo.Place('Bad Nauheim', 'Halle', 50.37, 8.73))
+    window.select_only(first)
+    editor = window.editor
+    editor.headline.setText('DEL 2 - A gegen B')
+    editor.city.setText('Bad Nauheim')
+    editor.sublocation.setText('Halle')
+    editor.caption.setPlainText('Jubel')
+    editor.submit(0)
+    assert first.meta.latitude == 50.37 and window.raw_captions.get(first) == 'Jubel'
+    window.undo()
+    assert (first.meta.headline, first.meta.caption, first.meta.latitude) == ('', '', None)
+    assert window.raw_captions.get(first) is None and first.meta.rating == 4
+    assert window.writer.flush(30)
+    tool = ExifTool(find_exiftool()).start()
+    try:
+        fresh = scanner.scan(first.primary.parent)[0]
+        list(metadata.read_items(tool, [fresh]))
+    finally:
+        tool.close()
+    assert (fresh.meta.rating, fresh.meta.headline, fresh.meta.latitude) == (4, '', None)
+
+
+@requires_exiftool
+def test_cmd_z_in_text_field_undoes_typing_not_metadata(window):
+    item = window.filtered[0]
+    window.view.setFocus()
+    press(window.view, Qt.Key.Key_2)
+    caption = window.editor.caption
+    caption.setFocus()
+    QTest.keyClicks(caption, 'abc')
+    press(caption, Qt.Key.Key_Z, CMD)
+    assert caption.toPlainText() == '' and item.meta.rating == 2

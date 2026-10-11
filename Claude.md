@@ -17,6 +17,7 @@ Bedienung: `readme.md`.
 | `metadata.py` | Lesen (Sidecar > eingebettet > RAW) und Schreiben (Sidecar bzw. eingebettet) |
 | `details.py` | EXIF/IPTC fürs Info-Panel: `read()` (Kamera aus RAW, IPTC Sidecar > eingebettet), `sections()` formatiert |
 | `transfer.py` | Kopieren zwischen Ordnern: Gruppen (RAW+JPG+Sidecar), Konflikte (überspringen/umbenennen/ersetzen) |
+| `undo.py` | Rückgängig/Wiederholen: Schritte mit Vorher/Nachher je Bild (Metadaten + Rohtext) |
 | `previews.py` | Kacheln/Großansicht aus eingebetteten JPEGs, Plattencache |
 | `exiftool.py` | `-stay_open`-Prozess, Pool pro OS-Thread, Aufräumen verwaister Prozesse |
 | `ui/viewer.py` | Großansicht mit Zoom (`ZoomView`): eingepasst/100 %/Stufen, Ankerpunkt, Begrenzung des Ausschnitts |
@@ -62,6 +63,15 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Offline: Dialog zeigt den Hinweis statt der Karte, sobald eine Kachel weder aus Netz noch
   Cache kommt; Stadt/Ort und Vorschläge funktionieren weiter.
 - Templates: `latitude`/`longitude` optional, ohne Wert nicht in der Datei (TOML hat kein None).
+
+## Rückgängig
+
+- Jede Aktion, die Metadaten ändert, läuft in `with self._undoable(N_('…'))`; `_enqueue` zeichnet
+  darin Vorher/Nachher auf (verschachtelt zählt der äußere Schritt, z. B. Einfügen → Speichern).
+  Neue Aktionen ebenso einpacken, sonst sind sie nicht rückgängig zu machen.
+- `undo.reverting` setzt `gps_changed`, wenn sich GPS ändert; mit `latitude=None` löscht der
+  Writer GPS (nur so wird von Captioner gesetztes GPS wieder entfernt).
+- `⌘Z` ist ein Window-Kürzel; Textfelder beanspruchen es per ShortcutOverride selbst.
 
 ## Großansicht mit Beschriftung
 
@@ -219,7 +229,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 178 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 180 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

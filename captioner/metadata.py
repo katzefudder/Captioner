@@ -246,6 +246,9 @@ def _xmp_args(meta: Metadata):
     args += [f'-XMP-dc:Subject={k}' for k in meta.keywords] or ['-XMP-dc:Subject=']
     if meta.gps_changed and meta.latitude is not None and meta.longitude is not None:
         args += [f'-XMP-exif:GPSLatitude={meta.latitude:.7f}', f'-XMP-exif:GPSLongitude={meta.longitude:.7f}']
+    elif meta.gps_changed:
+        # Rueckgaengig: von Captioner gesetztes GPS wieder entfernen
+        args += ['-XMP-exif:GPSLatitude=', '-XMP-exif:GPSLongitude=']
     for name, (xmp, _, _) in RIGHTS_TAGS.items():
         args.append(f'-{xmp}={getattr(meta, name)}')
     if meta.copyright:
@@ -280,6 +283,8 @@ def _embedded_args(meta: Metadata):
                  f'-EXIF:GPSLatitudeRef={"S" if meta.latitude < 0 else "N"}',
                  f'-EXIF:GPSLongitude={abs(meta.longitude):.7f}',
                  f'-EXIF:GPSLongitudeRef={"W" if meta.longitude < 0 else "E"}']
+    elif meta.gps_changed:
+        args += ['-EXIF:GPSLatitude=', '-EXIF:GPSLatitudeRef=', '-EXIF:GPSLongitude=', '-EXIF:GPSLongitudeRef=']
     return args
 
 

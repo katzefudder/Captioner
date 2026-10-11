@@ -113,6 +113,10 @@ Hardened Runtime braucht.
    ist das des Zielfotos. Mit mehreren ausgewählten Fotos fügt `⌘⇧V` in alle ein.
 5. **Bewerten und taggen:** `⌘1`–`⌘8` Farbklasse, `1`–`5`
    Sterne, `T` Tag. Filter oben (oder `F3`/`F4`) zeigen nur die Auswahl.
+   **Rückgängig:** `⌘Z` nimmt die letzte Änderung zurück (Sterne, Farbklasse, Tag,
+   gespeicherte Beschriftung, Einfügen, Template anwenden, auch für mehrere Bilder auf
+   einmal), `⌘⇧Z` wiederholt; das Menü „Bearbeiten“ zeigt, was zurückgenommen wird. Im
+   Textfeld gilt `⌘Z` für das Getippte.
    **Suchen und filtern:** Das Suchfeld findet Wörter in Dateiname, Titel, Beschreibung und
    Tags (alle Wörter müssen vorkommen). Bei mehreren Kameras im Ordner gibt es einen
    Kamera-Filter; zwei gleiche Modelle werden an der Seriennummer unterschieden
@@ -178,6 +182,7 @@ Hilfe → „Tastenkürzel“) zeigt alle Kürzel für das aktuelle System.
 | Seite zurück/vor | `Bild↑`/`Bild↓`, `⌘⇧[`/`⌘⇧]` | `Bild↑`/`Bild↓`, `Strg+←`/`→` |
 | Erstes/letztes Bild · zuletzt angesehenes | `Pos1`/`Ende` · `L` | `Pos1`/`Ende` · `L` |
 | Roster einstellen · neu laden | `⌘Control-C` · `⇧⌘Control-C` | `Strg+Alt+C` · `⇧Strg+Alt+C` |
+| Rückgängig · Wiederholen | `⌘Z` · `⌘⇧Z` | `Strg+Z` · `Strg+⇧Z` |
 | Tab schließen · nächster · vorheriger | `⌘W` · `⌘⌥→` · `⌘⌥←` | `Strg+W` · `Strg+Alt+→` · `Strg+Alt+←` |
 
 Im Beschriftungs-Panel:

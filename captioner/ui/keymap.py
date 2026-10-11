@@ -80,6 +80,9 @@ def _bindings(mac):
     # Beschriftung von Bild zu Bild: in der Galerie und beim Tippen im Panel
     add('snapshot_take', 'window', ['Ctrl+Shift+C'], N_('Beschriftung kopieren (IPTC-Snapshot)'))
     add('snapshot_paste', 'window', ['Ctrl+Shift+V'], N_('Beschriftung in Auswahl einfügen'))
+    # Bewertung/Beschriftung zuruecknehmen; im Textfeld gilt dessen eigenes Rueckgaengig
+    add('undo', 'window', ['Ctrl+Z'], N_('Rückgängig'))
+    add('redo', 'window', ['Ctrl+Shift+Z'], N_('Wiederholen'))
 
     # Ordner-Tabs
     add('close_tab', 'window', ['Ctrl+W'], N_('Tab schließen'))
@@ -113,6 +116,8 @@ def _bindings(mac):
     add('viewer_caption', 'viewer', ['I'], N_('Beschriften (Panel zeigen, in die Beschreibung)'))
     add('viewer_snapshot_take', 'viewer', ['Ctrl+Shift+C'], N_('Beschriftung kopieren (IPTC-Snapshot)'))
     add('viewer_snapshot_paste', 'viewer', ['Ctrl+Shift+V'], N_('Beschriftung einfügen'))
+    add('viewer_undo', 'viewer', ['Ctrl+Z'], N_('Rückgängig'))
+    add('viewer_redo', 'viewer', ['Ctrl+Shift+Z'], N_('Wiederholen'))
     return b
 
 

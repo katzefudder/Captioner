@@ -112,7 +112,7 @@ def test_english_ui_builds(english, tmp_path, monkeypatch):
     window = MainWindow(config.Settings(roster_sources=[]))
     try:
         menus = [a.text() for a in window.menuBar().actions()]
-        assert menus == ['File', 'Template', 'Roster', 'Help']
+        assert menus == ['File', 'Edit', 'Template', 'Roster', 'Help']
         assert window.editor.save_button.text() == 'Save'
         ShortcutsDialog(window)
         SettingsDialog(window.settings, window)

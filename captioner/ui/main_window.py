@@ -1,4 +1,5 @@
 """Hauptfenster: Ordner in Tabs, Filter, paginierte Galerie, Beschriftung, Drag nach Lightroom."""
+import contextlib
 import dataclasses
 import html
 import json
@@ -12,7 +13,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
                                QToolButton, QVBoxLayout, QWidget)
 
-from .. import WEBSITE_LINK, codes, config, geo, i18n, metadata, scanner, transfer
+from .. import WEBSITE_LINK, codes, config, geo, i18n, metadata, scanner, transfer, undo
 from ..i18n import _, N_, ngettext
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
@@ -52,7 +53,11 @@ class RawCaptionStore:
         return self.data.get(str(item.primary))
 
     def set(self, item, raw):
-        self.data[str(item.primary)] = raw
+        """raw=None entfernt den Eintrag (Rueckgaengig)."""
+        if raw is None:
+            self.data.pop(str(item.primary), None)
+        else:
+            self.data[str(item.primary)] = raw
         try:
             self.path.write_text(json.dumps(self.data, ensure_ascii=False), encoding='utf-8')
         except OSError as e:
@@ -145,6 +150,8 @@ class MainWindow(QMainWindow):
         self.roster_worker = None
         self.copy_worker = None
         self._drag_items = []
+        self.undo_stack = undo.UndoStack()
+        self._recording = None
         self.viewer = None
         self._syncing_selection = False
 
@@ -191,6 +198,12 @@ class MainWindow(QMainWindow):
         action(file_menu, _('Einstellungen …'), self.edit_settings, QKeySequence.StandardKey.Preferences,
                role.PreferencesRole)
         action(file_menu, _('Beenden'), self.close, QKeySequence.StandardKey.Quit, role.QuitRole)
+
+        edit_menu = bar.addMenu(_('Bearbeiten'))
+        # Kuerzel Cmd+Z/Cmd+Shift+Z kommen aus der Keymap (im Textfeld gilt dessen Rueckgaengig)
+        self.undo_action = action(edit_menu, _('Rückgängig'), self.undo)
+        self.redo_action = action(edit_menu, _('Wiederholen'), self.redo)
+        self._update_undo_actions()
 
         template_menu = bar.addMenu(_('Template'))
         action(template_menu, _('Neues Template …'), lambda: self.edit_template(None))
@@ -374,6 +387,8 @@ class MainWindow(QMainWindow):
             'shortcuts': self.show_shortcuts,
             'snapshot_take': self.take_snapshot,
             'snapshot_paste': self.paste_snapshot,
+            'undo': self.undo,
+            'redo': self.redo,
             'close_tab': lambda: self.close_tab(self.tabs.currentIndex()),
             'tab_next': lambda: self.tabs.setCurrentIndex((self.tabs.currentIndex() + 1) % self.tabs.count()),
             'tab_prev': lambda: self.tabs.setCurrentIndex((self.tabs.currentIndex() - 1) % self.tabs.count()),
@@ -827,15 +842,74 @@ class MainWindow(QMainWindow):
     # --- Bewertung und Beschriftung ---------------------------------------------
 
     def _enqueue(self, item, meta):
+        recording = getattr(self, '_recording', None)
+        if recording is not None and item.key not in recording:
+            recording[item.key] = undo.Change(item, item.meta, meta, raw_before=self.raw_captions.get(item))
+        elif recording is not None:
+            recording[item.key].after = meta
         item.meta = meta
         item.error = None
         self.edited_keys.add(item.key)
         self.writer.enqueue(item, meta)
 
+    @contextlib.contextmanager
+    def _undoable(self, label):
+        """Alle Aenderungen darin sind ein Schritt fuer Rueckgaengig (verschachtelt: der aeussere)."""
+        outer = getattr(self, '_recording', None) is None
+        if outer:
+            self._recording = {}
+        try:
+            yield
+        finally:
+            if outer:
+                changes = list(self._recording.values())
+                self._recording = None
+                for change in changes:
+                    change.raw_after = self.raw_captions.get(change.item)
+                self.undo_stack.push(undo.Step(label, changes))
+                self._update_undo_actions()
+
+    def undo(self):
+        self._apply_step(self.undo_stack.undo(), forward=False)
+
+    def redo(self):
+        self._apply_step(self.undo_stack.redo(), forward=True)
+
+    def _apply_step(self, step, forward):
+        if step is None:
+            return
+        for change in step.changes:
+            target, raw = (change.after, change.raw_after) if forward else (change.before, change.raw_before)
+            self._enqueue(change.item, undo.reverting(change.item.meta, target))
+            self.raw_captions.set(change.item, raw)
+        for tab in self.all_tabs():
+            tab.model.refresh([c.item.key for c in step.changes if c.item.key in tab.by_key])
+        self._show_selection_in_editor()
+        if self.viewer is not None and self.viewer.isVisible() and self.viewer._item is not None:
+            self.viewer.show_item(self.viewer._item, self.viewer._image)
+        self._update_status()
+        self._update_undo_actions()
+        count = len(step.changes)
+        text = (ngettext('Wiederholt: {action} ({count} Bild)', 'Wiederholt: {action} ({count} Bilder)', count)
+                if forward else
+                ngettext('Rückgängig: {action} ({count} Bild)', 'Rückgängig: {action} ({count} Bilder)', count))
+        self.statusBar().showMessage(text.format(action=_(step.label), count=count), 5000)
+
+    def _update_undo_actions(self):
+        if not hasattr(self, 'undo_action'):
+            return
+        label, redo_label = self.undo_stack.undo_label, self.undo_stack.redo_label
+        self.undo_action.setEnabled(label is not None)
+        self.undo_action.setText(_('Rückgängig: {action}').format(action=_(label)) if label else _('Rückgängig'))
+        self.redo_action.setEnabled(redo_label is not None)
+        self.redo_action.setText(_('Wiederholen: {action}').format(action=_(redo_label)) if redo_label
+                                 else _('Wiederholen'))
+
     def set_rating(self, rating):
         items = self._selected_items()
-        for item in items:
-            self._enqueue(item, dataclasses.replace(item.meta, rating=rating))
+        with self._undoable(N_('Bewertung')):
+            for item in items:
+                self._enqueue(item, dataclasses.replace(item.meta, rating=rating))
         self.model.refresh([i.key for i in items])
         self._update_status()
 
@@ -851,8 +925,9 @@ class MainWindow(QMainWindow):
         """Farbklasse 1-8, 0 entfernt. Dazu das Lightroom-Label."""
         label = self.settings.labels[n - 1] if 0 < n <= len(self.settings.labels) else ''
         items = self._selected_items()
-        for item in items:
-            self._enqueue(item, dataclasses.replace(item.meta, color_class=n, label=label))
+        with self._undoable(N_('Farbklasse')):
+            for item in items:
+                self._enqueue(item, dataclasses.replace(item.meta, color_class=n, label=label))
         self.model.refresh([i.key for i in items])
         self._update_status()
 
@@ -863,8 +938,9 @@ class MainWindow(QMainWindow):
             return
         if value is None:
             value = not all(item.meta.tagged for item in items)
-        for item in items:
-            self._enqueue(item, dataclasses.replace(item.meta, tagged=value))
+        with self._undoable(N_('Tag')):
+            for item in items:
+                self._enqueue(item, dataclasses.replace(item.meta, tagged=value))
         self.model.refresh([i.key for i in items])
         self._update_status()
         if self.tag_filter.currentData() is not None:
@@ -882,6 +958,10 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(_('Beschriftung von {name} kopiert').format(name=items[0].name), 5000)
 
     def paste_snapshot(self):
+        with self._undoable(N_('Beschriftung einfügen')):
+            self._paste_snapshot()
+
+    def _paste_snapshot(self):
         """
         In alle ausgewaehlten Bilder einfuegen und speichern. Gerechnet wird wie beim
         Speichern, je Bild: Codes aufloesen, Anhang mit dessen Datum, Personen-Tags, GPS.
@@ -909,6 +989,10 @@ class MainWindow(QMainWindow):
                 self.view.setFocus()
 
     def save_caption(self, fields, step):
+        with self._undoable(N_('Beschriftung')):
+            self._save_caption(fields, step)
+
+    def _save_caption(self, fields, step):
         items = self._focused_first(self._selected_items())
         if not items:
             return
@@ -964,6 +1048,10 @@ class MainWindow(QMainWindow):
             self.editor.focus_caption()
 
     def apply_template(self):
+        with self._undoable(N_('Template anwenden')):
+            self._apply_template()
+
+    def _apply_template(self):
         template = self.editor.template
         if not template:
             QMessageBox.information(self, _('Kein Template'), _('Bitte zuerst ein Spiel-Template auswählen oder anlegen.'))
@@ -1165,6 +1253,8 @@ class MainWindow(QMainWindow):
             for n in range(0, 6):
                 handlers[f'viewer_rating_{n}'] = lambda n=n: self._in_viewer(lambda: self.set_rating(n))
             handlers['viewer_caption'] = self._caption_in_viewer
+            handlers['viewer_undo'] = self.undo
+            handlers['viewer_redo'] = self.redo
             handlers['viewer_snapshot_take'] = lambda: self._in_viewer(self.take_snapshot)
             handlers['viewer_snapshot_paste'] = lambda: self._in_viewer(self.paste_snapshot)
             self._bind(handlers, self.viewer, Qt.ShortcutContext.WindowShortcut)

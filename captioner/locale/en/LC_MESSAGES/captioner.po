@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 15:44+0200\n"
+"POT-Creation-Date: 2026-10-11 15:47+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -140,6 +140,9 @@ msgstr ""
 msgid "Automatisch (Systemsprache)"
 msgstr "Automatic (system language)"
 
+msgid "Bearbeiten"
+msgstr "Edit"
+
 msgid "Bearbeiten …"
 msgstr "Edit …"
 
@@ -170,6 +173,9 @@ msgstr "Caption (show panel, go to caption)"
 
 msgid "Beschriftet von"
 msgstr "Caption writer"
+
+msgid "Beschriftung"
+msgstr "Caption"
 
 msgid "Beschriftung (IPTC Info)"
 msgstr "Caption panel (IPTC info)"
@@ -757,6 +763,19 @@ msgstr "Roster URL"
 msgid "Roster:"
 msgstr "Roster:"
 
+msgid "Rückgängig"
+msgstr "Undo"
+
+#, python-brace-format
+msgid "Rückgängig: {action}"
+msgstr "Undo {action}"
+
+#, python-brace-format
+msgid "Rückgängig: {action} ({count} Bild)"
+msgid_plural "Rückgängig: {action} ({count} Bilder)"
+msgstr[0] "Undone: {action} ({count} image)"
+msgstr[1] "Undone: {action} ({count} images)"
+
 msgid "Schließen"
 msgstr "Close"
 
@@ -1003,6 +1022,19 @@ msgstr "More"
 
 msgid "Weißabgleich"
 msgstr "White balance"
+
+msgid "Wiederholen"
+msgstr "Redo"
+
+#, python-brace-format
+msgid "Wiederholen: {action}"
+msgstr "Redo {action}"
+
+#, python-brace-format
+msgid "Wiederholt: {action} ({count} Bild)"
+msgid_plural "Wiederholt: {action} ({count} Bilder)"
+msgstr[0] "Redone: {action} ({count} image)"
+msgstr[1] "Redone: {action} ({count} images)"
 
 msgid "XMP-Sidecars mit in den Drag legen"
 msgstr "Include XMP sidecars when dragging"

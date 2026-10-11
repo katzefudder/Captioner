@@ -113,6 +113,9 @@ msgstr ""
 msgid "Automatisch (Systemsprache)"
 msgstr ""
 
+msgid "Bearbeiten"
+msgstr ""
+
 msgid "Bearbeiten …"
 msgstr ""
 
@@ -142,6 +145,9 @@ msgid "Beschriften (Panel zeigen, in die Beschreibung)"
 msgstr ""
 
 msgid "Beschriftet von"
+msgstr ""
+
+msgid "Beschriftung"
 msgstr ""
 
 msgid "Beschriftung (IPTC Info)"
@@ -708,6 +714,19 @@ msgstr ""
 msgid "Roster:"
 msgstr ""
 
+msgid "Rückgängig"
+msgstr ""
+
+#, python-brace-format
+msgid "Rückgängig: {action}"
+msgstr ""
+
+#, python-brace-format
+msgid "Rückgängig: {action} ({count} Bild)"
+msgid_plural "Rückgängig: {action} ({count} Bilder)"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "Schließen"
 msgstr ""
 
@@ -948,6 +967,19 @@ msgstr ""
 
 msgid "Weißabgleich"
 msgstr ""
+
+msgid "Wiederholen"
+msgstr ""
+
+#, python-brace-format
+msgid "Wiederholen: {action}"
+msgstr ""
+
+#, python-brace-format
+msgid "Wiederholt: {action} ({count} Bild)"
+msgid_plural "Wiederholt: {action} ({count} Bilder)"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "XMP-Sidecars mit in den Drag legen"
 msgstr ""
