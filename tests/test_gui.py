@@ -175,9 +175,12 @@ def test_menus_replace_the_toolbar(window):
 
 
 def test_about_dialog_links_to_the_website(app):
-    from captioner import WEBSITE, version
+    from captioner import WEBSITE, WEBSITE_LINK, version
     from captioner.ui.about import AboutDialog
     dialog = AboutDialog()
     assert WEBSITE == 'https://www.katzefudder.de/captioner'
-    assert f'href="{WEBSITE}"' in dialog.link.text() and dialog.link.openExternalLinks()
+    assert WEBSITE_LINK == WEBSITE + '?mtm_campaign=captioner&mtm_source=github'
+    assert 'href="https://www.katzefudder.de/captioner?mtm_campaign=captioner&amp;mtm_source=github"' \
+        in dialog.link.text() and dialog.link.openExternalLinks()
+    assert '>www.katzefudder.de/captioner</a>' in dialog.link.text()
     assert version() not in ('', None)

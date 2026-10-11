@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
                                QToolButton, QVBoxLayout, QWidget)
 
-from .. import WEBSITE, codes, config, geo, i18n, metadata, scanner, transfer
+from .. import WEBSITE_LINK, codes, config, geo, i18n, metadata, scanner, transfer
 from ..i18n import _, N_, ngettext
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
@@ -201,7 +201,7 @@ class MainWindow(QMainWindow):
 
         help_menu = bar.addMenu(_('Hilfe'))
         action(help_menu, _('Tastenkürzel'), self.show_shortcuts)
-        action(help_menu, _('Captioner-Website'), lambda: QDesktopServices.openUrl(QUrl(WEBSITE)))
+        action(help_menu, _('Captioner-Website'), lambda: QDesktopServices.openUrl(QUrl(WEBSITE_LINK)))
         action(help_menu, _('Über Captioner'), self.show_about, role=role.AboutRole)
 
     def show_about(self):

@@ -121,7 +121,7 @@ Hardened Runtime braucht.
 Die Menüs stehen auf dem Mac oben in der Menüleiste des Bildschirms: **Captioner** (Über
 Captioner, Einstellungen `⌘,`, Beenden `⌘Q`), **Ablage** (Ordner öffnen `⌘O`, in neuem
 Tab, Neu einlesen `F5`, Tab schließen), **Template**, **Roster** und **Hilfe**
-(Tastenkürzel, [Captioner-Website](https://www.katzefudder.de/captioner)).
+(Tastenkürzel, [Captioner-Website](https://www.katzefudder.de/captioner?mtm_campaign=captioner&mtm_source=github)).
 
 ## Mehrere Ordner (Tabs)
 

@@ -1,8 +1,10 @@
 """Fenster "Ueber Captioner": Logo, Version, Link zur Website."""
+import html
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 
-from .. import WEBSITE, version
+from .. import WEBSITE, WEBSITE_LINK, version
 from ..i18n import _
 from .resources import logo_pixmap
 
@@ -30,7 +32,8 @@ class AboutDialog(QDialog):
         text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(text)
 
-        self.link = QLabel(f'<a href="{WEBSITE}">{WEBSITE.split("://", 1)[1]}</a>')
+        # Ziel mit Kampagnen-Parametern, sichtbar nur die kurze Adresse
+        self.link = QLabel(f'<a href="{html.escape(WEBSITE_LINK)}">{WEBSITE.split("://", 1)[1]}</a>')
         self.link.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.link.setOpenExternalLinks(True)
         self.link.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
