@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 15:47+0200\n"
+"POT-Creation-Date: 2026-10-11 15:50+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -971,6 +971,10 @@ msgstr "Time"
 
 msgid "Umbenennen"
 msgstr "Rename"
+
+#, python-brace-format
+msgid "Unbekannte Codes im Titel: {codes}"
+msgstr "Unknown codes in the headline: {codes}"
 
 #, python-brace-format
 msgid "Unbekannte Codes in der kopierten Beschreibung: {codes}"

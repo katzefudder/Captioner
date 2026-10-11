@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (QComboBox, QCompleter, QFormLayout, QHBoxLayout, 
                                QLineEdit, QMenu, QPlainTextEdit, QPushButton, QSizePolicy,
                                QToolButton, QVBoxLayout, QWidget)
 
-from .. import codes, geo, metadata
+from .. import codes, geo, keywords, metadata
 from ..i18n import _, ngettext
 from .keymap import keys as binding_keys
 from .placepicker import PlacePickerDialog, place_completer, place_for_completion
@@ -55,6 +55,55 @@ class WrappingLineEdit(QPlainTextEdit):
                 self.submit.emit()
             return
         super().keyPressEvent(event)
+
+
+class TagTextEdit(WrappingLineEdit):
+    """Tag-Feld: schlaegt gemerkte Stichwoerter zum angefangenen Tag vor."""
+
+    def __init__(self, lines=None, parent=None):
+        super().__init__(lines=lines, parent=parent)
+        self.history = None   # keywords.KeywordHistory
+        self.completer = QCompleter(self)
+        self.completer.setWidget(self)
+        self.completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
+        self.completer.setMaxVisibleItems(10)
+        self.completer.activated.connect(self._insert_completion)
+        self.model = QStringListModel(self)
+        self.completer.setModel(self.model)
+
+    def _tags(self):
+        return [t.strip() for t in re.split(r'[,\n]', self.toPlainText()) if t.strip()]
+
+    def _insert_completion(self, word):
+        cursor = self.textCursor()
+        start, token = keywords.current_token(self.toPlainText(), cursor.position())
+        cursor.setPosition(start)
+        cursor.setPosition(self.textCursor().position(), QTextCursor.MoveMode.KeepAnchor)
+        cursor.insertText(word + ', ')
+        self.setTextCursor(cursor)
+        self.completer.popup().hide()
+
+    def keyPressEvent(self, event):
+        popup = self.completer.popup()
+        if popup.isVisible() and event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Tab,
+                                                 Qt.Key.Key_Escape, Qt.Key.Key_Backtab):
+            event.ignore()
+            return
+        super().keyPressEvent(event)
+        if self.history is None or event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            return
+        _start, token = keywords.current_token(self.toPlainText(), self.textCursor().position())
+        others = [t for t in self._tags() if t != token]
+        words = self.history.suggestions(token, exclude=others)
+        if not words or (len(words) == 1 and words[0].casefold() == token.casefold()):
+            popup.hide()
+            return
+        self.model.setStringList(words)
+        popup.setCurrentIndex(self.completer.completionModel().index(0, 0))
+        rect = self.cursorRect()
+        rect.setWidth(min(360, self.width()))
+        self.completer.complete(rect)
 
 
 class CodeTextEdit(WrappingLineEdit):
@@ -187,6 +236,9 @@ class CaptionEditor(QWidget):
         self.headline_hint.setStyleSheet('color: #d64541;')
         self.headline_hint.setWordWrap(True)
         self.headline_hint.hide()
+        self.headline_preview = QLabel()
+        self.headline_preview.setWordWrap(True)
+        self.headline_preview.hide()
         self.caption = CodeTextEdit()
         self.caption.setPlaceholderText(_('Zweikampf #bi99# gegen #bn23#'))
         self.caption.setMinimumHeight(90)
@@ -197,7 +249,7 @@ class CaptionEditor(QWidget):
         self.preview.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.preview.setTextFormat(Qt.TextFormat.RichText)
         # Tags wie die Beschreibung umgebrochen, aber niedriger
-        self.keywords = WrappingLineEdit(lines=3)
+        self.keywords = TagTextEdit(lines=3)
         self.keywords.setPlaceholderText(_('Tags, kommagetrennt'))
         self.keywords.textChanged.connect(self._update_preview)
         self.keywords.submit.connect(lambda: self.submit(0))
@@ -221,6 +273,7 @@ class CaptionEditor(QWidget):
         self.rights_hint.setStyleSheet('color: gray;')
 
         form.addRow(_('Titel'), self.headline)
+        form.addRow('', self.headline_preview)
         form.addRow('', self.headline_hint)
         form.addRow(_('Beschreibung'), self.caption)
         form.addRow('', self.preview)
@@ -358,7 +411,7 @@ class CaptionEditor(QWidget):
             return
         teams = self.template.teams if self.template else []
         if not teams:
-            parsed = parse_headline(self.headline.text())
+            parsed = parse_headline(self.resolve_headline().text if self.roster else self.headline.text())
             teams = list(parsed[1:]) if parsed else []
         if teams == getattr(self, '_completion_teams', None) and self.roster is getattr(self, '_completion_roster', None):
             return
@@ -427,20 +480,36 @@ class CaptionEditor(QWidget):
     def resolve(self):
         return codes.resolve(self.caption.toPlainText(), self.roster, self.delimiter)
 
+    def resolve_headline(self):
+        """Codes auch im Titel, z. B. 'DEL 2 - #bn# gegen #kh#' mit Team-Codes im Roster."""
+        return codes.resolve(self.headline.text().strip(), self.roster, self.delimiter)
+
+    def set_keyword_history(self, history):
+        self.keywords.history = history
+
     def tags(self):
         # Eingefuegter Text kann Zeilenumbrueche enthalten; sie trennen wie Kommas
         return [t.strip() for t in re.split(r'[,\n]', self.keywords.text()) if t.strip()]
 
     def _update_preview(self):
-        headline = self.headline.text().strip()
-        self.headline_hint.setVisible(bool(headline) and parse_headline(headline) is None)
+        headline_resolution = self.resolve_headline()
+        headline = metadata.single_line(headline_resolution.text)
+        self.headline_hint.setVisible(bool(headline) and not headline_resolution.unknown
+                                      and parse_headline(headline) is None)
+        if headline_resolution.unknown:
+            self.headline_preview.setText('<span style="color:#d64541">' + html.escape(
+                _('Unbekannte Codes im Titel: {codes}').format(codes=', '.join(headline_resolution.unknown)))
+                + '</span>')
+        elif headline != self.headline.text().strip():
+            self.headline_preview.setText('<span style="color:gray">→ ' + html.escape(headline) + '</span>')
+        self.headline_preview.setVisible(bool(headline_resolution.unknown) or headline != self.headline.text().strip())
         raw = self.caption.toPlainText()
         resolution = self.resolve()
         text = metadata.single_line(resolution.text)
         item = getattr(self, '_current_item', None)
         if self.template and text:
             text = self.template.compose_caption(
-                text, item.taken_at if item else '', headline=self.headline.text().strip(),
+                text, item.taken_at if item else '', headline=headline,
                 city=self.city.text().strip(), sublocation=self.sublocation.text().strip())
         shown = html.escape(text)
         for code in resolution.unknown:
@@ -455,7 +524,7 @@ class CaptionEditor(QWidget):
                 persons=', '.join(resolution.persons))) + '</span>')
         self.preview.setText('<br>'.join(p for p in parts if p))
 
-        meta = metadata.Metadata(headline=self.headline.text(), caption=text,
+        meta = metadata.Metadata(headline=headline, caption=text,
                                  keywords=unique(self.tags() + resolution.persons),
                                  city=self.city.text(), sublocation=self.sublocation.text())
         problems = metadata.validate(meta)
@@ -464,7 +533,7 @@ class CaptionEditor(QWidget):
         if problems:
             info += '<br><span style="color:#d64541">' + html.escape('; '.join(problems)) + '</span>'
         self.limits.setText(info)
-        blocked = bool(resolution.unknown or problems)
+        blocked = bool(resolution.unknown or headline_resolution.unknown or problems)
         self.save_button.setEnabled(not blocked and self.headline.isEnabled())
         self.next_button.setEnabled(not blocked and self.headline.isEnabled())
         self._update_gps_hint(item)
@@ -518,9 +587,10 @@ class CaptionEditor(QWidget):
         if not self.save_button.isEnabled():
             return False
         resolution = self.resolve()
-        if resolution.unknown:
+        headline = self.resolve_headline()
+        if resolution.unknown or headline.unknown:
             return False
         self.save_requested.emit(dict(
-            self.current_fields(), resolution=resolution,
+            self.current_fields(), resolution=resolution, headline=metadata.single_line(headline.text),
             caption_modified=self.caption.toPlainText() != getattr(self, '_shown_caption', None)), step)
         return True

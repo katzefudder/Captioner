@@ -918,6 +918,10 @@ msgid "Umbenennen"
 msgstr ""
 
 #, python-brace-format
+msgid "Unbekannte Codes im Titel: {codes}"
+msgstr ""
+
+#, python-brace-format
 msgid "Unbekannte Codes in der kopierten Beschreibung: {codes}"
 msgstr ""
 

@@ -17,6 +17,7 @@ Bedienung: `readme.md`.
 | `metadata.py` | Lesen (Sidecar > eingebettet > RAW) und Schreiben (Sidecar bzw. eingebettet) |
 | `details.py` | EXIF/IPTC fürs Info-Panel: `read()` (Kamera aus RAW, IPTC Sidecar > eingebettet), `sections()` formatiert |
 | `transfer.py` | Kopieren zwischen Ordnern: Gruppen (RAW+JPG+Sidecar), Konflikte (überspringen/umbenennen/ersetzen) |
+| `keywords.py` | Gemerkte Stichwörter (`<cache>/keywords.json`) und Vorschläge fürs Tag-Feld |
 | `undo.py` | Rückgängig/Wiederholen: Schritte mit Vorher/Nachher je Bild (Metadaten + Rohtext) |
 | `previews.py` | Kacheln/Großansicht aus eingebetteten JPEGs, Plattencache |
 | `exiftool.py` | `-stay_open`-Prozess, Pool pro OS-Thread, Aufräumen verwaister Prozesse |
@@ -63,6 +64,13 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Offline: Dialog zeigt den Hinweis statt der Karte, sobald eine Kachel weder aus Netz noch
   Cache kommt; Stadt/Ort und Vorschläge funktionieren weiter.
 - Templates: `latitude`/`longitude` optional, ohne Wert nicht in der Datei (TOML hat kein None).
+
+## Tags und Titel
+
+- Tag-Feld `TagTextEdit` schlägt aus `KeywordHistory` vor (angefangenes Wort nach dem letzten Komma).
+  Gefüttert beim Speichern (nach vorn), beim Einlesen und aus Templates (nur ergänzen).
+- Codes im Titel: `editor.resolve_headline()`; unbekannte blockieren wie in der Beschreibung.
+  Gespeichert wird der aufgelöste Titel (kein Rohtext); das Format wird am aufgelösten geprüft.
 
 ## Rückgängig
 
@@ -229,7 +237,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 180 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 184 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

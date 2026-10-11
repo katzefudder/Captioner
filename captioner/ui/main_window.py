@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
                                QToolButton, QVBoxLayout, QWidget)
 
-from .. import WEBSITE_LINK, codes, config, geo, i18n, metadata, scanner, transfer, undo
+from .. import WEBSITE_LINK, codes, config, geo, i18n, keywords, metadata, scanner, transfer, undo
 from ..i18n import _, N_, ngettext
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
@@ -143,6 +143,7 @@ class MainWindow(QMainWindow):
         self.template_store = TemplateStore(config.templates_dir())
         self.raw_captions = RawCaptionStore(config.cache_dir() / 'raw_captions.json')
         self.places = geo.PlaceBook(settings.places)
+        self.keyword_history = keywords.KeywordHistory(config.cache_dir() / 'keywords.json')
 
         self.edited_keys = set()   # ueber alle Tabs; Keys sind Pfade
         self.last_raw_caption = ''
@@ -323,6 +324,7 @@ class MainWindow(QMainWindow):
         self.editor.navigate_requested.connect(self.step_selection)
         self.editor.place_chosen.connect(self.remember_place)
         self.editor.set_place_book(self.places)
+        self.editor.set_keyword_history(self.keyword_history)
 
         self.main_splitter = QSplitter()
         self.main_splitter.addWidget(left)
@@ -576,6 +578,8 @@ class MainWindow(QMainWindow):
         if tab is None:
             return
         tab.model.refresh([item.key for item in chunk])
+        # Stichwoerter der Bilder fuer Vorschlaege merken (ohne die Reihenfolge zu aendern)
+        self.keyword_history.add([k for item in chunk for k in item.meta.keywords], recent=False)
         loaded = sum(1 for item in tab.all_items if item.meta_loaded)
         self._set_tab_status(tab, _('{folder} – Metadaten {loaded}/{total} …').format(
             folder=tab.folder, loaded=loaded, total=len(tab.all_items)))
@@ -592,6 +596,7 @@ class MainWindow(QMainWindow):
         if tab is None:
             return
         scanner.sort_items(tab.all_items)
+        self.keyword_history.save()
         elapsed = time.time() - tab.scan_started
         count = len(tab.all_items)
         self._set_tab_status(tab, ngettext('{folder} – {count} Bild ({seconds} s)', '{folder} – {count} Bilder ({seconds} s)',
@@ -971,11 +976,14 @@ class MainWindow(QMainWindow):
         if not snapshot or not items:
             return
         resolution = codes.resolve(snapshot['raw_caption'], self.roster, self.settings.code_delimiter)
-        if resolution.unknown:
+        headline = codes.resolve(snapshot['headline'], self.roster, self.settings.code_delimiter)
+        unknown = resolution.unknown + [c for c in headline.unknown if c not in resolution.unknown]
+        if unknown:
             QMessageBox.warning(self, _('Nicht eingefügt'), _('Unbekannte Codes in der kopierten Beschreibung: {codes}')
-                                .format(codes=', '.join(resolution.unknown)))
+                                .format(codes=', '.join(unknown)))
             return
-        self.save_caption(dict(snapshot, resolution=resolution, caption_modified=True), 0)
+        self.save_caption(dict(snapshot, resolution=resolution, caption_modified=True,
+                               headline=metadata.single_line(headline.text)), 0)
         self._show_selection_in_editor()
         self.statusBar().showMessage(ngettext('Beschriftung in {count} Bild eingefügt', 'Beschriftung in {count} Bilder eingefügt',
                                               len(items)).format(count=len(items)), 5000)
@@ -1025,6 +1033,9 @@ class MainWindow(QMainWindow):
             self._enqueue(item, meta)
             if apply_caption:
                 self.raw_captions.set(item, fields['raw_caption'])
+        if planned:
+            self.keyword_history.add(fields['keywords'])
+            self.keyword_history.save()
         if apply_caption and fields['raw_caption'].strip():
             self.last_raw_caption = fields['raw_caption']
         if fields['headline']:
@@ -1364,6 +1375,7 @@ class MainWindow(QMainWindow):
         if learned:
             self._save_places()
         self.editor.set_templates(templates, active_path)
+        self.keyword_history.add([k for t in templates for k in t.keywords], recent=False)
         if errors:
             self.statusBar().showMessage(_('Templates nicht geladen: {errors}').format(errors='; '.join(errors)), 15000)
 

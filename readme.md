@@ -113,6 +113,10 @@ Hardened Runtime braucht.
    ist das des Zielfotos. Mit mehreren ausgewählten Fotos fügt `⌘⇧V` in alle ein.
 5. **Bewerten und taggen:** `⌘1`–`⌘8` Farbklasse, `1`–`5`
    Sterne, `T` Tag. Filter oben (oder `F3`/`F4`) zeigen nur die Auswahl.
+   **Tags:** Beim Tippen im Tag-Feld schlägt die App Stichwörter vor, die schon einmal
+   benutzt wurden (gespeichert, in geöffneten Bildern oder Templates), ohne die schon
+   eingetragenen. **Codes im Titel** werden wie in der Beschreibung aufgelöst, z. B.
+   `DEL 2 - #bn# gegen #kh#`, wenn das Roster Team-Codes enthält (`bn⇥EC Bad Nauheim`).
    **Rückgängig:** `⌘Z` nimmt die letzte Änderung zurück (Sterne, Farbklasse, Tag,
    gespeicherte Beschriftung, Einfügen, Template anwenden, auch für mehrere Bilder auf
    einmal), `⌘⇧Z` wiederholt; das Menü „Bearbeiten“ zeigt, was zurückgenommen wird. Im

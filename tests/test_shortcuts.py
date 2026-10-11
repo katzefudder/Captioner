@@ -408,3 +408,35 @@ def test_cmd_z_in_text_field_undoes_typing_not_metadata(window):
     QTest.keyClicks(caption, 'abc')
     press(caption, Qt.Key.Key_Z, CMD)
     assert caption.toPlainText() == '' and item.meta.rating == 2
+
+
+@requires_exiftool
+def test_tag_suggestions_complete_the_current_tag(window):
+    window.keyword_history.add(['Eishockey', 'EC Bad Nauheim', 'EC Kassel Huskies'])
+    tags = window.editor.keywords
+    tags.setFocus()
+    QTest.keyClicks(tags, 'Eishockey, ec k')
+    QtWidgets.QApplication.processEvents()
+    assert tags.model.stringList() == ['EC Kassel Huskies']
+    tags.completer.activated.emit('EC Kassel Huskies')
+    assert tags.toPlainText() == 'Eishockey, EC Kassel Huskies, '
+    assert window.editor.tags() == ['Eishockey', 'EC Kassel Huskies']
+
+
+@requires_exiftool
+def test_codes_in_headline(window):
+    from captioner.roster import parse, Roster
+    roster = Roster()
+    for entry in parse('bn\tEC Bad Nauheim\nkh\tEC Kassel Huskies\nbn23\t-23- Marius Erk (EC Bad Nauheim)\n', 't'):
+        roster.entries[entry.code] = entry
+    editor = window.editor
+    editor.set_roster(roster, '#')
+    editor.headline.setText('DEL 2 - #bn# gegen #kh#')
+    assert '→ DEL 2 - EC Bad Nauheim gegen EC Kassel Huskies' in editor.headline_preview.text()
+    assert not editor.headline_hint.isVisibleTo(editor)          # aufgeloest im richtigen Format
+    editor.caption.setPlainText('Tor #bn23#')
+    editor.submit(0)
+    item = window.filtered[0]
+    assert item.meta.headline == 'DEL 2 - EC Bad Nauheim gegen EC Kassel Huskies'
+    editor.headline.setText('DEL 2 - #bn# gegen #xx#')
+    assert 'xx' in editor.headline_preview.text() and not editor.save_button.isEnabled()
