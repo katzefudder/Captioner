@@ -60,6 +60,8 @@ class Item:
     sidecar: Path = None      # vorhandenes <basis>.xmp (Schreibweise wie auf der Platte)
     taken_at: str = ''        # DateTimeOriginal + SubSec, sortierbar
     orientation: int = 1
+    camera: str = ''          # Modell, z. B. "NIKON Z 9"
+    serial: str = ''          # Seriennummer: unterscheidet zwei gleiche Bodies
     meta: Metadata = field(default_factory=Metadata)
     meta_loaded: bool = False
     error: str = None         # letzter Schreibfehler
@@ -130,6 +132,38 @@ def scan(folder, recursive=False):
             item.sidecar = sidecars.get(item.key)
     items.sort(key=lambda i: i.name.lower())
     return items
+
+
+def camera_labels(items):
+    """
+    (Modell, Seriennummer) -> Anzeige. Bei zwei gleichen Modellen mit den letzten
+    Ziffern der Seriennummer, sonst nur das Modell.
+    """
+    keys = sorted({(item.camera, item.serial) for item in items if item.camera})
+    models = [model for model, _serial in keys]
+    labels = {}
+    for model, serial in keys:
+        if models.count(model) > 1 and serial:
+            labels[(model, serial)] = f'{model} · …{serial[-4:]}'
+        else:
+            labels[(model, serial)] = model
+    return labels
+
+
+def matches_text(item, query):
+    """Alle Woerter der Suche kommen in Dateiname oder Beschriftung vor (ohne Gross/klein)."""
+    terms = query.casefold().split()
+    if not terms:
+        return True
+    meta = item.meta
+    haystack = ' '.join([item.name, meta.headline, meta.caption, ' '.join(meta.keywords),
+                         meta.city, meta.sublocation]).casefold()
+    return all(term in haystack for term in terms)
+
+
+def time_of_day(item):
+    """'HH:MM' der Aufnahme, '' wenn unbekannt."""
+    return item.taken_at[11:16] if len(item.taken_at) >= 16 else ''
 
 
 def has_images(folder):

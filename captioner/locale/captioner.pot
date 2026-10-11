@@ -59,6 +59,9 @@ msgstr ""
 msgid "Alle Farben"
 msgstr ""
 
+msgid "Alle Kameras"
+msgstr ""
+
 msgid "Alle Sterne"
 msgstr ""
 
@@ -771,6 +774,9 @@ msgstr ""
 msgid "Suchen (Code, Name, Team) – Enter: weiter"
 msgstr ""
 
+msgid "Suchen: Dateiname, Titel, Beschreibung, Tags"
+msgstr ""
+
 msgid "Tab schließen"
 msgstr ""
 
@@ -884,6 +890,9 @@ msgid ""
 msgstr ""
 
 msgid "UTF-8 mit BOM"
+msgstr ""
+
+msgid "Uhrzeit"
 msgstr ""
 
 msgid "Umbenennen"

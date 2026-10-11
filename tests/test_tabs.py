@@ -285,3 +285,46 @@ def test_tabs_are_restored_after_restart(app, cards, tmp_path):
         assert second.settings.open_tabs == [str(a), str(b)]   # fehlende fallen raus
     finally:
         second.close()
+
+
+def test_search_camera_and_time_filters(window, tmp_path):
+    from captioner.exiftool import ExifTool, find_exiftool
+    from PySide6.QtCore import QTime
+    folder = tmp_path / 'fotos'
+    folder.mkdir()
+    tool = ExifTool(find_exiftool()).start()
+    try:
+        for name, serial, when in (('a.jpg', '3001234', '2026:10:11 19:05:00'), ('b.jpg', '3005678', '2026:10:11 20:10:00'),
+                                   ('c.jpg', '3005678', '2026:10:11 21:30:00')):
+            make_jpeg(folder / name)
+            tool.execute('-overwrite_original', '-EXIF:Model=NIKON Z 9', f'-EXIF:SerialNumber={serial}',
+                         f'-EXIF:DateTimeOriginal={when}', str(folder / name))
+    finally:
+        tool.close()
+    window.open_folder(folder)
+    assert scanned(window.tab)
+    names = lambda: [i.name for i in window.filtered]
+    assert names() == ['a.jpg', 'b.jpg', 'c.jpg']
+
+    assert wait_until(lambda: window.camera_filter.count() > 1)   # gefuellt, wenn der Scan fertig ist
+    cameras = [window.camera_filter.itemText(i) for i in range(window.camera_filter.count())]
+    assert cameras == ['Alle Kameras', 'NIKON Z 9 · …1234', 'NIKON Z 9 · …5678']
+    window.camera_filter.setCurrentIndex(2)
+    assert names() == ['b.jpg', 'c.jpg']
+    window.camera_filter.setCurrentIndex(0)
+
+    window.time_filter.setChecked(True)                 # schlaegt den Zeitraum der Bilder vor
+    assert window.time_from.time() == QTime(19, 5) and window.time_to.time() == QTime(21, 30)
+    window.time_from.setTime(QTime(20, 0))
+    assert names() == ['b.jpg', 'c.jpg']
+    window.time_to.setTime(QTime(21, 0))
+    assert names() == ['b.jpg']
+    window.time_filter.setChecked(False)
+
+    window.select_only(window.filtered[0])
+    window.editor.headline.setText('DEL 2 - A gegen B')
+    window.editor.caption.setPlainText('Torjubel Erk')
+    window.editor.submit(0)
+    window.search.setText('jubel')
+    window._search_timer.timeout.emit()
+    assert names() == ['a.jpg']

@@ -74,7 +74,7 @@ READ_TAGS = [
     '-Subject', '-Keywords',
     '-City', '-Sub-location', '-Location',
     '-Rating', '-Label', '-XMP-photomech:ColorClass', '-XMP-photomech:Tagged',
-    '-DateTimeOriginal', '-SubSecTimeOriginal', '-Orientation',
+    '-DateTimeOriginal', '-SubSecTimeOriginal', '-Orientation', '-Model', '-SerialNumber',
     '-GPSLatitude', '-GPSLongitude',
 ] + sorted({f'-{name}' for names in RIGHTS_READ.values() for name in names})
 
@@ -199,6 +199,8 @@ def apply_records(item: Item, by_path):
     date = str(main.get('DateTimeOriginal') or '')
     subsec = str(main.get('SubSecTimeOriginal') or '')
     item.taken_at = f'{date}.{subsec.zfill(3)}' if date and subsec else date
+    item.camera = str(main.get('Model') or '').strip()
+    item.serial = str(main.get('SerialNumber') or '').strip()
     try:
         item.orientation = int(main.get('Orientation') or 1)
     except (TypeError, ValueError):

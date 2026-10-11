@@ -113,6 +113,11 @@ Hardened Runtime braucht.
    ist das des Zielfotos. Mit mehreren ausgewählten Fotos fügt `⌘⇧V` in alle ein.
 5. **Bewerten und taggen:** `⌘1`–`⌘8` Farbklasse, `1`–`5`
    Sterne, `T` Tag. Filter oben (oder `F3`/`F4`) zeigen nur die Auswahl.
+   **Suchen und filtern:** Das Suchfeld findet Wörter in Dateiname, Titel, Beschreibung und
+   Tags (alle Wörter müssen vorkommen). Bei mehreren Kameras im Ordner gibt es einen
+   Kamera-Filter; zwei gleiche Modelle werden an der Seriennummer unterschieden
+   („NIKON Z 9 · …1234“). **Uhrzeit** zeigt nur Bilder aus einem Zeitraum, z. B. einem
+   Drittel; beim Einschalten ist der Zeitraum aller Bilder voreingestellt.
 6. **In Lightroom ziehen.** Die Auswahl (auch über mehrere Seiten) per Drag & Drop
    ins Lightroom-Raster; Lightroom öffnet den Import-Dialog.
 

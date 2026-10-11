@@ -68,3 +68,29 @@ def test_image_folders_on_a_card(tmp_path):
     assert scanner.image_folders(card / 'DCIM' / '100NCZ_9') == [card / 'DCIM' / '100NCZ_9']
     assert scanner.image_folders(card / 'MISC') == []
     assert scanner.image_folders(tmp_path / 'fehlt') == []
+
+
+def test_camera_labels_distinguish_two_identical_bodies():
+    from captioner.scanner import Item
+    def item(model, serial):
+        i = Item(key=f'{model}{serial}')
+        i.camera, i.serial = model, serial
+        return i
+    labels = scanner.camera_labels([item('NIKON Z 9', '3001234'), item('NIKON Z 9', '3005678'),
+                                    item('NIKON Z 8', '2000001'), item('', '')])
+    assert labels == {('NIKON Z 8', '2000001'): 'NIKON Z 8', ('NIKON Z 9', '3001234'): 'NIKON Z 9 · …1234',
+                      ('NIKON Z 9', '3005678'): 'NIKON Z 9 · …5678'}
+
+
+def test_text_search_and_time_of_day(tmp_path):
+    from captioner.scanner import Item, Metadata
+    item = Item(key='a', embedded=[tmp_path / 'DSC_0001.JPG'], taken_at='2026:10:11 19:42:07.120')
+    item.meta = Metadata(headline='DEL 2 - EC Bad Nauheim gegen Kassel', caption='Torjubel Erk',
+                         keywords=['Eishockey'])
+    assert scanner.matches_text(item, '')
+    assert scanner.matches_text(item, 'jubel erk')          # alle Woerter, ohne Gross/klein
+    assert scanner.matches_text(item, 'dsc_0001 kassel')
+    assert not scanner.matches_text(item, 'jubel regensburg')
+    assert scanner.time_of_day(item) == '19:42'
+    item.taken_at = ''
+    assert scanner.time_of_day(item) == ''

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 11:25+0200\n"
+"POT-Creation-Date: 2026-10-11 15:44+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -83,6 +83,9 @@ msgstr "All files (*)"
 
 msgid "Alle Farben"
 msgstr "All colors"
+
+msgid "Alle Kameras"
+msgstr "All cameras"
 
 msgid "Alle Sterne"
 msgstr "All stars"
@@ -820,6 +823,9 @@ msgstr "Search"
 msgid "Suchen (Code, Name, Team) – Enter: weiter"
 msgstr "Search (code, name, team) – Enter: next"
 
+msgid "Suchen: Dateiname, Titel, Beschreibung, Tags"
+msgstr "Search: file name, headline, caption, tags"
+
 msgid "Tab schließen"
 msgstr "Close tab"
 
@@ -940,6 +946,9 @@ msgstr ""
 
 msgid "UTF-8 mit BOM"
 msgstr "UTF-8 with BOM"
+
+msgid "Uhrzeit"
+msgstr "Time"
 
 msgid "Umbenennen"
 msgstr "Rename"

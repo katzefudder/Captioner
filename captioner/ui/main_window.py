@@ -6,9 +6,9 @@ import logging
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QItemSelection, QItemSelectionModel, QMimeData, QObject, Qt, QTimer, QUrl
+from PySide6.QtCore import QEvent, QItemSelection, QItemSelectionModel, QMimeData, QObject, Qt, QTime, QTimer, QUrl
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QKeySequence, QShortcut
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QHBoxLayout,
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QHBoxLayout, QLineEdit, QTimeEdit,
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
                                QToolButton, QVBoxLayout, QWidget)
 
@@ -95,6 +95,11 @@ class OpenRequests(QObject):
             return
         paths, self.paths = self.paths, []
         self.handler(paths)
+
+
+def camera_key(model, serial):
+    """Kamera als Text fuer QComboBox-Daten (Tupel vergleicht Qt nicht zuverlaessig)."""
+    return f'{model}\x1f{serial}'
 
 
 def _tab_attribute(name):
@@ -238,6 +243,35 @@ class MainWindow(QMainWindow):
         self.tag_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
         self.uncaptioned_filter.toggled.connect(lambda: self.apply_filter(True))
 
+        # Zweite Zeile: Suche, Kamera, Uhrzeit
+        search_row = QHBoxLayout()
+        self.search = QLineEdit()
+        self.search.setPlaceholderText(_('Suchen: Dateiname, Titel, Beschreibung, Tags'))
+        self.search.setClearButtonEnabled(True)
+        self._search_timer = QTimer(self)
+        self._search_timer.setSingleShot(True)
+        self._search_timer.setInterval(200)
+        self._search_timer.timeout.connect(lambda: self.apply_filter(True))
+        self.search.textChanged.connect(self._search_timer.start)
+        self.camera_filter = QComboBox()
+        self.camera_filter.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.camera_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
+        self.time_filter = QCheckBox(_('Uhrzeit'))
+        self.time_from = QTimeEdit(QTime(0, 0))
+        self.time_to = QTimeEdit(QTime(23, 59))
+        for edit in (self.time_from, self.time_to):
+            edit.setDisplayFormat('HH:mm')
+            edit.setEnabled(False)
+            edit.timeChanged.connect(lambda: self.time_filter.isChecked() and self.apply_filter(True))
+        self.time_filter.toggled.connect(self._time_filter_toggled)
+        search_row.addWidget(self.search, 1)
+        search_row.addWidget(self.camera_filter)
+        search_row.addWidget(self.time_filter)
+        search_row.addWidget(self.time_from)
+        search_row.addWidget(QLabel('–'))
+        search_row.addWidget(self.time_to)
+        self._fill_camera_filter()
+
         # Reiter oben ueber die ganze Fensterbreite, Galerien darunter links
         self.tabs = FolderTabs(self)
         self.tabs.bar.files_dropped.connect(lambda index: self.copy_dragged_to(self.tabs.widget(index)))
@@ -258,6 +292,7 @@ class MainWindow(QMainWindow):
         left_layout = QVBoxLayout(left)
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.addLayout(filters)
+        left_layout.addLayout(search_row)
         left_layout.addWidget(self.tabs.stack, 1)
 
         self.editor = CaptionEditor()
@@ -547,6 +582,7 @@ class MainWindow(QMainWindow):
         self._set_tab_status(tab, ngettext('{folder} – {count} Bild ({seconds} s)', '{folder} – {count} Bilder ({seconds} s)',
                                            count).format(folder=tab.folder, count=count, seconds=f'{elapsed:.1f}'))
         if tab is self.tab:
+            self._fill_camera_filter()
             self.apply_filter(False)
 
     def _set_tab_status(self, tab, text):
@@ -559,6 +595,7 @@ class MainWindow(QMainWindow):
             return
         # Filter gelten fuer alle Tabs; beim Wechsel fuer den neuen anwenden
         self.folder_label.setText(self.tab.status_text)
+        self._fill_camera_filter()
         self.apply_filter(False)
         self._remember_tabs()
 
@@ -592,7 +629,44 @@ class MainWindow(QMainWindow):
             return False
         if self.uncaptioned_filter.isChecked() and item.meta.is_captioned:
             return False
+        camera = self.camera_filter.currentData()
+        if camera is not None and camera_key(item.camera, item.serial) != camera:
+            return False
+        if self.time_filter.isChecked():
+            taken = scanner.time_of_day(item)
+            start, end = self.time_from.time().toString('HH:mm'), self.time_to.time().toString('HH:mm')
+            # ueber Mitternacht (22:00-01:00) mit oder statt und
+            inside = start <= taken <= end if start <= end else (taken >= start or taken <= end)
+            if not taken or not inside:
+                return False
+        if not scanner.matches_text(item, self.search.text()):
+            return False
         return True
+
+    def _time_filter_toggled(self, on):
+        for edit in (self.time_from, self.time_to):
+            edit.setEnabled(on)
+        if on:
+            # Vorschlag: Zeitraum der Bilder im Tab
+            times = sorted(t for t in (scanner.time_of_day(i) for i in self.all_items) if t)
+            if times:
+                self.time_from.setTime(QTime.fromString(times[0], 'HH:mm'))
+                self.time_to.setTime(QTime.fromString(times[-1], 'HH:mm'))
+        self.apply_filter(True)
+
+    def _fill_camera_filter(self):
+        """Kameras des aktiven Tabs; die Auswahl bleibt, solange es die Kamera noch gibt."""
+        current = self.camera_filter.currentData()
+        self.camera_filter.blockSignals(True)
+        self.camera_filter.clear()
+        self.camera_filter.addItem(_('Alle Kameras'), None)
+        tab = self.tab if hasattr(self, 'tabs') else None
+        for (model, serial), label in scanner.camera_labels(tab.all_items if tab else []).items():
+            self.camera_filter.addItem(label, camera_key(model, serial))
+        index = self.camera_filter.findData(current) if current is not None else 0
+        self.camera_filter.setCurrentIndex(max(0, index))
+        self.camera_filter.setVisible(self.camera_filter.count() > 2)  # bei einer Kamera nichts zu waehlen
+        self.camera_filter.blockSignals(False)
 
     def apply_filter(self, reset_page):
         self.filtered = [item for item in self.all_items if self._passes(item)]
