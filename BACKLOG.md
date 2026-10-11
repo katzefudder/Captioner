@@ -44,30 +44,16 @@ in `readme.md` („Signieren und Notarisieren“) und `scripts/package_macos.py 
 beschrieben, aber ungetestet. In der GitHub Action dann über Secrets (Zertifikat als
 base64-p12, `notarytool` mit App-spezifischem Passwort oder API-Key).
 
-### Windows-Version (ca. 3–5 Arbeitstage, Stand 2026-10-10)
-Code (~1 Tag):
-- `exiftool.py` `ExifTool.start()`: `Popen(..., creationflags=subprocess.CREATE_NO_WINDOW)`,
-  sonst ein Konsolenfenster pro ExifTool-Prozess.
-- `exiftool.py` `find_exiftool()`: Bundle-Pfad `exiftool/exiftool.exe` (+ `exiftool_files/` mit
-  eigenem Perl), Homebrew-Fallbacks nur auf macOS.
-- `exiftool.py` `reap_orphans()`: nur POSIX. Unter Windows besser Job Object (Kinder sterben mit
-  der App) oder psutil.
-- `metadata.py` `write_embedded()`: `os.replace` scheitert, wenn Explorer/Virenscanner/Lightroom
-  die Datei offen hält → kurz wiederholen, dann klare Meldung. Sicherheitsregeln bleiben.
-- Seit der Einschätzung dazugekommen: Ordner-Dialog mit Mehrfachauswahl und Rechtschreibprüfung
-  sind macOS-only (Qt-Rückfall bzw. keine Prüfung); Öffnen aus dem Explorer über
-  Kommandozeile/Dateizuordnung statt `QFileOpenEvent`; `tabs.tab_title` kennt nur `/Volumes`
-  (Windows: Laufwerksbezeichnung).
-
-Paketierung (~1–2 Tage): Windows-Zweig oder zweite Spec (onedir, `captioner.ico`,
-Versionsressource; kein BUNDLE/macholib); ExifTool als `exiftool-<ver>_64.zip` mit fester
-SHA256; Installer per Inno Setup; Build-Skript in Python statt Makefile.
-
-CI (~½ Tag): zweiter Job `windows-latest` in `.github/workflows/release.yml`, Tests (ExifTool
-via choco), `setup.exe` an dasselbe Release.
-
-Außerhalb Code: Test auf echtem Windows mit Lightroom Classic (ADR 0001, Punkt 7);
-Code-Signing (Azure Trusted Signing oder OV-Zertifikat), sonst SmartScreen-Warnung.
+### Windows-Version: Rest
+Gebaut und getestet wird sie in der GitHub Action (`windows-latest`), siehe `readme.md`.
+Offen:
+- Test auf echtem Windows mit Lightroom Classic (ADR 0001, Punkt 7): Sidecars, Drag & Drop
+  in Lightroom, Kontextmenü „Mit Captioner öffnen“, Karte mit Laufwerksbezeichnung im Reiter.
+- Code-Signing (Azure Trusted Signing oder OV-Zertifikat), sonst SmartScreen-Warnung.
+- Rechtschreibprüfung unter Windows (Spell Checking API per COM, ca. ½–1 Tag).
+- Nach vorn holen beim Weiterreichen an die laufende App: Windows verweigert
+  `activateWindow` fremden Prozessen oft (blinkt nur in der Taskleiste);
+  ggf. `AllowSetForegroundWindow` im zweiten Prozess.
 
 ## Prüfen
 

@@ -10,10 +10,15 @@ WEBSITE_LINK = WEBSITE + '?mtm_campaign=captioner&mtm_source=app'
 
 def version():
     """
-    Versionsnummer: in der gebuendelten App aus deren Info.plist (die Release-Version,
-    siehe CAPTIONER_VERSION in Captioner.spec), sonst aus dem installierten Paket.
+    Versionsnummer: in der gebuendelten App die Release-Version (CAPTIONER_VERSION in der
+    Spec): Windows aus captioner/VERSION im Bundle, macOS aus der Info.plist; sonst aus dem
+    installierten Paket.
     """
     if getattr(sys, 'frozen', False):
+        try:
+            return (Path(getattr(sys, '_MEIPASS', '')) / 'captioner' / 'VERSION').read_text(encoding='utf-8').strip()
+        except OSError:
+            pass
         plist = Path(sys.executable).resolve().parent.parent / 'Info.plist'  # Contents/MacOS/..
         try:
             with open(plist, 'rb') as handle:

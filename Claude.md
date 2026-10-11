@@ -22,11 +22,13 @@ Bedienung: `readme.md`.
 | `undo.py` | Rückgängig/Wiederholen: Schritte mit Vorher/Nachher je Bild (Metadaten + Rohtext) |
 | `previews.py` | Kacheln/Großansicht aus eingebetteten JPEGs, Plattencache |
 | `exiftool.py` | `-stay_open`-Prozess, Pool pro OS-Thread, Aufräumen verwaister Prozesse |
+| `files.py` | `replace_file`: `os.replace` mit Wiederholung, wenn Windows die Datei sperrt |
 | `ui/viewer.py` | Großansicht mit Zoom (`ZoomView`): eingepasst/100 %/Stufen, Ankerpunkt, Begrenzung des Ausschnitts |
 | `ui/resources.py`, `resources/` | Logo (`logo.svg` = Quelle) und daraus erzeugte Icons; `make icons` / `scripts/make_icons.py` |
 | `ui/mapview.py` | OSM-Karte als QWidget (Kacheln, `QNetworkDiskCache`), `Geocoder` (Nominatim, 1 Anfrage/s) |
 | `ui/placepicker.py` | Dialog „Ort wählen“: Suche, Klick, Offline-Hinweis; Vorschläge aus dem `PlaceBook` |
 | `ui/tabs.py` | `FolderTab` (Zustand je Ordner), `FolderTabBar` (Drop auf Reiter), Konfliktdialog, `CopyWorker` |
+| `ui/instance.py` | Windows: eine App je Benutzer, weitere Starts reichen Ordner per `QLocalServer` weiter |
 | `ui/folderdialog.py` | „Ordner öffnen“ mit Mehrfachauswahl: macOS `NSOpenPanel` per ctypes, sonst Qt-Dialog |
 | `ui/rostereditor.py` | „Roster bearbeiten“: lokale Roster-Dateien mit Prüfung (`roster.check`), Speichern über `roster.write_file` |
 | `ui/about.py` | „Über Captioner“: Logo, `captioner.version()`, Link `captioner.WEBSITE_LINK` (mit `mtm_campaign`/`mtm_source`) |
@@ -35,7 +37,7 @@ Bedienung: `readme.md`.
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
-Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`) importiert kein Qt.
+Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`, `files`) importiert kein Qt.
 
 ## Regeln, die nicht verletzt werden dürfen
 
@@ -225,9 +227,28 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - `pkgbuild` meldet in der Claude-Code-Sandbox `write: Permission denied`; das Paket ist
   trotzdem vollständig (Dateiliste und Signatur geprüft).
 - Notarisierung ist ungetestet (kein Developer-ID-Zertifikat vorhanden).
-- Release-Workflow `.github/workflows/release.yml` (Push auf `main`, `macos-26`): Version
-  `<major>.<minor>` aus `pyproject.toml` + `github.run_number`, über `CAPTIONER_VERSION`
-  an die Spec. Lädt DMG und PKG als Release `v<version>` hoch, ad-hoc signiert.
+- Release-Workflow `.github/workflows/release.yml`: Jobs `version`, `macos` (`macos-26`),
+  `windows` (`windows-latest`), `release` (nur Push/Dispatch auf `main`; PRs bauen und
+  testen nur). Version `<major>.<minor>` aus `pyproject.toml` + `github.run_number`, über
+  `CAPTIONER_VERSION` an beide Specs. Lädt DMG, PKG und `setup.exe` als Release `v<version>` hoch.
+
+## Windows (x64)
+
+- Gebaut und getestet nur in der Action (`windows-latest`); lokal gibt es kein Windows.
+  Tastenkürzel der Windows-Tabelle lassen sich auf dem Mac prüfen, indem man vor den Tests
+  `keymap.MAC`, `BINDINGS` und `BY_COMMAND` auf `_bindings(False)` umstellt. Tests, die
+  Kürzel drücken, lesen die Tasten aus `keymap.keys()` oder fragen `keymap.MAC`.
+- ExifTool: `CREATE_NO_WINDOW`, Prozesse in einem Job Object (`KILL_ON_JOB_CLOSE`) statt
+  `reap_orphans()`. Pipes werden von je einem Lese-Thread gelesen (`_pump`), weil `selectors`
+  unter Windows keine Pipes kann; das gilt für alle Plattformen.
+- Gebündelt: offizielles `exiftool-<ver>_64.zip`, `exiftool(-k).exe` → `exiftool.exe` +
+  `exiftool_files/`. Version/Prüfsumme in `scripts/package_windows.py` (Mac: `Makefile`).
+- Ersetzen von Dateien immer über `files.replace_file` (Sperren durch Explorer/Virenscanner).
+- `captioner/VERSION` im Bundle liefert `version()` (keine `Info.plist`).
+- Explorer übergibt `"E:\"` als `E:"` (Backslash escapt das Anführungszeichen):
+  `main_window.command_line_path` repariert das.
+- Reiter: Laufwerk ≠ Systemlaufwerk → Laufwerksbezeichnung (`tabs.volume_label`, `QStorageInfo`).
+- Installer: Inno Setup, `packaging/captioner.iss`; `AppId` nie ändern (Updates).
 
 ## Fallstricke
 
@@ -252,7 +273,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 192 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 197 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

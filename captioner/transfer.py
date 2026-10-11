@@ -16,6 +16,7 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .files import replace_file
 from .i18n import _
 
 SKIP, RENAME, REPLACE = 'skip', 'rename', 'replace'
@@ -89,7 +90,10 @@ def copy_file(source, target):
         shutil.copy2(source, part)
         if part.stat().st_size != Path(source).stat().st_size:
             raise TransferError(_('{name}: Kopie unvollständig').format(name=target.name))
-        os.replace(part, target)
+        try:
+            replace_file(part, target)
+        except PermissionError:
+            raise TransferError(_('{name}: Ziel ist von einem anderen Programm geöffnet').format(name=target.name))
     finally:
         if part.exists():
             part.unlink()

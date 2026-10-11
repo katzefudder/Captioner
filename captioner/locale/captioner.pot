@@ -1325,6 +1325,12 @@ msgid ""
 msgstr ""
 
 #, python-brace-format
+msgid ""
+"{name}: Datei ist von einem anderen Programm geöffnet (z. B. Explorer-"
+"Vorschau, Lightroom), Original bleibt unangetastet"
+msgstr ""
+
+#, python-brace-format
 msgid "{name}: ExifTool hat keine Datei geschrieben"
 msgstr ""
 
@@ -1346,6 +1352,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{name}: XMP-Sidecar fehlt"
+msgstr ""
+
+#, python-brace-format
+msgid "{name}: Ziel ist von einem anderen Programm geöffnet"
 msgstr ""
 
 #, python-brace-format

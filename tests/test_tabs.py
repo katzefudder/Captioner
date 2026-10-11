@@ -64,6 +64,16 @@ def test_tab_titles():
     assert tabs.tab_title(None) == 'Neuer Tab'
 
 
+def test_tab_titles_on_windows(monkeypatch):
+    monkeypatch.setattr(tabs, 'WINDOWS', True)
+    monkeypatch.setenv('SystemDrive', 'C:')
+    monkeypatch.setattr(tabs, 'volume_label', lambda root: {'E:\\': 'NIKON Z 9'}.get(root, ''))
+    assert tabs.tab_title('E:\\DCIM\\100NCZ_9') == 'NIKON Z 9 › 100NCZ_9'
+    assert tabs.tab_title('E:\\') == 'NIKON Z 9'
+    assert tabs.tab_title('F:\\Fotos') == 'F: › Fotos'           # ohne Bezeichnung: Buchstabe
+    assert tabs.tab_title('C:\\Users\\flo\\Pictures\\2026') == '2026'
+
+
 def test_each_folder_gets_a_tab_and_keeps_its_own_state(window, cards):
     a, b = cards
     first = window.open_folder(a)
