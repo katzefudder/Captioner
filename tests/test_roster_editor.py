@@ -73,3 +73,19 @@ def test_url_source_is_read_only(app):
     dialog = RosterEditorDialog(['https://example.org/roster.txt'], cached_text=lambda url: TEXT.replace('\r', ''))
     assert dialog.text.isReadOnly() and not dialog.save_button.isEnabled()
     assert 'Marius Erk' in dialog.text.toPlainText() and 'nur lesbar' in dialog.status.text()
+
+
+def test_line_numbers(app, roster_file):
+    dialog = RosterEditorDialog([str(roster_file)])
+    dialog.resize(700, 400)
+    dialog.show()
+    QtWidgets.QApplication.processEvents()
+    gutter = dialog.text.numbers
+    assert gutter.isVisible() and gutter.width() == dialog.text.line_number_width() > 0
+    assert dialog.text.viewportMargins().left() == gutter.width()
+    dialog.text.appendPlainText('kaputt ohne tab')
+    dialog._check()
+    assert dialog.text.problem_lines == {6}
+    gutter.grab()   # zeichnet ohne Fehler
+    dialog.text.document().setModified(False)  # sonst fragt Schliessen nach dem Speichern
+    dialog.close()

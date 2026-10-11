@@ -9,16 +9,90 @@ Roster bearbeiten: lokale Roster-Dateien im Code-Replacement-Format.
 """
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import (QColor, QFont, QFontDatabase, QKeySequence, QShortcut, QSyntaxHighlighter,
+from PySide6.QtCore import QRect, QSize, Qt, QTimer, Signal
+from PySide6.QtGui import (QColor, QFont, QFontDatabase, QKeySequence, QPainter, QShortcut, QSyntaxHighlighter,
                            QTextCharFormat, QTextCursor)
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget,
                                QListWidgetItem, QMessageBox, QPlainTextEdit, QPushButton, QSplitter,
-                               QVBoxLayout)
+                               QVBoxLayout, QWidget)
 
 from .. import roster as roster_module
 
 ENCODING_NAMES = {'utf-8': 'UTF-8', 'utf-8-sig': 'UTF-8 mit BOM', 'utf-16': 'UTF-16', 'cp1252': 'Windows-1252'}
+
+
+class LineNumbers(QWidget):
+    """Zeilennummern links neben dem Text; Problemzeilen rot."""
+
+    def __init__(self, editor):
+        super().__init__(editor)
+        self.editor = editor
+
+    def sizeHint(self):
+        return QSize(self.editor.line_number_width(), 0)
+
+    def paintEvent(self, event):
+        self.editor.paint_line_numbers(event)
+
+
+class NumberedTextEdit(QPlainTextEdit):
+    """QPlainTextEdit mit Zeilennummern (Qt-Beispiel "Code Editor")."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.problem_lines = set()
+        self.numbers = LineNumbers(self)
+        self.blockCountChanged.connect(self._update_width)
+        self.updateRequest.connect(self._update_area)
+        self._update_width()
+
+    def line_number_width(self):
+        digits = max(3, len(str(max(1, self.blockCount()))))
+        return 14 + self.fontMetrics().horizontalAdvance('9') * digits
+
+    def _update_width(self, *_):
+        self.setViewportMargins(self.line_number_width(), 0, 0, 0)
+
+    def _update_area(self, rect, dy):
+        if dy:
+            self.numbers.scroll(0, dy)
+        else:
+            self.numbers.update(0, rect.y(), self.numbers.width(), rect.height())
+        if rect.contains(self.viewport().rect()):
+            self._update_width()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        area = self.contentsRect()
+        self.numbers.setGeometry(QRect(area.left(), area.top(), self.line_number_width(), area.height()))
+
+    def set_problem_lines(self, lines):
+        self.problem_lines = set(lines)
+        self.numbers.update()
+
+    def paint_line_numbers(self, event):
+        painter = QPainter(self.numbers)
+        palette = self.palette()
+        painter.fillRect(event.rect(), palette.alternateBase())
+        painter.setFont(self.font())
+        block = self.firstVisibleBlock()
+        top = round(self.blockBoundingGeometry(block).translated(self.contentOffset()).top())
+        height = self.fontMetrics().height()
+        current = self.textCursor().blockNumber()
+        while block.isValid() and top <= event.rect().bottom():
+            bottom = top + round(self.blockBoundingRect(block).height())
+            if block.isVisible() and bottom >= event.rect().top():
+                number = block.blockNumber() + 1
+                if number in self.problem_lines:
+                    painter.setPen(QColor('#d64541'))
+                elif block.blockNumber() == current:
+                    painter.setPen(palette.text().color())
+                else:
+                    painter.setPen(palette.placeholderText().color())
+                painter.drawText(0, top, self.numbers.width() - 6, height,
+                                 Qt.AlignmentFlag.AlignRight, str(number))
+            block = block.next()
+            top = bottom
 
 
 class RosterHighlighter(QSyntaxHighlighter):
@@ -81,7 +155,8 @@ class RosterEditorDialog(QDialog):
         top.addWidget(self.find, 1)
         layout.addLayout(top)
 
-        self.text = QPlainTextEdit()
+        self.text = NumberedTextEdit()
+        self.text.cursorPositionChanged.connect(self.text.numbers.update)
         font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
         self.text.setFont(font)
         self.text.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
@@ -188,6 +263,7 @@ class RosterEditorDialog(QDialog):
         entries = roster_module.parse(text)
         teams = {entry.team for entry in entries if entry.team}
         self.highlighter.problem_lines = {p.line for p in problems if p.serious}
+        self.text.set_problem_lines(self.highlighter.problem_lines)
         self.highlighter.rehighlight()
         self.problems.clear()
         for problem in problems:
