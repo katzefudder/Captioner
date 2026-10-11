@@ -5,7 +5,7 @@ from pathlib import Path
 
 WEBSITE = 'https://www.katzefudder.de/captioner'
 # Links zur Website mit Matomo-Kampagne (Anzeige ohne, Ziel mit Parametern)
-WEBSITE_LINK = WEBSITE + '?mtm_campaign=captioner&mtm_source=github'
+WEBSITE_LINK = WEBSITE + '?mtm_campaign=captioner&mtm_source=app'
 
 
 def version():
