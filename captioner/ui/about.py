@@ -35,7 +35,7 @@ class AboutDialog(QDialog):
         self.link.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         layout.addWidget(self.link)
 
-        credit = QLabel('<small>© Florian Dehn</small>')
+        credit = QLabel('<small>© Florian Dehn 2026</small>')
         credit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(credit)
 
