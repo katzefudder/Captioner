@@ -1,7 +1,7 @@
 # English translations for Captioner.
-# Copyright (C) 2026 ORGANIZATION
+# Copyright (C) 2026 Florian Dehn, flo@katzefudder.de
 # This file is distributed under the same license as the Captioner project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+# Florian Dehn <flo@katzefudder.de>, 2026.
 #
 msgid ""
 msgstr ""
