@@ -519,9 +519,10 @@ class CaptionEditor(QWidget):
         return [k for k in keywords if k not in persons]
 
     def focus_caption(self):
+        """Beschreibung markiert, damit Tippen sie ersetzt."""
         self.caption.setFocus()
         cursor = self.caption.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.End)
+        cursor.select(QTextCursor.SelectionType.Document)
         self.caption.setTextCursor(cursor)
 
     # --- Vorschau und Speichern -----------------------------------------------
