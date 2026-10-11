@@ -11,10 +11,10 @@ from pathlib import Path
 
 from PySide6.QtCore import QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (QColor, QFont, QFontDatabase, QKeySequence, QPainter, QShortcut, QSyntaxHighlighter,
-                           QTextCharFormat, QTextCursor)
+                           QTextCharFormat, QTextCursor, QTextFormat)
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget,
                                QListWidgetItem, QMessageBox, QPlainTextEdit, QPushButton, QSplitter,
-                               QVBoxLayout, QWidget)
+                               QTextEdit, QVBoxLayout, QWidget)
 
 from .. import roster as roster_module
 
@@ -44,7 +44,21 @@ class NumberedTextEdit(QPlainTextEdit):
         self.numbers = LineNumbers(self)
         self.blockCountChanged.connect(self._update_width)
         self.updateRequest.connect(self._update_area)
+        self.cursorPositionChanged.connect(self._highlight_current_line)
         self._update_width()
+        self._highlight_current_line()
+
+    def _highlight_current_line(self):
+        """Zeile mit dem Cursor ueber die ganze Breite hinterlegen: Systemfarbe, sehr blass
+        (passt zu hell/dunkel, rote Problemzeilen bleiben erkennbar)."""
+        color = QColor(self.palette().highlight().color())
+        color.setAlpha(60)
+        selection = QTextEdit.ExtraSelection()
+        selection.format.setBackground(color)
+        selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
+        selection.cursor = self.textCursor()
+        selection.cursor.clearSelection()
+        self.setExtraSelections([selection])
 
     def line_number_width(self):
         digits = max(3, len(str(max(1, self.blockCount()))))

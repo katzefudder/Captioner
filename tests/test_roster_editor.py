@@ -5,6 +5,7 @@ import pytest
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 QtWidgets = pytest.importorskip('PySide6.QtWidgets')
+QtGui = pytest.importorskip("PySide6.QtGui")
 
 from captioner.ui.rostereditor import RosterEditorDialog  # noqa: E402
 
@@ -89,3 +90,14 @@ def test_line_numbers(app, roster_file):
     gutter.grab()   # zeichnet ohne Fehler
     dialog.text.document().setModified(False)  # sonst fragt Schliessen nach dem Speichern
     dialog.close()
+
+
+def test_current_line_is_highlighted(app, roster_file):
+    dialog = RosterEditorDialog([str(roster_file)])
+    editor = dialog.text
+    cursor = editor.textCursor()
+    cursor.setPosition(editor.document().findBlockByNumber(2).position() + 2)
+    editor.setTextCursor(cursor)
+    selections = editor.extraSelections()
+    assert len(selections) == 1 and selections[0].cursor.blockNumber() == 2
+    assert selections[0].format.property(QtGui.QTextFormat.Property.FullWidthSelection)
