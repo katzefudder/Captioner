@@ -1,3 +1,5 @@
+import pytest
+
 from captioner.roster import RosterLoader, parse, raw_url
 from conftest import ROSTER_TEXT
 
@@ -120,3 +122,36 @@ def test_files_and_urls_combined(tmp_path):
     roster = loader.load(['https://example.org/del2.txt', str(path)])
     assert roster.lookup('bi99') and roster.lookup('ecn17')
     assert [s.origin for s in roster.status] == ['netz', 'datei']
+
+
+ROSTER_SOURCE = '- EC Bad Nauheim -\n\nbn23\t-23- Marius Erk (EC Bad Nauheim)\nbn31\t-31- Dean Döge (EC Bad Nauheim)\n'
+
+
+@pytest.mark.parametrize('encoding, newline', [('utf-8', '\n'), ('utf-8-sig', '\r\n'), ('utf-16', '\r\n'),
+                                               ('cp1252', '\r\n')])
+def test_roster_file_keeps_encoding_and_line_endings(tmp_path, encoding, newline):
+    from captioner import roster
+    path = tmp_path / 'r.txt'
+    path.write_bytes(ROSTER_SOURCE.replace('\n', newline).encode(encoding))
+    loaded = roster.read_file(path)
+    assert (loaded.encoding, loaded.newline) == (encoding, newline)
+    assert loaded.text == ROSTER_SOURCE  # im Editor immer \n
+    roster.write_file(loaded, loaded.text + 'bn99\t-99- Jörg Öhler (EC Bad Nauheim)\n')
+    data = path.read_bytes()
+    expected = (ROSTER_SOURCE + 'bn99\t-99- Jörg Öhler (EC Bad Nauheim)\n').replace('\n', newline).encode(encoding)
+    assert data == expected
+    assert not list(tmp_path.glob('.*captioner-tmp'))
+
+
+def test_roster_check_finds_ignored_and_conflicting_lines():
+    from captioner import roster
+    text = ('- EC Bad Nauheim -\n'
+            'bn23\t-23- Marius Erk (EC Bad Nauheim)\n'
+            'bn31 -31- Dean Döge (EC Bad Nauheim)\n'       # Leerzeichen statt Tab
+            'bn40\t\n'                                      # Ersetzung fehlt
+            'bn23\t-23- Jemand anders (EC Bad Nauheim)\n'  # widerspruechlich
+            'bn23\t-23- Marius Erk (EC Bad Nauheim)\n'     # nur doppelt
+            '\n')
+    problems = roster.check(text)
+    assert [(p.line, p.serious) for p in problems] == [(3, True), (4, True), (5, True), (6, False)]
+    assert 'kein Tab' in problems[0].message and 'Zeile 2' in problems[2].message

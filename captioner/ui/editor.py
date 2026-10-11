@@ -123,6 +123,7 @@ class CaptionEditor(QWidget):
     reload_roster_requested = Signal()
     place_chosen = Signal(object)         # geo.Place aus Karte oder Vorschlag: merken
     add_roster_file_requested = Signal()
+    edit_roster_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -260,11 +261,15 @@ class CaptionEditor(QWidget):
         add_roster_button = QPushButton('Roster-Datei hinzufügen …')
         add_roster_button.setToolTip('Roster-Datei (Code<Tab>Ersetzung) vom Rechner zusätzlich verwenden')
         add_roster_button.clicked.connect(self.add_roster_file_requested)
+        edit_roster_button = QPushButton('Roster bearbeiten …')
+        edit_roster_button.setToolTip('Die Roster-Datei(en) in einem Editor öffnen, der das Format prüft')
+        edit_roster_button.clicked.connect(self.edit_roster_requested)
         roster_buttons = QHBoxLayout()
         roster_buttons.addWidget(reload_button)
         roster_buttons.addWidget(add_roster_button)
         layout.addStretch(1)
         layout.addWidget(self.roster_status)
+        layout.addWidget(edit_roster_button)
         layout.addLayout(roster_buttons)
 
         self.selection_info = QLabel()

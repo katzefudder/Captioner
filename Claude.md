@@ -25,6 +25,7 @@ Bedienung: `readme.md`.
 | `ui/placepicker.py` | Dialog „Ort wählen“: Suche, Klick, Offline-Hinweis; Vorschläge aus dem `PlaceBook` |
 | `ui/tabs.py` | `FolderTab` (Zustand je Ordner), `FolderTabBar` (Drop auf Reiter), Konfliktdialog, `CopyWorker` |
 | `ui/folderdialog.py` | „Ordner öffnen“ mit Mehrfachauswahl: macOS `NSOpenPanel` per ctypes, sonst Qt-Dialog |
+| `ui/rostereditor.py` | „Roster bearbeiten“: lokale Roster-Dateien mit Prüfung (`roster.check`), Speichern über `roster.write_file` |
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
@@ -119,6 +120,10 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   löscht nur im Konfigurationsverzeichnis.
 - Roster-Dateien: `roster.decode()` erkennt UTF-16 (BOM), UTF-8 (auch mit BOM) und fällt
   auf Windows-1252 zurück. Eine lokale Datei ohne einen einzigen Code gilt als Fehler.
+- Roster-Editor: `roster.read_file` merkt sich Kodierung (inkl. BOM) und Zeilenenden,
+  `write_file` schreibt genau so zurück (Zwischendatei + replace). Speichern einer Datei ohne
+  Code wird abgelehnt; außerhalb geänderte Dateien nur nach Rückfrage überschreiben.
+  `roster.check` spiegelt `parse`: was dort ignoriert würde, ist ein Problem.
 
 ## Tastenkürzel
 
@@ -186,7 +191,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 153 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 163 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

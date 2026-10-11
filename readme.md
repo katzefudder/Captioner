@@ -317,6 +317,15 @@ Format: eine Zeile pro Code, Code und Ersetzung durch **Tab**
 getrennt, Abschnittsköpfe `- Team -`. Dateien dürfen UTF-8, UTF-16 oder Windows-1252
 sein. Lokale Dateien werden bei jedem Laden frisch gelesen.
 
+**Roster bearbeiten …** (Werkzeugleiste oder Panel) öffnet einen Editor für die lokalen
+Roster-Dateien. Tabs sind blau hinterlegt, Abschnittsköpfe und Codes hervorgehoben.
+Zeilen, die beim Laden ignoriert würden (Leerzeichen statt Tab, fehlende Ersetzung), und
+widersprüchliche doppelte Codes sind rot markiert und unten aufgelistet; ein Klick springt
+zur Zeile. `⌘F` sucht, `⌘S` speichert. Gespeichert wird in der Kodierung und mit den
+Zeilenenden der Datei (wichtig für unter Windows gespeicherte Roster); fehlt ein Zeichen in
+Windows-1252, bietet der Editor UTF-8 an. Danach wird der Roster neu geladen. URL-Quellen
+zeigt der Editor nur an (zuletzt geladene Fassung).
+
 ## Einstellungen
 
 `⌘,` öffnet den Dialog; gespeichert als `settings.toml` unter

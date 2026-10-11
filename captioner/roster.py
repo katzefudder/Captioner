@@ -101,6 +101,92 @@ def decode(data: bytes):
         return data.decode('cp1252', errors='replace')
 
 
+# --- Bearbeiten (Roster-Editor) ------------------------------------------------
+
+@dataclass
+class RosterFile:
+    """Eine lokale Roster-Datei mit allem, was zum unveraenderten Zurueckschreiben noetig ist."""
+    path: Path
+    text: str
+    encoding: str        # 'utf-8', 'utf-8-sig' (mit BOM), 'utf-16' (mit BOM), 'cp1252'
+    newline: str         # '\n' oder '\r\n', wie in der Datei
+    mtime: float
+    lossy: bool = False  # cp1252 mit unbekannten Bytes: Speichern veraendert sie
+
+
+def read_file(path):
+    path = Path(path).expanduser()
+    data = path.read_bytes()
+    if data.startswith((b'\xff\xfe', b'\xfe\xff')):
+        text, encoding, lossy = data.decode('utf-16'), 'utf-16', False
+    elif data.startswith(b'\xef\xbb\xbf'):
+        text, encoding, lossy = data.decode('utf-8-sig'), 'utf-8-sig', False
+    else:
+        try:
+            text, encoding, lossy = data.decode('utf-8'), 'utf-8', False
+        except UnicodeDecodeError:
+            text = data.decode('cp1252', errors='replace')
+            encoding, lossy = 'cp1252', '\ufffd' in text
+    newline = '\r\n' if '\r\n' in text else '\n'
+    return RosterFile(path, text.replace('\r\n', '\n'), encoding, newline, path.stat().st_mtime, lossy)
+
+
+def write_file(roster_file, text, encoding=None):
+    """
+    Schreibt in Kodierung und Zeilenenden der Datei (oder encoding), ueber eine
+    Zwischendatei. UnicodeEncodeError, wenn ein Zeichen in der Kodierung fehlt.
+    """
+    encoding = encoding or roster_file.encoding
+    data = text.replace('\r\n', '\n').replace('\n', roster_file.newline).encode(encoding)
+    path = roster_file.path
+    temp = path.with_name(f'.{path.name}.captioner-tmp')
+    try:
+        temp.write_bytes(data)
+        temp.replace(path)
+    finally:
+        if temp.exists():
+            temp.unlink()
+    roster_file.text, roster_file.encoding = text, encoding
+    roster_file.mtime = path.stat().st_mtime
+    roster_file.lossy = False
+
+
+@dataclass(frozen=True)
+class Problem:
+    line: int       # 1-basiert
+    message: str
+    serious: bool   # wirkt sich aus (Zeile ignoriert, Widerspruch); sonst nur Hinweis
+
+
+def check(text):
+    """Zeilen, die parse() ignoriert oder die sich widersprechen, mit Zeilennummer."""
+    problems = []
+    seen = {}  # code -> (Zeile, Ersetzung)
+    for number, line in enumerate(text.split('\n'), 1):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if '\t' not in line:
+            if not SECTION_PATTERN.match(stripped):
+                problems.append(Problem(number, 'kein Tab zwischen Code und Ersetzung (und kein '
+                                                '„- Team -“): Zeile wird ignoriert', True))
+            continue
+        code, replacement = (part.strip() for part in line.split('\t', 1))
+        if not code or not replacement:
+            problems.append(Problem(number, 'Code fehlt' if not code else 'Ersetzung fehlt', True))
+            continue
+        if code in seen:
+            first, previous = seen[code]
+            if previous != replacement:
+                problems.append(Problem(number, f'„{code}“ steht schon in Zeile {first} mit anderer Ersetzung '
+                                                '(widersprüchlich, wird nicht verwendet)', True))
+            else:
+                problems.append(Problem(number, f'„{code}“ doppelt (wie Zeile {first})', False))
+            continue
+        seen[code] = (number, replacement)
+    return problems
+
+
 def raw_url(url):
     """GitHub-blob-URLs liefern HTML. Umschreiben auf raw.githubusercontent.com."""
     match = GITHUB_BLOB_PATTERN.match(url)
@@ -121,6 +207,11 @@ class RosterLoader:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.ttl_seconds = max(0, int(ttl_minutes)) * 60
         self._fetch = fetch or _http_get
+
+    def cached_text(self, source):
+        """Zuletzt geladene Fassung einer URL-Quelle, oder None."""
+        cached = self._cache_file(source)
+        return cached.read_text(encoding='utf-8') if cached.exists() else None
 
     def _cache_file(self, source):
         name = hashlib.sha256(source.encode('utf-8')).hexdigest()[:16]

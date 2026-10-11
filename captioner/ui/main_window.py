@@ -21,6 +21,7 @@ from ..templates import TemplateError, TemplateStore, unique
 from . import keymap
 from .dialogs import ROSTER_FILE_FILTER, SettingsDialog, ShortcutsDialog, TemplateDialog
 from .editor import CaptionEditor
+from .rostereditor import RosterEditorDialog
 from . import folderdialog
 from .viewer import Viewer
 from .gallery import CLASS_COLORS, ItemRole
@@ -161,7 +162,9 @@ class MainWindow(QMainWindow):
         settings_action.triggered.connect(self.edit_settings)
         shortcuts_action = QAction('Tastenkürzel', self)
         shortcuts_action.triggered.connect(self.show_shortcuts)
-        for action in (open_action, reload_action, settings_action, shortcuts_action):
+        roster_action = QAction('Roster bearbeiten …', self)
+        roster_action.triggered.connect(self.edit_roster)
+        for action in (open_action, reload_action, roster_action, settings_action, shortcuts_action):
             toolbar.addAction(action)
             self.addAction(action)
 
@@ -222,6 +225,7 @@ class MainWindow(QMainWindow):
         self.editor.remove_template_requested.connect(self.remove_template)
         self.editor.reload_roster_requested.connect(lambda: self.load_roster(force=True))
         self.editor.add_roster_file_requested.connect(self.add_roster_file)
+        self.editor.edit_roster_requested.connect(self.edit_roster)
         self.editor.navigate_requested.connect(self.step_selection)
         self.editor.place_chosen.connect(self.remember_place)
         self.editor.set_place_book(self.places)
@@ -1211,6 +1215,11 @@ class MainWindow(QMainWindow):
             self.settings.roster_sources.append(path)
             self.settings.save()
         self.load_roster(force=True)
+
+    def edit_roster(self):
+        dialog = RosterEditorDialog(self.settings.roster_sources, self.roster_loader.cached_text, self)
+        dialog.saved.connect(lambda path: self.load_roster(force=True))
+        dialog.exec()
 
     def load_roster(self, force=False):
         self.editor.set_roster_status('Roster wird geladen …')
