@@ -179,8 +179,11 @@ def test_about_dialog_links_to_the_website(app):
     from captioner.ui.about import AboutDialog
     dialog = AboutDialog()
     assert WEBSITE == 'https://www.katzefudder.de/captioner'
-    assert WEBSITE_LINK == WEBSITE + '?mtm_campaign=captioner&mtm_source=github'
-    assert 'href="https://www.katzefudder.de/captioner?mtm_campaign=captioner&amp;mtm_source=github"' \
-        in dialog.link.text() and dialog.link.openExternalLinks()
+    # Kampagnen-Parameter da; welcher mtm_source, entscheidet captioner/__init__.py
+    from urllib.parse import parse_qs, urlsplit
+    query = parse_qs(urlsplit(WEBSITE_LINK).query)
+    assert WEBSITE_LINK.startswith(WEBSITE + '?') and query['mtm_campaign'] == ['captioner'] and query['mtm_source']
+    import html
+    assert f'href="{html.escape(WEBSITE_LINK)}"' in dialog.link.text() and dialog.link.openExternalLinks()
     assert '>www.katzefudder.de/captioner</a>' in dialog.link.text()
     assert version() not in ('', None)
