@@ -264,6 +264,4 @@ Mit echten Fotos nur auf **Kopien** testen. `tests/test_gui.py` läuft offscreen
 
 ## Offen
 
-- Lightroom-Akzeptanztest aus ADR 0001, Punkt 7 (Sidecars beim Kopier-Import, `.xmp` im Drop).
-- Windows-Build (ExifTool als `exiftool.exe`), Signierung/Notarisierung für macOS.
-- Kein Ingest mit Umbenennen/Ordnerstruktur (nur Kopieren zwischen offenen Tabs), kein direkter Upload.
+Siehe `BACKLOG.md` (Fehler, Funktionen, Windows-Version, Signieren, Lightroom-Akzeptanztest).
