@@ -48,17 +48,21 @@ class NumberedTextEdit(QPlainTextEdit):
         self._update_width()
         self._highlight_current_line()
 
-    def _highlight_current_line(self):
-        """Zeile mit dem Cursor ueber die ganze Breite hinterlegen: Systemfarbe, sehr blass
-        (passt zu hell/dunkel, rote Problemzeilen bleiben erkennbar)."""
+    def current_line_color(self):
+        """Systemfarbe, sehr blass: passt zu hell/dunkel, rote Problemzeilen bleiben erkennbar."""
         color = QColor(self.palette().highlight().color())
         color.setAlpha(60)
+        return color
+
+    def _highlight_current_line(self):
+        """Zeile mit dem Cursor ueber die ganze Breite hinterlegen, die Nummer links mit."""
         selection = QTextEdit.ExtraSelection()
-        selection.format.setBackground(color)
+        selection.format.setBackground(self.current_line_color())
         selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
         selection.cursor = self.textCursor()
         selection.cursor.clearSelection()
         self.setExtraSelections([selection])
+        self.numbers.update()
 
     def line_number_width(self):
         digits = max(3, len(str(max(1, self.blockCount()))))
@@ -97,9 +101,15 @@ class NumberedTextEdit(QPlainTextEdit):
             bottom = top + round(self.blockBoundingRect(block).height())
             if block.isVisible() and bottom >= event.rect().top():
                 number = block.blockNumber() + 1
+                is_current = block.blockNumber() == current
+                if is_current:
+                    painter.fillRect(0, top, self.numbers.width(), bottom - top, self.current_line_color())
+                font = painter.font()
+                font.setBold(is_current)
+                painter.setFont(font)
                 if number in self.problem_lines:
                     painter.setPen(QColor('#d64541'))
-                elif block.blockNumber() == current:
+                elif is_current:
                     painter.setPen(palette.text().color())
                 else:
                     painter.setPen(palette.placeholderText().color())
@@ -170,7 +180,6 @@ class RosterEditorDialog(QDialog):
         layout.addLayout(top)
 
         self.text = NumberedTextEdit()
-        self.text.cursorPositionChanged.connect(self.text.numbers.update)
         font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
         self.text.setFont(font)
         self.text.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
