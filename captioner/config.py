@@ -62,6 +62,7 @@ class Settings:
     viewer_info_panel: bool = True   # EXIF/IPTC rechts in der Grossansicht
     viewer_caption_panel: bool = False  # Beschriftungs-Panel in der Grossansicht
     language: str = ''           # '' = Systemsprache, sonst 'de'/'en'; siehe i18n.LANGUAGES
+    spellcheck: str = 'auto'     # Beschreibung: 'auto' (macOS waehlt), 'de', 'en', 'off'
     exiftool_path: str = ''
     last_folder: str = ''
     # Offene Tabs beim Beenden (Ordnerpfade, in Reihenfolge) und der aktive; beim Start

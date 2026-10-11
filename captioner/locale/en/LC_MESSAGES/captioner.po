@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 15:50+0200\n"
+"POT-Creation-Date: 2026-10-11 15:52+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -117,6 +117,9 @@ msgstr "Resolution"
 msgid "Aufnahme"
 msgstr "Capture"
 
+msgid "Aus"
+msgstr "Off"
+
 #, python-brace-format
 msgid "Aus dem Template: {values}"
 msgstr "From the template: {values}"
@@ -139,6 +142,9 @@ msgstr ""
 
 msgid "Automatisch (Systemsprache)"
 msgstr "Automatic (system language)"
+
+msgid "Automatisch (macOS)"
+msgstr "Automatic (macOS)"
 
 msgid "Bearbeiten"
 msgstr "Edit"
@@ -271,6 +277,9 @@ msgstr "Files"
 msgid "Der neue ExifTool-Pfad gilt nach einem Neustart."
 msgstr "The new ExifTool path takes effect after a restart."
 
+msgid "Deutsch"
+msgstr "German"
+
 msgid "Deutschland"
 msgstr "Germany"
 
@@ -342,6 +351,9 @@ msgstr "Settings …"
 
 msgid "Eishockey, DEL2, Saison 2026/27"
 msgstr "Ice hockey, DEL2, season 2026/27"
+
+msgid "Englisch"
+msgstr "English"
 
 #, python-brace-format
 msgid ""
@@ -539,6 +551,9 @@ msgstr "Help"
 msgid "Hinweise"
 msgstr "Instructions"
 
+msgid "Ignorieren"
+msgstr "Ignore"
+
 msgid "In diesem Tab ist kein Ordner geöffnet."
 msgstr "No folder is open in this tab."
 
@@ -547,6 +562,9 @@ msgstr "Files are being copied into this folder."
 
 msgid "Infos"
 msgstr "Info"
+
+msgid "Ins Wörterbuch aufnehmen"
+msgstr "Learn spelling"
 
 msgid "Kamera"
 msgstr "Camera"
@@ -579,6 +597,9 @@ msgid ""
 "Keine Roster-Quelle eingerichtet. Mit „Roster-Datei hinzufügen …“ eine "
 "Datei auswählen."
 msgstr "No roster source set up. Choose a file with “Add roster file …”."
+
+msgid "Keine Vorschläge"
+msgstr "No suggestions"
 
 msgid "Kodierung"
 msgstr "Encoding"
@@ -655,6 +676,9 @@ msgstr "Show tagged only"
 msgid "Nur nicht getaggte zeigen"
 msgstr "Show untagged only"
 
+msgid "Nur unter macOS verfügbar"
+msgstr "Only available on macOS"
+
 msgid "Nächste Seite"
 msgstr "Next page"
 
@@ -720,6 +744,9 @@ msgstr "Program"
 
 msgid "Quelle"
 msgstr "Source"
+
+msgid "Rechtschreibprüfung"
+msgstr "Spell checking"
 
 msgid "Roster"
 msgstr "Roster"

@@ -13,7 +13,7 @@ from ..i18n import _, N_
 from ..scanner import Metadata
 from ..roster import is_url
 from .placepicker import PlacePickerDialog, place_completer, place_for_completion
-from . import keymap
+from . import keymap, spelling
 from ..templates import DEFAULT_CAPTION_SUFFIX, MatchTemplate, parse_headline
 
 ROSTER_FILE_FILTER = N_('Roster-Dateien (*.txt *.tsv *.csv);;Alle Dateien (*)')
@@ -235,6 +235,15 @@ class SettingsDialog(QDialog):
         form.addRow('', self.drag_sidecars)
         form.addRow('ExifTool', self.exiftool)
         form.addRow(_('Sprache'), language_row)
+        self.spellcheck = QComboBox()
+        for label, value in ((N_('Automatisch (macOS)'), 'auto'), (N_('Deutsch'), 'de'), (N_('Englisch'), 'en'),
+                             (N_('Aus'), 'off')):
+            self.spellcheck.addItem(_(label), value)
+        self.spellcheck.setCurrentIndex(max(0, self.spellcheck.findData(getattr(settings, 'spellcheck', 'auto'))))
+        if spelling.checker() is None:
+            self.spellcheck.setEnabled(False)
+            self.spellcheck.setToolTip(_('Nur unter macOS verfügbar'))
+        form.addRow(_('Rechtschreibprüfung'), self.spellcheck)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.accept)
@@ -252,6 +261,7 @@ class SettingsDialog(QDialog):
         s.drag_include_sidecars = self.drag_sidecars.isChecked()
         s.exiftool_path = self.exiftool.text().strip()
         s.language = self.language.currentData()
+        s.spellcheck = self.spellcheck.currentData()
         return s
 
 

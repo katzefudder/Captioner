@@ -30,6 +30,7 @@ Bedienung: `readme.md`.
 | `ui/rostereditor.py` | „Roster bearbeiten“: lokale Roster-Dateien mit Prüfung (`roster.check`), Speichern über `roster.write_file` |
 | `ui/about.py` | „Über Captioner“: Logo, `captioner.version()`, Link `captioner.WEBSITE_LINK` (mit `mtm_campaign`/`mtm_source`) |
 | `i18n.py` | gettext: `_`, `ngettext`, `N_`, Sprache wählen (`resolve`, `setup`) |
+| `ui/spelling.py` | Rechtschreibprüfung der Beschreibung über macOS `NSSpellChecker` (ctypes) |
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
@@ -71,6 +72,13 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   Gefüttert beim Speichern (nach vorn), beim Einlesen und aus Templates (nur ergänzen).
 - Codes im Titel: `editor.resolve_headline()`; unbekannte blockieren wie in der Beschreibung.
   Gespeichert wird der aufgelöste Titel (kein Rohtext); das Format wird am aufgelösten geprüft.
+
+## Rechtschreibung
+
+- `NSSpellChecker` per ctypes (wie `folderdialog`); anderswo keine Prüfung. Bereiche sind UTF-16
+  (wie QString): nie mit Python-Indizes mischen, `utf16_slice`/`utf16_spans` benutzen.
+- Nicht angestrichen: Codes und Wörter aus Roster-Ersetzungen (`set_known_words` in `set_roster`).
+- „Ins Wörterbuch aufnehmen“ ruft `learnWord:` auf, wirkt systemweit.
 
 ## Rückgängig
 
@@ -237,7 +245,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 184 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 187 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

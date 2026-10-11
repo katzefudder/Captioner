@@ -117,6 +117,10 @@ Hardened Runtime braucht.
    benutzt wurden (gespeichert, in geöffneten Bildern oder Templates), ohne die schon
    eingetragenen. **Codes im Titel** werden wie in der Beschreibung aufgelöst, z. B.
    `DEL 2 - #bn# gegen #kh#`, wenn das Roster Team-Codes enthält (`bn⇥EC Bad Nauheim`).
+   **Rechtschreibung:** Tippfehler in der Beschreibung sind rot unterstrichen (macOS-
+   Rechtschreibprüfung, dieselben Wörterbücher wie Mail/Pages). Codes und Namen aus dem
+   Roster gelten nicht als Fehler. Rechtsklick: Vorschläge, „Ins Wörterbuch aufnehmen“
+   (gilt dann auch in anderen Apps), „Ignorieren“. Sprache in den Einstellungen.
    **Rückgängig:** `⌘Z` nimmt die letzte Änderung zurück (Sterne, Farbklasse, Tag,
    gespeicherte Beschriftung, Einfügen, Template anwenden, auch für mehrere Bilder auf
    einmal), `⌘⇧Z` wiederholt; das Menü „Bearbeiten“ zeigt, was zurückgenommen wird. Im
@@ -362,6 +366,7 @@ zeigt der Editor nur an (zuletzt geladene Fassung).
   die zuletzt geladene Fassung einer URL benutzt.
 * **Sprache:** Automatisch (Systemsprache: Deutsch, sonst Englisch), Deutsch oder English.
   Gilt nach einem Neustart.
+* **Rechtschreibprüfung:** Automatisch (macOS wählt), Deutsch, Englisch oder Aus.
 * **Code-Trennzeichen:** Default `#`.
 * **Farbmarkierungen:** Default `Red, Yellow, Green, Blue, Purple`.
   Für ein deutsches Lightroom `Rot, Gelb, Grün, Blau, Lila`.

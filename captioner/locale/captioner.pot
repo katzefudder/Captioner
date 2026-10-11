@@ -92,6 +92,9 @@ msgstr ""
 msgid "Aufnahme"
 msgstr ""
 
+msgid "Aus"
+msgstr ""
+
 #, python-brace-format
 msgid "Aus dem Template: {values}"
 msgstr ""
@@ -111,6 +114,9 @@ msgid ""
 msgstr ""
 
 msgid "Automatisch (Systemsprache)"
+msgstr ""
+
+msgid "Automatisch (macOS)"
 msgstr ""
 
 msgid "Bearbeiten"
@@ -244,6 +250,9 @@ msgstr ""
 msgid "Der neue ExifTool-Pfad gilt nach einem Neustart."
 msgstr ""
 
+msgid "Deutsch"
+msgstr ""
+
 msgid "Deutschland"
 msgstr ""
 
@@ -303,6 +312,9 @@ msgid "Einstellungen …"
 msgstr ""
 
 msgid "Eishockey, DEL2, Saison 2026/27"
+msgstr ""
+
+msgid "Englisch"
 msgstr ""
 
 #, python-brace-format
@@ -490,6 +502,9 @@ msgstr ""
 msgid "Hinweise"
 msgstr ""
 
+msgid "Ignorieren"
+msgstr ""
+
 msgid "In diesem Tab ist kein Ordner geöffnet."
 msgstr ""
 
@@ -497,6 +512,9 @@ msgid "In diesen Ordner wird gerade kopiert."
 msgstr ""
 
 msgid "Infos"
+msgstr ""
+
+msgid "Ins Wörterbuch aufnehmen"
 msgstr ""
 
 msgid "Kamera"
@@ -529,6 +547,9 @@ msgstr ""
 msgid ""
 "Keine Roster-Quelle eingerichtet. Mit „Roster-Datei hinzufügen …“ eine "
 "Datei auswählen."
+msgstr ""
+
+msgid "Keine Vorschläge"
 msgstr ""
 
 msgid "Kodierung"
@@ -606,6 +627,9 @@ msgstr ""
 msgid "Nur nicht getaggte zeigen"
 msgstr ""
 
+msgid "Nur unter macOS verfügbar"
+msgstr ""
+
 msgid "Nächste Seite"
 msgstr ""
 
@@ -670,6 +694,9 @@ msgid "Programm"
 msgstr ""
 
 msgid "Quelle"
+msgstr ""
+
+msgid "Rechtschreibprüfung"
 msgstr ""
 
 msgid "Roster"

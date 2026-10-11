@@ -325,6 +325,7 @@ class MainWindow(QMainWindow):
         self.editor.place_chosen.connect(self.remember_place)
         self.editor.set_place_book(self.places)
         self.editor.set_keyword_history(self.keyword_history)
+        self.editor.set_spellcheck(self.settings.spellcheck)
 
         self.main_splitter = QSplitter()
         self.main_splitter.addWidget(left)
@@ -1521,6 +1522,7 @@ class MainWindow(QMainWindow):
             return
         old_recursive, old_exiftool = self.settings.recursive, self.settings.exiftool_path
         dialog.apply().save()
+        self.editor.set_spellcheck(self.settings.spellcheck)
         self._fill_color_filter()
         self.load_roster(force=True)
         if old_exiftool != self.settings.exiftool_path:

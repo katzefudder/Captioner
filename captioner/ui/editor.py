@@ -10,12 +10,13 @@ import re
 from pathlib import Path
 
 from PySide6.QtCore import QStringListModel, Qt, Signal
-from PySide6.QtGui import QKeySequence, QShortcut, QTextCursor
+from PySide6.QtGui import QAction, QKeySequence, QShortcut, QTextCursor
 from PySide6.QtWidgets import (QComboBox, QCompleter, QFormLayout, QHBoxLayout, QLabel,
                                QLineEdit, QMenu, QPlainTextEdit, QPushButton, QSizePolicy,
                                QToolButton, QVBoxLayout, QWidget)
 
 from .. import codes, geo, keywords, metadata
+from . import spelling
 from ..i18n import _, ngettext
 from .keymap import keys as binding_keys
 from .placepicker import PlacePickerDialog, place_completer, place_for_completion
@@ -121,6 +122,43 @@ class CodeTextEdit(WrappingLineEdit):
         self.completer.activated.connect(self._insert_completion)
         self.model = QStringListModel(self)
         self.completer.setModel(self.model)
+        self.spelling = spelling.SpellHighlighter(self.document(), spelling.checker(), self.delimiter)
+
+    def contextMenuEvent(self, event):
+        """Rechtsklick auf ein unterstrichenes Wort: Vorschlaege, lernen, ignorieren."""
+        menu = self.createStandardContextMenu(event.pos())
+        cursor = self.cursorForPosition(event.pos())
+        block = cursor.block()
+        position = cursor.positionInBlock()
+        hit = next(((start, length, word) for start, length, word in self.spelling.misspelled(block.text())
+                    if start <= position <= start + length), None)
+        if hit is not None:
+            start, length, word = hit
+            first = menu.actions()[0] if menu.actions() else None
+            checker = self.spelling.spell_checker
+            suggestions = checker.suggestions(block.text(), start, length, self.spelling.language)
+            for suggestion in suggestions:
+                action = QAction(suggestion, menu)
+                action.triggered.connect(lambda _=False, s=suggestion: self._replace(block, start, length, s))
+                menu.insertAction(first, action)
+            if not suggestions:
+                none = QAction(_('Keine Vorschläge'), menu)
+                none.setEnabled(False)
+                menu.insertAction(first, none)
+            learn = QAction(_('Ins Wörterbuch aufnehmen'), menu)
+            learn.triggered.connect(lambda: (checker.learn(word), self.spelling.rehighlight()))
+            ignore = QAction(_('Ignorieren'), menu)
+            ignore.triggered.connect(lambda: (self.spelling.ignored.add(word.casefold()), self.spelling.rehighlight()))
+            menu.insertAction(first, learn)
+            menu.insertAction(first, ignore)
+            menu.insertSeparator(first)
+        menu.exec(event.globalPos())
+
+    def _replace(self, block, start, length, text):
+        cursor = QTextCursor(block)
+        cursor.setPosition(block.position() + start)
+        cursor.setPosition(block.position() + start + length, QTextCursor.MoveMode.KeepAnchor)
+        cursor.insertText(text)
 
     def set_completions(self, entries):
         self.model.setStringList([f'{e.code}\t{e.replacement}' for e in entries])
@@ -368,8 +406,19 @@ class CaptionEditor(QWidget):
         self.roster = roster
         self.delimiter = delimiter
         self.caption.delimiter = delimiter
+        # Namen aus dem Roster sind keine Tippfehler; Codes ebenfalls nicht
+        self.caption.spelling.set_delimiter(delimiter)
+        self.caption.spelling.set_known_words(
+            [e.replacement for e in roster.entries.values()] + list(roster.teams) if roster else [])
         self._update_completions()
         self._update_preview()
+
+    def set_spellcheck(self, language):
+        """'auto' (macOS waehlt), 'de', 'en' oder 'off'."""
+        highlighter = self.caption.spelling
+        highlighter.enabled = highlighter.spell_checker is not None and language != 'off'
+        highlighter.language = language if language in ('de', 'en') else None
+        highlighter.rehighlight()
 
     def set_roster_status(self, html_text):
         self.roster_status.setText(html_text)
