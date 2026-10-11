@@ -18,6 +18,7 @@ from PySide6.QtNetwork import QLocalServer, QLocalSocket
 logger = logging.getLogger(__name__)
 
 TIMEOUT_MS = 1000
+ACK_TIMEOUT_MS = 5000   # bis die laufende App die Ordner uebernommen hat
 
 
 def server_name():
@@ -29,7 +30,13 @@ def server_name():
 
 
 def forward(paths, name=None):
-    """An eine laufende App weiterreichen. True, wenn eine da war (dann beenden)."""
+    """
+    An eine laufende App weiterreichen. True, wenn eine da war (dann beenden).
+
+    Eine Nachricht je Verbindung: JSON-Liste plus Zeilenende. Der Server legt auf, sobald
+    er sie uebernommen hat; erst dann endet dieser Prozess. Wer selbst sofort auflegt,
+    verliert unter Windows ungelesene Daten in der Named Pipe.
+    """
     socket = QLocalSocket()
     socket.connectToServer(name or server_name())
     if not socket.waitForConnected(TIMEOUT_MS):
@@ -37,9 +44,9 @@ def forward(paths, name=None):
     socket.write(json.dumps([str(p) for p in paths]).encode('utf-8') + b'\n')
     socket.flush()
     socket.waitForBytesWritten(TIMEOUT_MS)
-    socket.disconnectFromServer()
     if socket.state() != QLocalSocket.LocalSocketState.UnconnectedState:
-        socket.waitForDisconnected(TIMEOUT_MS)
+        socket.waitForDisconnected(ACK_TIMEOUT_MS)
+    socket.abort()
     return True
 
 
@@ -72,14 +79,29 @@ class InstanceServer(QObject):
         if buffer is None:
             return
         buffer.extend(bytes(socket.readAll()))
-        while b'\n' in buffer:
-            line, _, rest = bytes(buffer).partition(b'\n')
-            buffer[:] = rest
+        if b'\n' in buffer:
+            line = bytes(buffer).partition(b'\n')[0]
+            self._finish(socket)
             self._deliver(line)
 
+    def _finish(self, socket):
+        """Uebernommen: auflegen, damit der weiterreichende Prozess endet."""
+        if self.buffers.pop(socket, None) is None:
+            return
+        socket.readyRead.disconnect()
+        socket.disconnected.disconnect()
+        socket.disconnectFromServer()
+        socket.deleteLater()
+
     def _drop(self, socket):
-        if self.buffers.pop(socket, None) is not None:
-            socket.deleteLater()
+        """Gegenseite weg: was noch im Puffer liegt, gilt (auch ohne Zeilenende)."""
+        if socket not in self.buffers:
+            return
+        self._read(socket)
+        rest = self.buffers.pop(socket, None)
+        socket.deleteLater()
+        if rest:
+            self._deliver(bytes(rest))
 
     def close(self):
         for socket in list(self.buffers):

@@ -1,5 +1,7 @@
 """Weitere Starts reichen ihre Ordner an die laufende App weiter (Windows, ui/instance.py)."""
 import os
+import subprocess
+import sys
 import time
 
 import pytest
@@ -24,16 +26,31 @@ def wait_for(condition, seconds=3):
     return condition()
 
 
+FORWARD = """
+import sys
+from PySide6.QtCore import QCoreApplication
+from captioner.ui import instance
+app = QCoreApplication([])
+sys.exit(0 if instance.forward(sys.argv[2:], name=sys.argv[1]) else 3)
+"""
+
+
+def start_second(name, *paths):
+    """Ein zweiter Start als eigener Prozess, wie aus dem Explorer."""
+    return subprocess.Popen([sys.executable, '-c', FORWARD, name, *paths])
+
+
 def test_second_start_forwards_folders(app):
     name = f'captioner-test-{os.getpid()}'
     received = []
     server = instance.InstanceServer(received.append, name=name)
     try:
-        assert instance.forward(['C:\\Fotos\\Spiel', 'E:\\DCIM\\100NCZ_9'], name=name)
-        assert wait_for(lambda: received)
-        assert received == [['C:\\Fotos\\Spiel', 'E:\\DCIM\\100NCZ_9']]
-        assert instance.forward([], name=name)  # ohne Ordner: nur nach vorn holen
-        assert wait_for(lambda: len(received) == 2) and received[1] == []
+        second = start_second(name, 'C:\\Fotos\\Spiel', 'E:\\DCIM\\100NCZ_9')
+        assert wait_for(lambda: second.poll() is not None, 15)
+        assert second.returncode == 0 and received == [['C:\\Fotos\\Spiel', 'E:\\DCIM\\100NCZ_9']]
+        third = start_second(name)  # ohne Ordner: nur nach vorn holen
+        assert wait_for(lambda: third.poll() is not None, 15)
+        assert third.returncode == 0 and received[1:] == [[]]
     finally:
         server.close()
         QApplication.processEvents()
