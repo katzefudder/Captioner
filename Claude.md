@@ -85,6 +85,8 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   `DCIM/100…`), außer bei `Settings.recursive`. Mehr als `MANY_FOLDERS` nur nach Rückfrage.
 - Reiter (`FolderTabs.bar`) laufen oben über die ganze Fensterbreite, die Galerien liegen im
   `FolderTabs.stack` darunter; `FolderTabs` bietet die nötige `QTabWidget`-API.
+- Offene Tabs: `Settings.open_tabs`/`active_tab`, gepflegt von `_remember_tabs` (Öffnen, Schließen,
+  Wechseln, Verschieben), beim Start `_restore_tabs` (fehlende Ordner fallen weg).
 - Galerie-Kürzel hängen am `FolderTabs.stack` (gelten in jedem Tab), nicht an einer Galerie.
 - Ordner-Dialog: Qts nativer macOS-Dialog kann für Ordner nur Einzelauswahl.
   `folderdialog.choose_folders` ruft deshalb `NSOpenPanel` direkt über die Objective-C-Laufzeit
@@ -214,7 +216,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 174 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 175 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

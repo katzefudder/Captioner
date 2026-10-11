@@ -64,6 +64,10 @@ class Settings:
     language: str = ''           # '' = Systemsprache, sonst 'de'/'en'; siehe i18n.LANGUAGES
     exiftool_path: str = ''
     last_folder: str = ''
+    # Offene Tabs beim Beenden (Ordnerpfade, in Reihenfolge) und der aktive; beim Start
+    # wieder geoeffnet, nicht vorhandene (Karte nicht eingesteckt) uebersprungen
+    open_tabs: list = field(default_factory=list)
+    active_tab: str = ''
     last_template: str = ''      # Pfad des zuletzt gewaehlten Templates
     # Template-Dateien vom Rechner, die ausserhalb des Konfigurationsverzeichnisses liegen
     template_files: list = field(default_factory=list)

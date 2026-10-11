@@ -146,10 +146,13 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self.refresh_templates(settings.last_template)
         self.load_roster()
+        self._restore_tabs()
         # Ein Ordner (str/Path) oder eine Liste, z. B. von der Kommandozeile
         folders = [folder] if isinstance(folder, (str, Path)) else list(folder or [])
         if folders:
             self.open_folders(folders)
+        self._restoring = False
+        self._remember_tabs()
 
     # --- Aufbau ---------------------------------------------------------------
 
@@ -240,6 +243,7 @@ class MainWindow(QMainWindow):
         self.tabs.bar.files_dropped.connect(lambda index: self.copy_dragged_to(self.tabs.widget(index)))
         self.tabs.tabCloseRequested.connect(self.close_tab)
         self.tabs.currentChanged.connect(self._on_tab_changed)
+        self.tabs.bar.tabMoved.connect(self._remember_tabs)
         new_tab_button = QToolButton(text='+')
         new_tab_button.setToolTip(_('Ordner in neuem Tab öffnen'))
         new_tab_button.clicked.connect(lambda: self.choose_folder(new_tab=True))
@@ -440,6 +444,25 @@ class MainWindow(QMainWindow):
             self.tabs.setCurrentWidget(tabs[0])
         return tabs
 
+    def _restore_tabs(self):
+        """Tabs vom letzten Mal; Ordner, die fehlen (Karte nicht eingesteckt), fallen weg."""
+        self._restoring = True
+        folders = [f for f in self.settings.open_tabs if isinstance(f, str) and Path(f).is_dir()]
+        for folder in folders:
+            self.open_folder(folder)
+        active = self.tab_for_folder(self.settings.active_tab) if self.settings.active_tab else None
+        if active is not None:
+            self.tabs.setCurrentWidget(active)
+
+    def _remember_tabs(self, *_args):
+        if getattr(self, '_restoring', True) or getattr(self, '_shut_down', False):
+            return
+        open_tabs = [tab.folder for tab in self.all_tabs() if tab.folder]
+        active = (self.tab.folder or '') if self.tab is not None else ''
+        if (open_tabs, active) != (self.settings.open_tabs, self.settings.active_tab):
+            self.settings.open_tabs, self.settings.active_tab = open_tabs, active
+            self.settings.save()
+
     def open_folder(self, folder, new_tab=False):
         """In einem neuen Tab; ein leerer aktueller Tab wird benutzt. Schon offen: dorthin wechseln."""
         folder = str(folder)
@@ -455,6 +478,7 @@ class MainWindow(QMainWindow):
         self.settings.last_folder = folder
         self.settings.save()
         self.rescan(tab, wait_for_writer=False)
+        self._remember_tabs()
         return tab
 
     def rescan(self, tab, wait_for_writer=True):
@@ -536,6 +560,7 @@ class MainWindow(QMainWindow):
         # Filter gelten fuer alle Tabs; beim Wechsel fuer den neuen anwenden
         self.folder_label.setText(self.tab.status_text)
         self.apply_filter(False)
+        self._remember_tabs()
 
     def close_tab(self, index):
         tab = self.tabs.widget(index)
@@ -549,6 +574,7 @@ class MainWindow(QMainWindow):
         tab.deleteLater()
         if self.tabs.count() == 0:
             self.new_tab()
+        self._remember_tabs()
 
     # --- Filter, Seiten, Auswahl -------------------------------------------------
 

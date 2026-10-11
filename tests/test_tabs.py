@@ -263,3 +263,25 @@ def test_qt_fallback_dialog_allows_multiple_folders(app, monkeypatch):
     monkeypatch.setattr(QtWidgets.QFileDialog, 'exec', fake_exec)
     assert folderdialog._choose_qt(None, 'Ordner öffnen', '/tmp') == []
     assert seen['modes'] == {QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection}
+
+
+def test_tabs_are_restored_after_restart(app, cards, tmp_path):
+    from captioner import config
+    from captioner.ui.main_window import MainWindow
+    a, b = cards
+    first = MainWindow(config.Settings(roster_sources=[]))
+    first.open_folder(a)
+    first.open_folder(b)
+    first.tabs.setCurrentWidget(first.tab_for_folder(str(b)))
+    assert first.settings.open_tabs == [str(a), str(b)] and first.settings.active_tab == str(b)
+    first.close()
+
+    settings = config.Settings.load()
+    settings.open_tabs.append(str(tmp_path / 'nicht-eingesteckt'))   # Karte fehlt beim Start
+    second = MainWindow(settings)
+    try:
+        assert [second.tabs.widget(i).folder for i in range(second.tabs.count())] == [str(a), str(b)]
+        assert second.tab.folder == str(b)
+        assert second.settings.open_tabs == [str(a), str(b)]   # fehlende fallen raus
+    finally:
+        second.close()

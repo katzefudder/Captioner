@@ -136,7 +136,9 @@ aber Unterordner mit Bildern (die Karte oder `DCIM`), öffnet jeder dieser Unter
 eigenen Tab. Zwei Karten aus dem Finder aufs Fenster ziehen öffnet also alle Bildordner
 beider Karten. Ab mehr als 8 Ordnern fragt die App vorher. Ist „Unterordner mit einlesen“
 eingeschaltet, wird der Ordner stattdessen als ein Tab mit allen Unterordnern geöffnet.
-Ein schon offener Ordner wird nur in den Vordergrund geholt.
+Ein schon offener Ordner wird nur in den Vordergrund geholt. Beim nächsten Start sind die
+Tabs wieder da, der zuletzt aktive vorn; Ordner, die fehlen (Karte nicht eingesteckt),
+werden übersprungen.
 
 **Aus dem Finder öffnen** (gebündelte App): Ordner oder Karten im Finder markieren und aufs
 Captioner-Symbol im Dock ziehen, oder Rechtsklick → „Öffnen mit“ → Captioner. Läuft die App
