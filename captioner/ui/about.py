@@ -3,13 +3,14 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 
 from .. import WEBSITE, version
+from ..i18n import _
 from .resources import logo_pixmap
 
 
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Über Captioner')
+        self.setWindowTitle(_('Über Captioner'))
         layout = QVBoxLayout(self)
         layout.setContentsMargins(32, 24, 32, 16)
         layout.setSpacing(10)
@@ -20,11 +21,11 @@ class AboutDialog(QDialog):
         logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(logo)
 
-        title = QLabel(f'<h2 style="margin:0">Captioner</h2>Version {version()}')
+        title = QLabel('<h2 style="margin:0">Captioner</h2>' + _('Version {version}').format(version=version()))
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
-        text = QLabel('Fotos sichten, bewerten und beschriften, bevor sie in Lightroom importiert werden.')
+        text = QLabel(_('Fotos sichten, bewerten und beschriften, bevor sie in Lightroom importiert werden.'))
         text.setWordWrap(True)
         text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(text)

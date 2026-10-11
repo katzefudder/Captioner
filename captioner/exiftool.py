@@ -17,6 +17,8 @@ import sys
 import threading
 from pathlib import Path
 
+from .i18n import _
+
 logger = logging.getLogger(__name__)
 
 # ExifTool beendet sich im -stay_open-Modus nicht, wenn stdin zugeht. Stirbt die
@@ -45,7 +47,7 @@ def find_exiftool(configured=''):
     for fallback in ('/opt/homebrew/bin/exiftool', '/usr/local/bin/exiftool'):
         if os.access(fallback, os.X_OK):
             return fallback
-    raise ExifToolError('ExifTool nicht gefunden. Pfad in den Einstellungen setzen.')
+    raise ExifToolError(_('ExifTool nicht gefunden. Pfad in den Einstellungen setzen.'))
 
 
 class ExifTool:
@@ -98,7 +100,7 @@ class ExifTool:
                 for key, _ in selector.select(timeout=60):
                     chunk = os.read(key.fileobj.fileno(), 65536)
                     if not chunk:
-                        raise ExifToolError('ExifTool wurde unerwartet beendet')
+                        raise ExifToolError(_('ExifTool wurde unerwartet beendet'))
                     buffer = out if key.data == 'out' else err
                     buffer.extend(chunk)
                     if buffer.rstrip().endswith(marker):
@@ -122,7 +124,7 @@ class ExifTool:
         try:
             return json.loads(out.decode('utf-8'))
         except ValueError as e:
-            raise ExifToolError(f'Antwort von ExifTool nicht lesbar: {e}; {err}')
+            raise ExifToolError(_('Antwort von ExifTool nicht lesbar: {error}; {stderr}').format(error=e, stderr=err))
 
     def binary(self, tag, path):
         out, _ = self.execute('-b', f'-{tag}', str(path))

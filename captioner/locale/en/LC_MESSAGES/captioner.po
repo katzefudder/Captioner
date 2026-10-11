@@ -1,0 +1,1383 @@
+# English translations for Captioner.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Captioner project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Captioner VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-11 11:25+0200\n"
+"PO-Revision-Date: 2026-10-11 11:23+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+msgid "  oder  "
+msgstr "  or  "
+
+msgid " min"
+msgstr " min"
+
+msgid "(nur in Bilder ohne GPS der Kamera)"
+msgstr "(only into images without camera GPS)"
+
+msgid "1 Stern"
+msgstr "1 star"
+
+msgid "2 Sterne"
+msgstr "2 stars"
+
+msgid "3 Sterne"
+msgstr "3 stars"
+
+msgid "4 Sterne"
+msgstr "4 stars"
+
+msgid "5 Sterne"
+msgstr "5 stars"
+
+#, python-brace-format
+msgid "<b>{count} Bilder ausgewählt</b> – Speichern schreibt in alle"
+msgstr "<b>{count} images selected</b> – saving writes to all of them"
+
+#, python-brace-format
+msgid ""
+"<b>{names}</b> gibt es in <b>{folder}</b> bereits.<br><br>Überspringen "
+"lässt die vorhandene Datei, Umbenennen kopiert als <b>{new_name}</b>, "
+"Ersetzen überschreibt die vorhandene."
+msgstr ""
+"<b>{names}</b> already exists in <b>{folder}</b>.<br><br>Skip keeps the "
+"existing file, Rename copies as <b>{new_name}</b>, Replace overwrites the"
+" existing one."
+
+msgid "Abbrechen"
+msgstr "Cancel"
+
+msgid "Ablage"
+msgstr "File"
+
+msgid ""
+"Achtung: die Datei enthält Bytes, die in Windows-1252 nicht vorkommen; "
+"sie werden beim Speichern zu „�“"
+msgstr ""
+"Caution: the file contains bytes that do not exist in Windows-1252; "
+"saving turns them into “�”"
+
+msgid "Adresse, PLZ oder Halle suchen, z. B. „61231 Bad Nauheim“"
+msgstr "Search for an address, postcode or venue, e.g. “61231 Bad Nauheim”"
+
+msgid "Agentur, Redaktion"
+msgstr "Agency, newsroom"
+
+msgid "Aktion"
+msgstr "Action"
+
+msgid "Alle Dateien (*)"
+msgstr "All files (*)"
+
+msgid "Alle Farben"
+msgstr "All colors"
+
+msgid "Alle Sterne"
+msgstr "All stars"
+
+msgid "Alle Tags"
+msgstr "All tags"
+
+msgid "Alle auswählen (alle Seiten)"
+msgstr "Select all (all pages)"
+
+msgid "Anhang"
+msgstr "Suffix"
+
+#, python-brace-format
+msgid "Antwort von ExifTool nicht lesbar: {error}; {stderr}"
+msgstr "Could not read ExifTool’s response: {error}; {stderr}"
+
+msgid ""
+"Auf die Karte klicken, um den Ort zu setzen. Ziehen verschiebt, Mausrad "
+"zoomt."
+msgstr "Click the map to set the location. Drag to pan, scroll to zoom."
+
+msgid "Aufgenommen"
+msgstr "Taken"
+
+msgid "Auflösung"
+msgstr "Resolution"
+
+msgid "Aufnahme"
+msgstr "Capture"
+
+#, python-brace-format
+msgid "Aus dem Template: {values}"
+msgstr "From the template: {values}"
+
+msgid "Aus der Liste entfernen"
+msgstr "Remove from list"
+
+msgid "Auslösungen"
+msgstr "Shutter count"
+
+msgid "Auswahl aufheben"
+msgstr "Deselect all"
+
+msgid ""
+"Auswahl in Lightroom ziehen, um sie zu importieren, oder auf einen "
+"anderen Tab, um sie dorthin zu kopieren"
+msgstr ""
+"Drag the selection into Lightroom to import it, or onto another tab to "
+"copy it there"
+
+msgid "Automatisch (Systemsprache)"
+msgstr "Automatic (system language)"
+
+msgid "Bearbeiten …"
+msgstr "Edit …"
+
+msgid "Beenden"
+msgstr "Quit"
+
+msgid "Belichtungskorrektur"
+msgstr "Exposure compensation"
+
+msgid "Belichtungszeit"
+msgstr "Shutter speed"
+
+msgid "Beschreibung"
+msgstr "Caption"
+
+msgid "Beschreibung und Tags"
+msgstr "Caption and tags"
+
+#, python-brace-format
+msgid "Beschreibung {size}/{limit} Bytes"
+msgstr "Caption {size}/{limit} bytes"
+
+msgid "Beschriften"
+msgstr "Caption"
+
+msgid "Beschriften (Panel zeigen, in die Beschreibung)"
+msgstr "Caption (show panel, go to caption)"
+
+msgid "Beschriftet von"
+msgstr "Caption writer"
+
+msgid "Beschriftung (IPTC Info)"
+msgstr "Caption panel (IPTC info)"
+
+msgid "Beschriftung bearbeiten (IPTC Info)"
+msgstr "Edit caption (IPTC info)"
+
+msgid "Beschriftung einfügen"
+msgstr "Paste caption"
+
+msgid "Beschriftung in Auswahl einfügen"
+msgstr "Paste caption into selection"
+
+#, python-brace-format
+msgid "Beschriftung in {count} Bild eingefügt"
+msgid_plural "Beschriftung in {count} Bilder eingefügt"
+msgstr[0] "Caption pasted into {count} image"
+msgstr[1] "Caption pasted into {count} images"
+
+msgid "Beschriftung kopieren (IPTC-Snapshot)"
+msgstr "Copy caption (IPTC snapshot)"
+
+#, python-brace-format
+msgid "Beschriftung von {name} kopiert"
+msgstr "Caption of {name} copied"
+
+msgid "Beschriftungs-Panel ein-/ausblenden (I)"
+msgstr "Show/hide the caption panel (I)"
+
+msgid "Bewertung"
+msgstr "Rating"
+
+msgid "Bilder pro Seite"
+msgstr "Images per page"
+
+msgid "Bitte einen Namen eingeben."
+msgstr "Please enter a name."
+
+msgid "Bitte zuerst ein Spiel-Template auswählen oder anlegen."
+msgstr "Please select or create a template first."
+
+msgid "Blende"
+msgstr "Aperture"
+
+msgid "Blitz"
+msgstr "Flash"
+
+msgid "Brennweite"
+msgstr "Focal length"
+
+msgid "Bundesland"
+msgstr "State/Province"
+
+msgid "Cache für URLs"
+msgstr "Cache for URLs"
+
+msgid "Captioner-Website"
+msgstr "Captioner website"
+
+msgid "Code fehlt"
+msgstr "code missing"
+
+msgid "Code-Trennzeichen"
+msgstr "Code delimiter"
+
+msgid "Copyright"
+msgstr "Copyright"
+
+msgid "Copyright-URL"
+msgstr "Copyright URL"
+
+msgid "Credit"
+msgstr "Credit"
+
+msgid "Datei"
+msgstr "File"
+
+msgid "Datei auf diesem Rechner"
+msgstr "File on this computer"
+
+msgid "Datei existiert bereits"
+msgstr "File already exists"
+
+msgid "Datei wurde geändert"
+msgstr "File was changed"
+
+msgid "Datei …"
+msgstr "File …"
+
+msgid "Dateien"
+msgstr "Files"
+
+msgid "Der neue ExifTool-Pfad gilt nach einem Neustart."
+msgstr "The new ExifTool path takes effect after a restart."
+
+msgid "Deutschland"
+msgstr "Germany"
+
+msgid ""
+"Die Datei enthält keinen einzigen Code (Code, Tab, Ersetzung). So würde "
+"sie beim Laden als fehlerhaft gelten."
+msgstr ""
+"The file contains no code at all (code, tab, replacement). It would be "
+"treated as broken when loading."
+
+msgid ""
+"Die Farbklasse wird zusätzlich als Label geschrieben, das Lightroom "
+"liest. Muss zum Label-Set in Lightroom passen: „Red“ (englisch) oder "
+"„Rot“ (deutsches Lightroom). Klassen ohne Eintrag bekommen kein Label."
+msgstr ""
+"The color class is also written as a label, which Lightroom reads. It "
+"must match Lightroom’s label set: “Red” (English) or “Rot” (German "
+"Lightroom). Classes without an entry get no label."
+
+msgid "Die Roster-Datei(en) in einem Editor öffnen, der das Format prüft"
+msgstr "Open the roster file(s) in an editor that checks the format"
+
+msgid "Die vorhandene Datei wird überschrieben. Fortfahren?"
+msgstr "The existing file will be overwritten. Continue?"
+
+msgid ""
+"Diese Bilder werden nicht gezogen, ihre Metadaten sind nicht sicher "
+"gespeichert:"
+msgstr "These images are not dragged, their metadata is not safely saved:"
+
+msgid ""
+"Diese Karte kann nur bei Verbindung mit dem Internet angezeigt werden.\n"
+"Stadt und Ort lassen sich unten trotzdem eintragen; bereits gewählte Orte"
+" werden vorgeschlagen."
+msgstr ""
+"This map can only be shown with an internet connection.\n"
+"You can still enter city and location below; places chosen before are "
+"suggested."
+
+msgid "Diese Übersicht"
+msgstr "This overview"
+
+msgid "EXIF wird gelesen …"
+msgstr "Reading EXIF …"
+
+msgid "EXIF/IPTC rechts ein-/ausblenden"
+msgstr "Show/hide EXIF/IPTC on the right"
+
+msgid ""
+"Eine Zeile pro Code: <b>Code</b>, <b>Tab</b>, Ersetzung (z. B. "
+"<code>bn23⇥-23- Marius Erk (EC Bad Nauheim)</code>). Abschnitte mit "
+"<code>- Team -</code>. Tabs sind blau hinterlegt."
+msgstr ""
+"One line per code: <b>code</b>, <b>tab</b>, replacement (e.g. "
+"<code>bn23⇥-23- Marius Erk (EC Bad Nauheim)</code>). Sections with "
+"<code>- Team -</code>. Tabs are highlighted in blue."
+
+msgid "Einlesen fehlgeschlagen"
+msgstr "Reading failed"
+
+msgid "Einpassen"
+msgstr "Fit"
+
+msgid "Einstellungen"
+msgstr "Settings"
+
+msgid "Einstellungen …"
+msgstr "Settings …"
+
+msgid "Eishockey, DEL2, Saison 2026/27"
+msgstr "Ice hockey, DEL2, season 2026/27"
+
+#, python-brace-format
+msgid ""
+"Enter speichert · {save_next} speichert und weiter · {save_close} "
+"speichert und zurück zur Galerie · {shortcuts} alle Tastenkürzel"
+msgstr ""
+"Enter saves · {save_next} saves and goes on · {save_close} saves and "
+"returns to the gallery · {shortcuts} all shortcuts"
+
+msgid "Entfernen"
+msgstr "Remove"
+
+msgid "Erneut versuchen"
+msgstr "Try again"
+
+msgid "Ersetzen"
+msgstr "Replace"
+
+msgid "Ersetzung fehlt"
+msgstr "replacement missing"
+
+msgid "Es werden noch Metadaten geschrieben."
+msgstr "Metadata is still being written."
+
+msgid "Es werden noch Metadaten geschrieben. Bitte kurz warten."
+msgstr "Metadata is still being written. Please wait a moment."
+
+msgid ""
+"Es wird noch kopiert. Abbrechen und beenden?\n"
+"Bereits kopierte Bilder bleiben, angefangene werden verworfen."
+msgstr ""
+"Copying is still in progress. Cancel and quit?\n"
+"Images already copied are kept, incomplete ones are discarded."
+
+msgid "Es wird noch kopiert. Bitte warten, bis das fertig ist."
+msgstr "Copying is still in progress. Please wait until it is done."
+
+msgid "ExifTool fehlt"
+msgstr "ExifTool missing"
+
+msgid "ExifTool nicht gefunden. Pfad in den Einstellungen setzen."
+msgstr "ExifTool not found. Set its path in the settings."
+
+msgid "ExifTool wurde unerwartet beendet"
+msgstr "ExifTool quit unexpectedly"
+
+msgid "Farbklasse"
+msgstr "Color class"
+
+msgid "Farbklasse 1"
+msgstr "Color class 1"
+
+msgid "Farbklasse 2"
+msgstr "Color class 2"
+
+msgid "Farbklasse 3"
+msgstr "Color class 3"
+
+msgid "Farbklasse 4"
+msgstr "Color class 4"
+
+msgid "Farbklasse 5"
+msgstr "Color class 5"
+
+msgid "Farbklasse 6"
+msgstr "Color class 6"
+
+msgid "Farbklasse 7"
+msgstr "Color class 7"
+
+msgid "Farbklasse 8"
+msgstr "Color class 8"
+
+msgid "Farbklasse entfernen"
+msgstr "Remove color class"
+
+#, python-brace-format
+msgid "Farbklasse {number}"
+msgstr "Color class {number}"
+
+#, python-brace-format
+msgid "Farbklasse {number} ({label})"
+msgstr "Color class {number} ({label})"
+
+msgid "Fehler"
+msgstr "Error"
+
+#, python-brace-format
+msgid "Fehler: {error}"
+msgstr "Error: {error}"
+
+#, python-brace-format
+msgid "Fehler: {message}"
+msgstr "Error: {message}"
+
+msgid "Fokus"
+msgstr "Focus"
+
+msgid ""
+"Format „<Anlass> - <Heim> gegen <Gast>“, sonst erkennt die "
+"Personenerkennung das Spiel nicht"
+msgstr ""
+"Format “<Occasion> - <Home> gegen <Away>”, otherwise person recognition "
+"cannot identify the game"
+
+msgid ""
+"Format: eine Zeile pro Code, Code und Ersetzung durch Tab getrennt, "
+"Abschnitte „- Team -“. Bei gleichem Code gewinnt die obere Quelle."
+msgstr ""
+"Format: one line per code, code and replacement separated by a tab, "
+"sections “- Team -”. For the same code, the upper source wins."
+
+msgid "Fotograf"
+msgstr "Photographer"
+
+msgid ""
+"Fotos sichten, bewerten und beschriften, bevor sie in Lightroom "
+"importiert werden."
+msgstr "Review, rate and caption photos before importing them into Lightroom."
+
+#, python-brace-format
+msgid "Für alle weiteren Konflikte übernehmen ({count})"
+msgstr "Apply to all remaining conflicts ({count})"
+
+msgid "GPS"
+msgstr "GPS"
+
+msgid "GPS der Kamera bleibt erhalten"
+msgstr "Camera GPS is kept"
+
+msgid "GPS des Ortes ist gesetzt"
+msgstr "Location GPS is set"
+
+#, python-brace-format
+msgid "GPS wird gesetzt: {latitude}, {longitude}"
+msgstr "GPS will be set: {latitude}, {longitude}"
+
+msgid "Galerie (Kontaktbogen)"
+msgstr "Gallery (contact sheet)"
+
+msgid ""
+"Gefüllte Felder gehen beim Speichern in jedes Bild, leere lassen den Wert"
+" des Bildes stehen. Heim und Gast stehen im Titel und ergeben sich aus "
+"den Codes in der Beschreibung."
+msgstr ""
+"Filled fields go into every image when saving, empty ones keep the "
+"image’s value. Home and away teams are part of the headline and follow "
+"from the codes in the caption."
+
+msgid "Getaggte auswählen"
+msgstr "Select tagged"
+
+msgid "Gewähltes Template anzeigen und ändern"
+msgstr "Show and edit the selected template"
+
+msgid "Gilt nach einem Neustart."
+msgstr "Takes effect after a restart."
+
+msgid "Großansicht"
+msgstr "Preview"
+
+msgid "Großansicht blättern"
+msgstr "Preview: previous/next"
+
+msgid "Großansicht schließen"
+msgstr "Close preview"
+
+msgid "Großansicht: Ausschnitt verschieben (mit ⇧ schneller)"
+msgstr "Preview: pan (faster with ⇧)"
+
+msgid "Großansicht: Zoom stufenlos, 50–400 %"
+msgstr "Preview: continuous zoom, 50–400 %"
+
+msgid "Großansicht: an der Maus zoomen"
+msgstr "Preview: zoom at the mouse"
+
+msgid "Großansicht: auf Stelle zoomen"
+msgstr "Preview: zoom to a spot"
+
+msgid "Halle, Stadion"
+msgstr "Arena, stadium"
+
+msgid "Heranzoomen"
+msgstr "Zoom in"
+
+msgid "Herauszoomen"
+msgstr "Zoom out"
+
+msgid "Hessen"
+msgstr "Hesse"
+
+msgid "Hilfe"
+msgstr "Help"
+
+msgid "Hinweise"
+msgstr "Instructions"
+
+msgid "In diesem Tab ist kein Ordner geöffnet."
+msgstr "No folder is open in this tab."
+
+msgid "In diesen Ordner wird gerade kopiert."
+msgstr "Files are being copied into this folder."
+
+msgid "Infos"
+msgstr "Info"
+
+msgid "Kamera"
+msgstr "Camera"
+
+msgid "Karte …"
+msgstr "Map …"
+
+msgid "Kategorie"
+msgstr "Category"
+
+msgid "Kein Bild passt zu den Filtern"
+msgstr "No image matches the filters"
+
+msgid "Kein Ordner geöffnet"
+msgstr "No folder open"
+
+msgid "Kein Roster verfügbar – Codes können nicht aufgelöst werden."
+msgstr "No roster available – codes cannot be resolved."
+
+msgid "Kein Template"
+msgstr "No template"
+
+msgid "Keine Auswahl"
+msgstr "No selection"
+
+msgid "Keine Bilder in diesem Ordner (JPG, NEF und andere RAWs, DNG, TIFF)"
+msgstr "No images in this folder (JPG, NEF and other RAWs, DNG, TIFF)"
+
+msgid ""
+"Keine Roster-Quelle eingerichtet. Mit „Roster-Datei hinzufügen …“ eine "
+"Datei auswählen."
+msgstr "No roster source set up. Choose a file with “Add roster file …”."
+
+msgid "Kodierung"
+msgstr "Encoding"
+
+#, python-brace-format
+msgid "Kopiere nach {name}: {done}/{total} …"
+msgstr "Copying to {name}: {done}/{total} …"
+
+#, python-brace-format
+msgid "Kopiere {count} Bild nach {folder} …"
+msgid_plural "Kopiere {count} Bilder nach {folder} …"
+msgstr[0] "Copying {count} image to {folder} …"
+msgstr[1] "Copying {count} images to {folder} …"
+
+msgid "Kopieren"
+msgstr "Copy"
+
+msgid "Kopieren läuft"
+msgstr "Copying in progress"
+
+msgid "Land"
+msgstr "Country"
+
+msgid "Lightroom-Label für Farbklasse 1, 2, 3, …"
+msgstr "Lightroom label for color class 1, 2, 3, …"
+
+msgid "Messung"
+msgstr "Metering"
+
+#, python-brace-format
+msgid "Metadaten werden geschrieben ({purpose}) …"
+msgstr "Writing metadata ({purpose}) …"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Neu einlesen"
+msgstr "Reload"
+
+msgid "Neuer Tab"
+msgstr "New tab"
+
+msgid "Neues Template …"
+msgstr "New template …"
+
+msgid "Neues Template, Datei laden, speichern unter, entfernen"
+msgstr "New template, load file, save as, remove"
+
+msgid "Nicht alle Bilder übergeben"
+msgstr "Not all images handed over"
+
+msgid "Nicht alles kopiert"
+msgstr "Not everything copied"
+
+msgid "Nicht eingefügt"
+msgstr "Not pasted"
+
+msgid "Nicht gespeichert"
+msgstr "Not saved"
+
+#, python-brace-format
+msgid "Nicht lesbar: {error}"
+msgstr "Not readable: {error}"
+
+msgid "Nichts gefunden. Anders formulieren oder direkt auf die Karte klicken."
+msgstr "Nothing found. Rephrase or click directly on the map."
+
+msgid "Noch nicht bereit"
+msgstr "Not ready yet"
+
+msgid "Nur getaggte zeigen"
+msgstr "Show tagged only"
+
+msgid "Nur nicht getaggte zeigen"
+msgstr "Show untagged only"
+
+msgid "Nächste Seite"
+msgstr "Next page"
+
+msgid "Nächster Tab"
+msgstr "Next tab"
+
+msgid "Nächstes Bild"
+msgstr "Next image"
+
+msgid "Nächstes Bild ohne Speichern"
+msgstr "Next image without saving"
+
+msgid "Objektiv"
+msgstr "Lens"
+
+msgid "Ordner in neuem Tab öffnen"
+msgstr "Open folder in new tab"
+
+msgid "Ordner in neuem Tab öffnen …"
+msgstr "Open folder in new tab …"
+
+msgid "Ordner wird eingelesen …"
+msgstr "Reading folder …"
+
+#, python-brace-format
+msgid "Ordner öffnen ({keys}) oder einen Ordner hierher ziehen"
+msgstr "Open a folder ({keys}) or drag one here"
+
+msgid "Ordner öffnen – mehrere mit ⌘-Klick"
+msgstr "Open folders – several with ⌘-click"
+
+msgid "Ordner öffnen …"
+msgstr "Open folder …"
+
+msgid "Ort"
+msgstr "Location"
+
+msgid "Ort / Halle"
+msgstr "Location / arena"
+
+msgid "Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)"
+msgstr "Choose the location on the map or by address search (OpenStreetMap)"
+
+msgid "Ort wird ermittelt …"
+msgstr "Looking up location …"
+
+msgid "Ort wählen"
+msgstr "Choose location"
+
+#, python-brace-format
+msgid "Personen-Tags: {persons}"
+msgstr "Person tags: {persons}"
+
+#, python-brace-format
+msgid "Platzhalter: {headline}, {city}, {sublocation}, {date}"
+msgstr "Placeholders: {headline}, {city}, {sublocation}, {date}"
+
+msgid "Position"
+msgstr "Position"
+
+msgid "Programm"
+msgstr "Program"
+
+msgid "Quelle"
+msgstr "Source"
+
+msgid "Roster"
+msgstr "Roster"
+
+msgid "Roster bearbeiten"
+msgstr "Edit roster"
+
+msgid "Roster bearbeiten …"
+msgstr "Edit roster …"
+
+msgid "Roster neu laden"
+msgstr "Reload roster"
+
+msgid "Roster wird geladen …"
+msgstr "Loading roster …"
+
+msgid "Roster-Datei (Code<Tab>Ersetzung) vom Rechner zusätzlich verwenden"
+msgstr "Also use a roster file (code<tab>replacement) from this computer"
+
+msgid "Roster-Datei hinzufügen"
+msgstr "Add roster file"
+
+msgid "Roster-Datei hinzufügen …"
+msgstr "Add roster file …"
+
+msgid "Roster-Datei wählen"
+msgstr "Choose roster file"
+
+msgid "Roster-Dateien (*.txt *.tsv *.csv);;Alle Dateien (*)"
+msgstr "Roster files (*.txt *.tsv *.csv);;All files (*)"
+
+msgid "Roster-Quellen"
+msgstr "Roster sources"
+
+msgid "Roster-Quellen einstellen"
+msgstr "Set up roster sources"
+
+msgid "Roster-URL"
+msgstr "Roster URL"
+
+msgid "Roster:"
+msgstr "Roster:"
+
+msgid "Schließen"
+msgstr "Close"
+
+msgid "Schreiben dauert an"
+msgstr "Still writing"
+
+#, python-brace-format
+msgid "Seite {page} / {pages} · {count} Bild"
+msgid_plural "Seite {page} / {pages} · {count} Bilder"
+msgstr[0] "Page {page} / {pages} · {count} image"
+msgstr[1] "Page {page} / {pages} · {count} images"
+
+msgid "Seriennummer"
+msgstr "Serial number"
+
+msgid "Slider unten"
+msgstr "Slider below"
+
+msgid "Speichern"
+msgstr "Save"
+
+msgid "Speichern && weiter"
+msgstr "Save && next"
+
+msgid "Speichern und nächstes Bild"
+msgstr "Save and next image"
+
+msgid "Speichern und vorheriges Bild"
+msgstr "Save and previous image"
+
+msgid "Speichern und zurück zur Galerie"
+msgstr "Save and back to the gallery"
+
+msgid "Speichern unter …"
+msgstr "Save as …"
+
+msgid "Spiel-Templates (*.toml)"
+msgstr "Templates (*.toml)"
+
+msgid "Sport"
+msgstr "Sport"
+
+msgid "Sprache"
+msgstr "Language"
+
+msgid "Stadt"
+msgstr "City"
+
+msgid "Sterne"
+msgstr "Stars"
+
+msgid "Sterne entfernen"
+msgstr "Remove stars"
+
+msgid "Suche nicht möglich: keine Verbindung zum Kartendienst"
+msgstr "Search not possible: no connection to the map service"
+
+msgid "Suche …"
+msgstr "Searching …"
+
+msgid "Suchen"
+msgstr "Search"
+
+msgid "Suchen (Code, Name, Team) – Enter: weiter"
+msgstr "Search (code, name, team) – Enter: next"
+
+msgid "Tab schließen"
+msgstr "Close tab"
+
+msgid "Tag"
+msgstr "Tag"
+
+#, python-brace-format
+msgid "Tag \"{keyword}\""
+msgstr "Tag \"{keyword}\""
+
+msgid "Tag an"
+msgstr "Tag on"
+
+msgid "Tag an/aus"
+msgstr "Tag on/off"
+
+msgid "Tag aus"
+msgstr "Tag off"
+
+msgid "Tags"
+msgstr "Tags"
+
+msgid "Tags, kommagetrennt"
+msgstr "Tags, comma-separated"
+
+msgid "Taste"
+msgstr "Key"
+
+msgid "Tastenkürzel"
+msgstr "Keyboard shortcuts"
+
+msgid "Template"
+msgstr "Template"
+
+msgid "Template anwenden"
+msgstr "Apply template"
+
+msgid "Template auf Auswahl anwenden"
+msgstr "Apply template to selection"
+
+msgid "Template bearbeiten …"
+msgstr "Edit template …"
+
+#, python-brace-format
+msgid "Template gespeichert: {path}"
+msgstr "Template saved: {path}"
+
+msgid "Template löschen"
+msgstr "Delete template"
+
+msgid "Template nicht geladen"
+msgstr "Template not loaded"
+
+msgid "Template nicht gespeichert"
+msgstr "Template not saved"
+
+msgid "Template speichern unter"
+msgstr "Save template as"
+
+msgid "Template speichern unter …"
+msgstr "Save template as …"
+
+msgid "Template unvollständig"
+msgstr "Template incomplete"
+
+#, python-brace-format
+msgid "Template „{name}“ geladen"
+msgstr "Template “{name}” loaded"
+
+msgid "Template-Datei laden"
+msgstr "Load template file"
+
+msgid "Template-Datei laden …"
+msgstr "Load template file …"
+
+msgid "Template:"
+msgstr "Template:"
+
+#, python-brace-format
+msgid "Templates nicht geladen: {errors}"
+msgstr "Templates not loaded: {errors}"
+
+msgid "Titel"
+msgstr "Headline"
+
+msgid ""
+"Titel nicht im Format „<Anlass> - <Heim> gegen <Gast>“ – die "
+"Personenerkennung erkennt das Spiel dann nicht"
+msgstr ""
+"Headline not in the format “<Occasion> - <Home> gegen <Away>” – person "
+"recognition will not identify the game"
+
+msgid ""
+"Titel, Ort und Tags des Templates in alle ausgewählten Bilder schreiben; "
+"Beschreibungen bleiben erhalten"
+msgstr ""
+"Write the template’s headline, location and tags into all selected "
+"images; captions are kept"
+
+msgid "URL (GitHub-Links wie im Browser gehen auch):"
+msgstr "URL (GitHub links as shown in the browser work too):"
+
+msgid "URL …"
+msgstr "URL …"
+
+msgid "URL, wird bei Bedarf neu geladen"
+msgstr "URL, reloaded when needed"
+
+msgid "URL-Quelle, noch nicht geladen."
+msgstr "URL source, not loaded yet."
+
+msgid ""
+"URL-Quelle, nur lesbar: angezeigt wird die zuletzt geladene Fassung. "
+"Ändern lässt sie sich nur dort, wo sie liegt."
+msgstr ""
+"URL source, read-only: showing the most recently loaded version. It can "
+"only be changed where it is hosted."
+
+msgid "UTF-8 mit BOM"
+msgstr "UTF-8 with BOM"
+
+msgid "Umbenennen"
+msgstr "Rename"
+
+#, python-brace-format
+msgid "Unbekannte Codes in der kopierten Beschreibung: {codes}"
+msgstr "Unknown codes in the copied caption: {codes}"
+
+#, python-brace-format
+msgid "Unbekannte Codes: {codes}"
+msgstr "Unknown codes: {codes}"
+
+msgid "Unerwartete Antwort vom Kartendienst"
+msgstr "Unexpected response from the map service"
+
+msgid "Ungespeicherte Änderungen"
+msgstr "Unsaved changes"
+
+msgid "Unterordner mit einlesen"
+msgstr "Include subfolders"
+
+msgid "Urheber und Rechte"
+msgstr "Creator and rights"
+
+#, python-brace-format
+msgid "Version {version}"
+msgstr "Version {version}"
+
+msgid "Viele Ordner"
+msgstr "Many folders"
+
+msgid "Vor- und Nachname"
+msgstr "First and last name"
+
+msgid "Vorherige Seite"
+msgstr "Previous page"
+
+msgid "Vorheriger Tab"
+msgstr "Previous tab"
+
+msgid "Vorheriges Bild"
+msgstr "Previous image"
+
+msgid "Vorheriges Bild ohne Speichern"
+msgstr "Previous image without saving"
+
+msgid "Vorschau"
+msgstr "Preview"
+
+msgid "Weitere"
+msgstr "More"
+
+msgid "Weißabgleich"
+msgstr "White balance"
+
+msgid "XMP-Sidecars mit in den Drag legen"
+msgstr "Include XMP sidecars when dragging"
+
+#, python-brace-format
+msgid "Zeile {line}: {message}"
+msgstr "Line {line}: {message}"
+
+msgid "Zoom 50–400 %"
+msgstr "Zoom 50–400 %"
+
+msgid "Zoom an/aus (100 %)"
+msgstr "Zoom on/off (100 %)"
+
+msgid "Zu diesem Punkt ist keine Adresse bekannt; Stadt und Ort bitte eintragen."
+msgstr "No address is known for this point; please enter city and location."
+
+msgid "Zuletzt angesehenes Bild auswählen"
+msgstr "Select last viewed image"
+
+msgid "Zum ersten Bild"
+msgstr "Go to first image"
+
+msgid "Zum letzten Bild"
+msgstr "Go to last image"
+
+msgid "Zusatz-Tags"
+msgstr "Extra tags"
+
+msgid "Zweikampf #bi99# gegen #bn23#"
+msgstr "Battle #bi99# vs #bn23#"
+
+msgid "abgebrochen"
+msgstr "cancelled"
+
+msgid "alles gespeichert"
+msgstr "everything saved"
+
+msgid "cache"
+msgstr "cache"
+
+msgid "datei"
+msgstr "file"
+
+#, python-brace-format
+msgid "eingepasst ({percent} %)"
+msgstr "fitted ({percent} %)"
+
+msgid "fehlt"
+msgstr "missing"
+
+msgid "getaggt"
+msgstr "tagged"
+
+msgid "https://… (Nutzungsbedingungen, Lizenz)"
+msgstr "https://… (terms of use, license)"
+
+msgid "ja"
+msgstr "yes"
+
+msgid ""
+"kein Tab zwischen Code und Ersetzung (und kein „- Team -“): Zeile wird "
+"ignoriert"
+msgstr "no tab between code and replacement (and not “- Team -”): line is ignored"
+
+msgid "keine Codes gefunden (Code und Ersetzung durch Tab getrennt?)"
+msgstr "no codes found (code and replacement separated by a tab?)"
+
+msgid "keine Codes gefunden (falsche URL oder HTML statt Textdatei?)"
+msgstr "no codes found (wrong URL, or HTML instead of a text file?)"
+
+msgid "keine – nur Stadt und Ort werden geschrieben"
+msgstr "none – only city and location are written"
+
+msgid "leer = automatisch suchen"
+msgstr "empty = find automatically"
+
+msgid "leer = im Panel eintragen, z. B. DEL 2 - EC Bad Nauheim gegen …"
+msgstr "empty = enter in the panel, e.g. DEL 2 - EC Bad Nauheim gegen …"
+
+msgid "letzte gute Version"
+msgstr "last good version"
+
+msgid "lädt Vollbild …"
+msgstr "loading full image …"
+
+msgid "lädt …"
+msgstr "loading …"
+
+msgid "nein"
+msgstr "no"
+
+msgid "netz"
+msgstr "network"
+
+#, python-brace-format
+msgid "nicht erreichbar: {error}"
+msgstr "not reachable: {error}"
+
+msgid "nicht getaggt"
+msgstr "not tagged"
+
+msgid "nur unbeschriftet"
+msgstr "uncaptioned only"
+
+msgid "ohne Farbe"
+msgstr "no color"
+
+msgid "ohne Sterne"
+msgstr "no stars"
+
+#, python-brace-format
+msgid "schreibe {count} …"
+msgstr "writing {count} …"
+
+msgid "tippen für gemerkte Orte"
+msgstr "type for remembered places"
+
+msgid "ungespeichert"
+msgstr "unsaved"
+
+msgid "wer beschriftet"
+msgstr "who writes captions"
+
+msgid "z. B. DEL 2 Heimspiele"
+msgstr "e.g. DEL 2 home games"
+
+#, python-brace-format
+msgid "{alt} + Mausrad, Doppelklick"
+msgstr "{alt} + scroll wheel, double-click"
+
+#, python-brace-format
+msgid "{alt} + Pfeiltasten, mit der Maus ziehen"
+msgstr "{alt} + arrow keys, drag with the mouse"
+
+#, python-brace-format
+msgid "{count} Bild"
+msgid_plural "{count} Bilder"
+msgstr[0] "{count} image"
+msgstr[1] "{count} images"
+
+#, python-brace-format
+msgid "{count} Bild nach {folder} kopiert"
+msgid_plural "{count} Bilder nach {folder} kopiert"
+msgstr[0] "{count} image copied to {folder}"
+msgstr[1] "{count} images copied to {folder}"
+
+#, python-brace-format
+msgid "{count} Code"
+msgid_plural "{count} Codes"
+msgstr[0] "{count} code"
+msgstr[1] "{count} codes"
+
+#, python-brace-format
+msgid "{count} Datei"
+msgid_plural "{count} Dateien"
+msgstr[0] "{count} file"
+msgstr[1] "{count} files"
+
+#, python-brace-format
+msgid "{count} Fehler"
+msgid_plural "{count} Fehler"
+msgstr[0] "{count} error"
+msgstr[1] "{count} errors"
+
+#, python-brace-format
+msgid "{count} Feld"
+msgid_plural "{count} Felder"
+msgstr[0] "{count} field"
+msgstr[1] "{count} fields"
+
+#, python-brace-format
+msgid "{count} Hinweis"
+msgid_plural "{count} Hinweise"
+msgstr[0] "{count} note"
+msgstr[1] "{count} notes"
+
+#, python-brace-format
+msgid "{count} Ordner mit Bildern gefunden. Alle in Tabs öffnen?"
+msgid_plural "{count} Ordner mit Bildern gefunden. Alle in Tabs öffnen?"
+msgstr[0] "{count} folder with images found. Open it in a tab?"
+msgstr[1] "{count} folders with images found. Open all in tabs?"
+
+#, python-brace-format
+msgid "{count} Problem"
+msgid_plural "{count} Probleme"
+msgstr[0] "{count} problem"
+msgstr[1] "{count} problems"
+
+#, python-brace-format
+msgid "{count} Team"
+msgid_plural "{count} Teams"
+msgstr[0] "{count} team"
+msgstr[1] "{count} teams"
+
+#, python-brace-format
+msgid "{count} Treffer"
+msgid_plural "{count} Treffer"
+msgstr[0] "{count} result"
+msgstr[1] "{count} results"
+
+#, python-brace-format
+msgid "{count} Treffer – den passenden in der Liste wählen."
+msgstr "{count} results – choose the right one in the list."
+
+#, python-brace-format
+msgid "{count} ausgewählt"
+msgstr "{count} selected"
+
+#, python-brace-format
+msgid "{count} weiteres"
+msgid_plural "{count} weitere"
+msgstr[0] "{count} more"
+msgstr[1] "{count} more"
+
+#, python-brace-format
+msgid "{count} widersprüchlicher Code: {codes}"
+msgid_plural "{count} widersprüchliche Codes: {codes}"
+msgstr[0] "{count} conflicting code: {codes}"
+msgstr[1] "{count} conflicting codes: {codes}"
+
+#, python-brace-format
+msgid "{count} übersprungen"
+msgstr "{count} skipped"
+
+#, python-brace-format
+msgid "{ctrl} + Klick"
+msgstr "{ctrl} + click"
+
+#, python-brace-format
+msgid "{encoding}, Zeilenenden {newlines}"
+msgstr "{encoding}, line endings {newlines}"
+
+#, python-brace-format
+msgid "{encoding}, gespeichert {name}"
+msgstr "{encoding}, saved {name}"
+
+#, python-brace-format
+msgid "{focal} (KB {focal35})"
+msgstr "{focal} (35 mm equiv. {focal35})"
+
+#, python-brace-format
+msgid "{folder} – Metadaten {loaded}/{total} …"
+msgstr "{folder} – metadata {loaded}/{total} …"
+
+#, python-brace-format
+msgid "{folder} – wird eingelesen …"
+msgstr "{folder} – reading …"
+
+#, python-brace-format
+msgid "{folder} – {count} Bild ({seconds} s)"
+msgid_plural "{folder} – {count} Bilder ({seconds} s)"
+msgstr[0] "{folder} – {count} image ({seconds} s)"
+msgstr[1] "{folder} – {count} images ({seconds} s)"
+
+#, python-brace-format
+msgid "{images} ({files}) gezogen"
+msgstr "{images} ({files}) dragged"
+
+#, python-brace-format
+msgid "{label}: {size} von max. {limit} Bytes"
+msgstr "{label}: {size} of max. {limit} bytes"
+
+#, python-brace-format
+msgid "{name}  (URL, nur lesbar)"
+msgstr "{name}  (URL, read-only)"
+
+#, python-brace-format
+msgid ""
+"{name} wurde außerhalb von Captioner geändert, seit sie hier geöffnet "
+"wurde. Trotzdem überschreiben?"
+msgstr ""
+"{name} was changed outside Captioner since it was opened here. Overwrite "
+"anyway?"
+
+#, python-brace-format
+msgid ""
+"{name}: Bilddaten nach dem Schreiben veraendert, Original bleibt "
+"unangetastet"
+msgstr "{name}: image data changed after writing, the original is left untouched"
+
+#, python-brace-format
+msgid "{name}: ExifTool hat keine Datei geschrieben"
+msgstr "{name}: ExifTool did not write a file"
+
+#, python-brace-format
+msgid "{name}: Feld {field} hat den falschen Typ"
+msgstr "{name}: field {field} has the wrong type"
+
+#, python-brace-format
+msgid "{name}: Kopie unvollständig"
+msgstr "{name}: copy incomplete"
+
+#, python-brace-format
+msgid "{name}: Sidecar wurde nicht angelegt"
+msgstr "{name}: sidecar was not created"
+
+#, python-brace-format
+msgid "{name}: Template-Version {version} ist neuer als diese App"
+msgstr "{name}: template version {version} is newer than this app"
+
+#, python-brace-format
+msgid "{name}: XMP-Sidecar fehlt"
+msgstr "{name}: XMP sidecar missing"
+
+#, python-brace-format
+msgid "{name}: existiert schon in {folder}"
+msgstr "{name}: already exists in {folder}"
+
+#, python-brace-format
+msgid "{name}: kein Captioner-Template (format = {format})"
+msgstr "{name}: not a Captioner template (format = {format})"
+
+#, python-brace-format
+msgid "{name}: kein gültiges TOML ({error})"
+msgstr "{name}: not valid TOML ({error})"
+
+#, python-brace-format
+msgid "{name}: keine RAW-Datei fuer ein Sidecar"
+msgstr "{name}: no RAW file for a sidecar"
+
+#, python-brace-format
+msgid ""
+"{name}: latitude/longitude unvollständig oder außerhalb des gültigen "
+"Bereichs"
+msgstr "{name}: latitude/longitude incomplete or out of range"
+
+#, python-brace-format
+msgid "{name}: nicht lesbar ({error})"
+msgstr "{name}: not readable ({error})"
+
+msgid "© 2026 Vor- und Nachname"
+msgstr "© 2026 first and last name"
+
+msgid "© OpenStreetMap-Mitwirkende"
+msgstr "© OpenStreetMap contributors"
+
+msgid "Änderungen am Roster speichern?"
+msgstr "Save changes to the roster?"
+
+msgid "Öffnen"
+msgstr "Open"
+
+msgid "Über Captioner"
+msgstr "About Captioner"
+
+msgid "Überall"
+msgstr "Everywhere"
+
+msgid "Überspringen"
+msgstr "Skip"
+
+msgid "— kein Template —"
+msgstr "— no template —"
+
+#, python-brace-format
+msgid "„{characters}“ gibt es in {encoding} nicht. Als UTF-8 speichern?"
+msgstr "“{characters}” does not exist in {encoding}. Save as UTF-8?"
+
+#, python-brace-format
+msgid "„{code}“ doppelt (wie Zeile {line})"
+msgstr "“{code}” duplicated (same as line {line})"
+
+#, python-brace-format
+msgid ""
+"„{code}“ steht schon in Zeile {line} mit anderer Ersetzung "
+"(widersprüchlich, wird nicht verwendet)"
+msgstr ""
+"“{code}” is already in line {line} with a different replacement "
+"(conflicting, not used)"
+
+#, python-brace-format
+msgid "„{name}“ löschen?"
+msgstr "Delete “{name}”?"
+
+msgid "★ und mehr"
+msgstr "★ and more"
+
+msgid "★★ und mehr"
+msgstr "★★ and more"
+
+msgid "★★★ und mehr"
+msgstr "★★★ and more"
+
+msgid "★★★★ und mehr"
+msgstr "★★★★ and more"
+

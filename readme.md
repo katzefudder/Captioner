@@ -344,7 +344,19 @@ zeigt der Editor nur an (zuletzt geladene Fassung).
 * **Roster-Quellen:** Dateien (`Datei …`) und URLs (`URL …`), Reihenfolge mit ▲/▼.
   GitHub-Links können so eingetragen werden, wie sie im Browser stehen. Ohne Netz wird
   die zuletzt geladene Fassung einer URL benutzt.
+* **Sprache:** Automatisch (Systemsprache: Deutsch, sonst Englisch), Deutsch oder English.
+  Gilt nach einem Neustart.
 * **Code-Trennzeichen:** Default `#`.
 * **Farbmarkierungen:** Default `Red, Yellow, Green, Blue, Purple`.
   Für ein deutsches Lightroom `Rot, Gelb, Grün, Blau, Lila`.
 * **XMP-Sidecars mit in den Drag legen:** an, solange Lightroom das akzeptiert.
+
+## Übersetzungen
+
+Die App gibt es auf Deutsch (Ausgangssprache im Code) und Englisch. Die Texte stehen in
+`captioner/locale/<sprache>/LC_MESSAGES/captioner.po` (bearbeitbar, z. B. mit Poedit);
+`make translations` zieht neue Texte aus dem Code, aktualisiert die Kataloge und
+kompiliert sie (`.mo`, eingecheckt). Die Tests schlagen fehl, solange ein Text keine
+Übersetzung hat oder Platzhalter wie `{name}` nicht übereinstimmen. Eine neue Sprache:
+`pybabel init -i captioner/locale/captioner.pot -d captioner/locale -D captioner -l fr`,
+übersetzen, in `captioner/i18n.py` bei `LANGUAGES` eintragen.

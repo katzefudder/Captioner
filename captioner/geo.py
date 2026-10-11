@@ -18,10 +18,13 @@ import math
 from dataclasses import dataclass, field
 from urllib.parse import urlencode
 
+from . import i18n
+from .i18n import N_
+
 USER_AGENT = 'Captioner (+https://github.com/katzefudder/Captioner)'
 TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
-ATTRIBUTION = '© OpenStreetMap-Mitwirkende'
+ATTRIBUTION = N_('© OpenStreetMap-Mitwirkende')  # bei der Anzeige mit _() uebersetzen
 TILE_SIZE = 256
 MIN_ZOOM, MAX_ZOOM = 2, 19
 MAX_PLACES = 200
@@ -126,13 +129,13 @@ def apply_gps(meta, book):
 # --- Nominatim ------------------------------------------------------------------
 
 def search_url(query, limit=8):
-    params = {'q': query, 'format': 'jsonv2', 'addressdetails': 1, 'limit': limit, 'accept-language': 'de'}
+    params = {'q': query, 'format': 'jsonv2', 'addressdetails': 1, 'limit': limit, 'accept-language': i18n.language()}
     return f'{NOMINATIM_URL}/search?{urlencode(params)}'
 
 
 def reverse_url(lat, lon, zoom=18):
     params = {'lat': f'{lat:.6f}', 'lon': f'{lon:.6f}', 'format': 'jsonv2', 'addressdetails': 1,
-              'zoom': zoom, 'accept-language': 'de'}
+              'zoom': zoom, 'accept-language': i18n.language()}
     return f'{NOMINATIM_URL}/reverse?{urlencode(params)}'
 
 

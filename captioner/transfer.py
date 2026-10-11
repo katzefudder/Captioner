@@ -16,6 +16,8 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .i18n import _
+
 SKIP, RENAME, REPLACE = 'skip', 'rename', 'replace'
 PART_SUFFIX = '.captioner-part'
 
@@ -86,7 +88,7 @@ def copy_file(source, target):
     try:
         shutil.copy2(source, part)
         if part.stat().st_size != Path(source).stat().st_size:
-            raise TransferError(f'{target.name}: Kopie unvollständig')
+            raise TransferError(_('{name}: Kopie unvollständig').format(name=target.name))
         os.replace(part, target)
     finally:
         if part.exists():
@@ -106,7 +108,7 @@ def copy_group(group, folder, decision=None):
         if decision == RENAME:
             stem = free_stem(group, folder)
         elif decision != REPLACE:
-            raise TransferError(f'{group.name}: existiert schon in {folder}')
+            raise TransferError(_('{name}: existiert schon in {folder}').format(name=group.name, folder=folder))
     copied = []
     for source, target in zip(group.files, group.targets(folder, stem)):
         if target.exists() and _same_file(source, target):

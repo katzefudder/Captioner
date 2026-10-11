@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (QDialog, QFrame, QHBoxLayout, QLabel, QPushButton
                                QSplitter, QTextBrowser, QVBoxLayout, QWidget)
 
 from .. import details as details_module
+from ..i18n import _
 
 # Wertebereich des Zooms; "eingepasst" liegt meist darunter (Z9-Bild ~13 %) und ist
 # ein eigener Zustand, keine Zoomstufe
@@ -192,11 +193,11 @@ class ZoomView(QWidget):
 
     def _announce(self):
         if self.provisional:
-            text = 'lädt Vollbild …'
+            text = _('lädt Vollbild …')
         elif self.is_zoomed():
             text = f'{self.zoom * 100:.0f} %'
         else:
-            text = f'eingepasst ({self.fit_factor() * 100:.0f} %)' if self._pixmap else ''
+            text = _('eingepasst ({percent} %)').format(percent=f'{self.fit_factor() * 100:.0f}') if self._pixmap else ''
         self.zoom_changed.emit(text)
         self.zoom_state.emit(self.is_zoomed(), self.factor())
         if self._drag_from is None:
@@ -210,7 +211,7 @@ class ZoomView(QWidget):
         painter.fillRect(self.rect(), QColor('#111111'))
         if not self._pixmap:
             painter.setPen(QColor('#aaaaaa'))
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, 'lädt …')
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, _('lädt …'))
             return
         rect = self._image_rect()
         visible = rect.intersected(QRectF(self.rect()))
@@ -295,7 +296,7 @@ class InfoPanel(QTextBrowser):
                 parts.append(f'<tr><td class="k">{html.escape(key)}</td><td>{html.escape(value)}</td></tr>')
             parts.append('</table>')
         if loading:
-            parts.append('<p style="color:#8a8a8a">EXIF wird gelesen …</p>')
+            parts.append('<p style="color:#8a8a8a">' + html.escape(_('EXIF wird gelesen …')) + '</p>')
         self.setHtml(''.join(parts))
 
 
@@ -310,7 +311,7 @@ class Viewer(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Vorschau')
+        self.setWindowTitle(_('Vorschau'))
         self.resize(1400, 950)
         self.setStyleSheet('background: #111; color: #ddd;')
         layout = QVBoxLayout(self)
@@ -352,7 +353,7 @@ class Viewer(QDialog):
         Pfeiltasten weiter blaettern statt den Slider zu bewegen."""
         bar = QHBoxLayout()
         bar.setContentsMargins(12, 4, 12, 0)
-        self.fit_button = QPushButton('Einpassen')
+        self.fit_button = QPushButton(_('Einpassen'))
         self.fit_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.fit_button.clicked.connect(self.zoom.fit)
         self.hundred_button = QPushButton('100 %')
@@ -365,7 +366,7 @@ class Viewer(QDialog):
         self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.slider.setTickInterval(50)
         self.slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.slider.setToolTip('Zoom 50–400 %')
+        self.slider.setToolTip(_('Zoom 50–400 %'))
         self.slider.valueChanged.connect(self._slider_moved)
         self.zoom_label = QLabel()
         self.zoom_label.setMinimumWidth(150)
@@ -379,16 +380,16 @@ class Viewer(QDialog):
         bar.addWidget(self.slider, 1)
         bar.addWidget(QLabel('400 %'))
         bar.addWidget(self.zoom_label)
-        self.info_button = QPushButton('Infos')
+        self.info_button = QPushButton(_('Infos'))
         self.info_button.setCheckable(True)
         self.info_button.setChecked(True)
         self.info_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.info_button.setToolTip('EXIF/IPTC rechts ein-/ausblenden')
+        self.info_button.setToolTip(_('EXIF/IPTC rechts ein-/ausblenden'))
         self.info_button.toggled.connect(self.set_info_visible)
-        self.caption_button = QPushButton('Beschriften')
+        self.caption_button = QPushButton(_('Beschriften'))
         self.caption_button.setCheckable(True)
         self.caption_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.caption_button.setToolTip('Beschriftungs-Panel ein-/ausblenden (I)')
+        self.caption_button.setToolTip(_('Beschriftungs-Panel ein-/ausblenden (I)'))
         self.caption_button.toggled.connect(self.set_caption_visible)
         bar.addWidget(self.caption_button)
         bar.addWidget(self.info_button)
@@ -427,7 +428,7 @@ class Viewer(QDialog):
         sections = details_module.sections(self._raw_details or {}, self._item.meta, self.labels)
         loading = self._raw_details is None
         if self._raw_details and '_error' in self._raw_details:
-            sections.append(('Fehler', [('ExifTool', self._raw_details['_error'])]))
+            sections.append((_('Fehler'), [('ExifTool', self._raw_details['_error'])]))
         self.info_panel.show_sections(sections, loading)
 
     def _slider_moved(self, value):
@@ -448,7 +449,7 @@ class Viewer(QDialog):
         self.key = item.key
         stars = '★' * item.meta.rating + '☆' * (5 - item.meta.rating)
         tag = '☑' if item.meta.tagged else '☐'
-        color = f' · Farbklasse {item.meta.color_class}' if item.meta.color_class else ''
+        color = ' · ' + _('Farbklasse {number}').format(number=item.meta.color_class) if item.meta.color_class else ''
         label = f' ({item.meta.label})' if item.meta.label else ''
         line = f'<b>{item.name}</b> ({item.kind}) {tag} {stars}{color}{label}'
         # Die Beschreibung steht im Info-Panel; unten nur, wenn das Panel aus ist

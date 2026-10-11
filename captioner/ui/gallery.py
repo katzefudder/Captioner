@@ -7,6 +7,8 @@ from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, Qt, Si
 from PySide6.QtGui import QBrush, QColor, QDrag, QFont, QPainter, QPen
 from PySide6.QtWidgets import QAbstractItemView, QListView, QStyle, QStyledItemDelegate
 
+from ..i18n import _
+
 ItemRole = Qt.ItemDataRole.UserRole + 1
 
 TILE_W, TILE_H = 220, 210
@@ -70,7 +72,7 @@ class GalleryModel(QAbstractListModel):
             if item.meta.caption:
                 lines.append(item.meta.caption)
             if getattr(item, 'error', None):
-                lines.append('Fehler: ' + item.error)
+                lines.append(_('Fehler: {error}').format(error=item.error))
             return '\n'.join(lines)
         return None
 

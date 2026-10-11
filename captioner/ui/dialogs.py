@@ -3,19 +3,20 @@ import html
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeySequence
-from PySide6.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox, QFileDialog,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
                                QFormLayout, QHBoxLayout, QInputDialog, QLabel, QLineEdit,
                                QListWidget, QPushButton, QSpinBox, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 
-from .. import geo, metadata
+from .. import geo, i18n, metadata
+from ..i18n import _, N_
 from ..scanner import Metadata
 from ..roster import is_url
 from .placepicker import PlacePickerDialog, place_completer, place_for_completion
 from . import keymap
 from ..templates import DEFAULT_CAPTION_SUFFIX, MatchTemplate, parse_headline
 
-ROSTER_FILE_FILTER = 'Roster-Dateien (*.txt *.tsv *.csv);;Alle Dateien (*)'
+ROSTER_FILE_FILTER = N_('Roster-Dateien (*.txt *.tsv *.csv);;Alle Dateien (*)')
 
 
 def _split(text):
@@ -29,7 +30,7 @@ class TemplateDialog(QDialog):
         super().__init__(parent)
         self.places = places if places is not None else geo.PlaceBook()
         self.places_changed = False
-        self.setWindowTitle('Template')
+        self.setWindowTitle(_('Template'))
         self.setMinimumWidth(620)
         template = template or MatchTemplate()
         form = QFormLayout(self)
@@ -41,62 +42,62 @@ class TemplateDialog(QDialog):
             edit.setPlaceholderText(placeholder)
             return edit
 
-        self.name = field(template.name, 'z. B. DEL 2 Heimspiele')
-        self.headline = field(template.headline, 'leer = im Panel eintragen, z. B. DEL 2 - EC Bad Nauheim gegen …')
+        self.name = field(template.name, _('z. B. DEL 2 Heimspiele'))
+        self.headline = field(template.headline, _('leer = im Panel eintragen, z. B. DEL 2 - EC Bad Nauheim gegen …'))
         self.headline_hint = QLabel()
         self.headline_hint.setWordWrap(True)
         self.city = field(template.city)
         self.city.setCompleter(place_completer(self.places, self))
         self.city.completer().activated.connect(self._known_place_chosen)
-        self.sublocation = field(template.sublocation, 'Halle, Stadion')
-        self.state = field(template.state, 'Hessen')
-        self.country = field(template.country, 'Deutschland')
-        map_button = QPushButton('Karte …')
-        map_button.setToolTip('Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)')
+        self.sublocation = field(template.sublocation, _('Halle, Stadion'))
+        self.state = field(template.state, _('Hessen'))
+        self.country = field(template.country, _('Deutschland'))
+        map_button = QPushButton(_('Karte …'))
+        map_button.setToolTip(_('Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)'))
         map_button.clicked.connect(self.pick_place)
         city_row = QHBoxLayout()
         city_row.addWidget(self.city, 1)
         city_row.addWidget(map_button)
         # Koordinaten aus der Datei, solange Stadt/Ort nicht geaendert werden
         self._file_place = geo.Place(template.city, template.sublocation, template.latitude, template.longitude)
-        self.creator = field(template.creator, 'Vor- und Nachname')
-        self.authors_position = field(template.authors_position, 'Fotograf')
-        self.caption_writer = field(template.caption_writer, 'wer beschriftet')
-        self.copyright = field(template.copyright, '© 2026 Vor- und Nachname')
-        self.web_statement = field(template.web_statement, 'https://… (Nutzungsbedingungen, Lizenz)')
-        self.source = field(template.source, 'Agentur, Redaktion')
-        self.extra_tags = field(', '.join(template.extra_tags), 'Eishockey, DEL2, Saison 2026/27')
-        self.category = field(template.category, 'Sport')
+        self.creator = field(template.creator, _('Vor- und Nachname'))
+        self.authors_position = field(template.authors_position, _('Fotograf'))
+        self.caption_writer = field(template.caption_writer, _('wer beschriftet'))
+        self.copyright = field(template.copyright, _('© 2026 Vor- und Nachname'))
+        self.web_statement = field(template.web_statement, _('https://… (Nutzungsbedingungen, Lizenz)'))
+        self.source = field(template.source, _('Agentur, Redaktion'))
+        self.extra_tags = field(', '.join(template.extra_tags), _('Eishockey, DEL2, Saison 2026/27'))
+        self.category = field(template.category, _('Sport'))
         self.suffix = field(template.caption_suffix, DEFAULT_CAPTION_SUFFIX)
 
         def section(title):
-            label = QLabel(f'<b>{title}</b>')
+            label = QLabel(f'<b>{html.escape(title)}</b>')
             label.setContentsMargins(0, 10, 0, 0)
             form.addRow(label)
 
-        form.addRow('Name', self.name)
-        form.addRow('Titel', self.headline)
+        form.addRow(_('Name'), self.name)
+        form.addRow(_('Titel'), self.headline)
         form.addRow('', self.headline_hint)
-        section('Ort')
-        form.addRow('Stadt', city_row)
-        form.addRow('Ort / Halle', self.sublocation)
-        form.addRow('Bundesland', self.state)
-        form.addRow('Land', self.country)
-        section('Urheber und Rechte')
-        form.addRow('Fotograf', self.creator)
-        form.addRow('Position', self.authors_position)
-        form.addRow('Beschriftet von', self.caption_writer)
-        form.addRow('Copyright', self.copyright)
-        form.addRow('Copyright-URL', self.web_statement)
-        form.addRow('Quelle', self.source)
-        section('Beschreibung und Tags')
-        form.addRow('Kategorie', self.category)
-        form.addRow('Zusatz-Tags', self.extra_tags)
-        form.addRow('Anhang', self.suffix)
-        form.addRow('', QLabel('<small>Platzhalter: {headline}, {city}, {sublocation}, {date}</small>'))
-        note = QLabel('<small>Gefüllte Felder gehen beim Speichern in jedes Bild, leere lassen den Wert '
-                      'des Bildes stehen. Heim und Gast stehen im Titel und ergeben sich aus den Codes in '
-                      'der Beschreibung.</small>')
+        section(_('Ort'))
+        form.addRow(_('Stadt'), city_row)
+        form.addRow(_('Ort / Halle'), self.sublocation)
+        form.addRow(_('Bundesland'), self.state)
+        form.addRow(_('Land'), self.country)
+        section(_('Urheber und Rechte'))
+        form.addRow(_('Fotograf'), self.creator)
+        form.addRow(_('Position'), self.authors_position)
+        form.addRow(_('Beschriftet von'), self.caption_writer)
+        form.addRow(_('Copyright'), self.copyright)
+        form.addRow(_('Copyright-URL'), self.web_statement)
+        form.addRow(_('Quelle'), self.source)
+        section(_('Beschreibung und Tags'))
+        form.addRow(_('Kategorie'), self.category)
+        form.addRow(_('Zusatz-Tags'), self.extra_tags)
+        form.addRow(_('Anhang'), self.suffix)
+        form.addRow('', QLabel('<small>' + _('Platzhalter: {headline}, {city}, {sublocation}, {date}') + '</small>'))
+        note = QLabel('<small>' + _('Gefüllte Felder gehen beim Speichern in jedes Bild, leere lassen den Wert '
+                                  'des Bildes stehen. Heim und Gast stehen im Titel und ergeben sich aus den '
+                                  'Codes in der Beschreibung.') + '</small>')
         note.setWordWrap(True)
         form.addRow('', note)
 
@@ -140,14 +141,19 @@ class TemplateDialog(QDialog):
             return geo.Place(city, sublocation, self._file_place.latitude, self._file_place.longitude)
         return geo.Place(city, sublocation)
 
+    def _too_long(self):
+        """Zu lange Felder (IPTC-Grenzen)."""
+        template = self.template()
+        return metadata.validate(Metadata(headline=template.headline, city=template.city,
+                                          sublocation=template.sublocation, **template.fixed_values()))
+
     def problems(self):
         """Zu lange Felder (IPTC-Grenzen) und ein Titel im falschen Format."""
-        template = self.template()
-        problems = metadata.validate(Metadata(headline=template.headline, city=template.city,
-                                              sublocation=template.sublocation, **template.fixed_values()))
-        if template.headline and parse_headline(template.headline) is None:
-            problems.insert(0, 'Titel nicht im Format „<Anlass> - <Heim> gegen <Gast>“ – '
-                               'die Personenerkennung erkennt das Spiel dann nicht')
+        problems = self._too_long()
+        headline = self.headline.text().strip()
+        if headline and parse_headline(headline) is None:
+            problems.insert(0, _('Titel nicht im Format „<Anlass> - <Heim> gegen <Gast>“ – '
+                                 'die Personenerkennung erkennt das Spiel dann nicht'))
         return problems
 
     def _update(self):
@@ -156,7 +162,7 @@ class TemplateDialog(QDialog):
                                    if problems else '')
         self.headline_hint.setVisible(bool(problems))
         # Nur zu lange Felder blockieren; ein abweichender Titel ist erlaubt
-        too_long = any('Bytes' in p for p in problems)
+        too_long = bool(self._too_long())
         self.buttons.button(QDialogButtonBox.StandardButton.Save).setEnabled(not too_long)
 
     def template(self):
@@ -185,38 +191,50 @@ class TemplateDialog(QDialog):
 class SettingsDialog(QDialog):
     def __init__(self, settings, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Einstellungen')
+        self.setWindowTitle(_('Einstellungen'))
         self.setMinimumWidth(620)
         self.settings = settings
         form = QFormLayout(self)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         self.sources = RosterSourceList(settings.roster_sources)
-        self.ttl = QSpinBox(minimum=0, maximum=24 * 60, value=settings.roster_cache_ttl_minutes, suffix=' min')
+        self.ttl = QSpinBox(minimum=0, maximum=24 * 60, value=settings.roster_cache_ttl_minutes, suffix=_(' min'))
         self.delimiter = QLineEdit(settings.code_delimiter)
         self.delimiter.setMaxLength(3)
         self.page_size = QSpinBox(minimum=20, maximum=2000, singleStep=20, value=settings.page_size)
-        self.recursive = QCheckBox('Unterordner mit einlesen')
+        self.recursive = QCheckBox(_('Unterordner mit einlesen'))
         self.recursive.setChecked(settings.recursive)
         self.labels = QLineEdit(', '.join(settings.labels))
-        self.drag_sidecars = QCheckBox('XMP-Sidecars mit in den Drag legen')
+        self.drag_sidecars = QCheckBox(_('XMP-Sidecars mit in den Drag legen'))
         self.drag_sidecars.setChecked(settings.drag_include_sidecars)
         self.exiftool = QLineEdit(settings.exiftool_path)
-        self.exiftool.setPlaceholderText('leer = automatisch suchen')
+        self.exiftool.setPlaceholderText(_('leer = automatisch suchen'))
+        self.language = QComboBox()
+        self.language.addItem(_('Automatisch (Systemsprache)'), '')
+        for code, name in i18n.LANGUAGES.items():
+            self.language.addItem(name, code)   # in der eigenen Sprache, nicht uebersetzt
+        self.language.setCurrentIndex(max(0, self.language.findData(getattr(settings, 'language', ''))))
+        language_row = QHBoxLayout()
+        language_row.addWidget(self.language)
+        language_hint = QLabel('<small>' + _('Gilt nach einem Neustart.') + '</small>')
+        language_hint.setStyleSheet('color: gray;')
+        language_row.addWidget(language_hint, 1)
 
-        form.addRow('Roster-Quellen', self.sources)
-        form.addRow('Cache für URLs', self.ttl)
-        form.addRow('Code-Trennzeichen', self.delimiter)
-        form.addRow('Bilder pro Seite', self.page_size)
+        form.addRow(_('Roster-Quellen'), self.sources)
+        form.addRow(_('Cache für URLs'), self.ttl)
+        form.addRow(_('Code-Trennzeichen'), self.delimiter)
+        form.addRow(_('Bilder pro Seite'), self.page_size)
         form.addRow('', self.recursive)
-        form.addRow('Lightroom-Label für Farbklasse 1, 2, 3, …', self.labels)
-        label_hint = QLabel('<small>Die Farbklasse wird zusätzlich als Label geschrieben, das Lightroom liest. '
-                            'Muss zum Label-Set in Lightroom passen: „Red“ (englisch) '
-                            'oder „Rot“ (deutsches Lightroom). Klassen ohne Eintrag bekommen kein Label.</small>')
+        form.addRow(_('Lightroom-Label für Farbklasse 1, 2, 3, …'), self.labels)
+        label_hint = QLabel('<small>' + _('Die Farbklasse wird zusätzlich als Label geschrieben, das Lightroom liest. '
+                                        'Muss zum Label-Set in Lightroom passen: „Red“ (englisch) '
+                                        'oder „Rot“ (deutsches Lightroom). Klassen ohne Eintrag bekommen '
+                                        'kein Label.') + '</small>')
         label_hint.setWordWrap(True)
         form.addRow('', label_hint)
         form.addRow('', self.drag_sidecars)
         form.addRow('ExifTool', self.exiftool)
+        form.addRow(_('Sprache'), language_row)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.accept)
@@ -233,6 +251,7 @@ class SettingsDialog(QDialog):
         s.labels = _split(self.labels.text()) or s.labels
         s.drag_include_sidecars = self.drag_sidecars.isChecked()
         s.exiftool_path = self.exiftool.text().strip()
+        s.language = self.language.currentData()
         return s
 
 
@@ -251,16 +270,17 @@ class RosterSourceList(QWidget):
         for source in sources:
             self._add(source)
         buttons = QHBoxLayout()
-        for label, slot in (('Datei …', self.add_file), ('URL …', self.add_url),
-                            ('Entfernen', self.remove), ('▲', lambda: self.move(-1)), ('▼', lambda: self.move(1))):
+        for label, slot in ((_('Datei …'), self.add_file), (_('URL …'), self.add_url),
+                            (_('Entfernen'), self.remove), ('▲', lambda: self.move(-1)), ('▼', lambda: self.move(1))):
             button = QPushButton(label)
             button.clicked.connect(slot)
             buttons.addWidget(button)
         buttons.addStretch(1)
         layout.addWidget(self.list)
         layout.addLayout(buttons)
-        hint = QLabel('<small>Format: eine Zeile pro Code, Code und Ersetzung durch Tab getrennt, '
-                      'Abschnitte „- Team -“. Bei gleichem Code gewinnt die obere Quelle.</small>')
+        hint = QLabel('<small>' + _('Format: eine Zeile pro Code, Code und Ersetzung durch Tab getrennt, '
+                                  'Abschnitte „- Team -“. Bei gleichem Code gewinnt die obere Quelle.')
+                      + '</small>')
         hint.setWordWrap(True)
         layout.addWidget(hint)
 
@@ -268,18 +288,18 @@ class RosterSourceList(QWidget):
         if source and source not in self.sources():
             self.list.addItem(source)
             item = self.list.item(self.list.count() - 1)
-            kind = 'URL, wird bei Bedarf neu geladen' if is_url(source) else 'Datei auf diesem Rechner'
+            kind = _('URL, wird bei Bedarf neu geladen') if is_url(source) else _('Datei auf diesem Rechner')
             item.setToolTip(f'{source}\n{kind}')
 
     def add_file(self, path=None):
         if not path:
-            path, _ = QFileDialog.getOpenFileName(self, 'Roster-Datei wählen', '', ROSTER_FILE_FILTER)
+            path, _filter = QFileDialog.getOpenFileName(self, _('Roster-Datei wählen'), '', _(ROSTER_FILE_FILTER))
         if path:
             self._add(path)
 
     def add_url(self, url=None):
         if not url:
-            url, ok = QInputDialog.getText(self, 'Roster-URL', 'URL (GitHub-Links wie im Browser gehen auch):')
+            url, ok = QInputDialog.getText(self, _('Roster-URL'), _('URL (GitHub-Links wie im Browser gehen auch):'))
             if not ok:
                 return
         url = (url or '').strip()
@@ -308,29 +328,29 @@ class ShortcutsDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Tastenkürzel')
+        self.setWindowTitle(_('Tastenkürzel'))
         self.resize(640, 720)
         layout = QVBoxLayout(self)
         rows = []
         for context, title in keymap.CONTEXT_TITLES.items():
-            rows.append((title, None))
+            rows.append((_(title), None))
             for binding in keymap.BINDINGS:
                 if binding.context != context:
                     continue
-                text = '  oder  '.join(QKeySequence(k).toString(QKeySequence.SequenceFormat.NativeText)
+                text = _('  oder  ').join(QKeySequence(k).toString(QKeySequence.SequenceFormat.NativeText)
                                        for k in binding.keys)
-                rows.append((binding.label, text))
-        rows.append(('Weitere', None))
-        rows.append(('Großansicht blättern', '←  →'))
+                rows.append((_(binding.label), text))
+        rows.append((_('Weitere'), None))
+        rows.append((_('Großansicht blättern'), '←  →'))
         alt = QKeySequence('Alt+Left').toString(QKeySequence.SequenceFormat.NativeText).replace('←', '').strip()
-        rows.append(('Großansicht: Ausschnitt verschieben (mit ⇧ schneller)',
-                     f'{alt} + Pfeiltasten, mit der Maus ziehen'))
-        rows.append(('Großansicht: an der Maus zoomen', f'{alt} + Mausrad, Doppelklick'))
+        rows.append((_('Großansicht: Ausschnitt verschieben (mit ⇧ schneller)'),
+                     _('{alt} + Pfeiltasten, mit der Maus ziehen').format(alt=alt)))
+        rows.append((_('Großansicht: an der Maus zoomen'), _('{alt} + Mausrad, Doppelklick').format(alt=alt)))
         ctrl = QKeySequence('Ctrl+A').toString(QKeySequence.SequenceFormat.NativeText).replace('A', '').strip()
-        rows.append(('Großansicht: auf Stelle zoomen', f'{ctrl} + Klick'))
-        rows.append(('Großansicht: Zoom 50–400 % stufenlos', 'Slider unten'))
+        rows.append((_('Großansicht: auf Stelle zoomen'), _('{ctrl} + Klick').format(ctrl=ctrl)))
+        rows.append((_('Großansicht: Zoom stufenlos, 50–400 %'), _('Slider unten')))
         table = QTableWidget(len(rows), 2)
-        table.setHorizontalHeaderLabels(['Aktion', 'Taste'])
+        table.setHorizontalHeaderLabels([_('Aktion'), _('Taste')])
         table.verticalHeader().hide()
         table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         for row, (label, text) in enumerate(rows):

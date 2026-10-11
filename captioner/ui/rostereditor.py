@@ -17,8 +17,14 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdi
                                QTextEdit, QVBoxLayout, QWidget)
 
 from .. import roster as roster_module
+from ..i18n import N_, _, ngettext
 
-ENCODING_NAMES = {'utf-8': 'UTF-8', 'utf-8-sig': 'UTF-8 mit BOM', 'utf-16': 'UTF-16', 'cp1252': 'Windows-1252'}
+ENCODING_NAMES = {'utf-8': 'UTF-8', 'utf-8-sig': N_('UTF-8 mit BOM'), 'utf-16': 'UTF-16', 'cp1252': 'Windows-1252'}
+
+
+def encoding_name(encoding):
+    """Anzeigename einer Kodierung, uebersetzt (ENCODING_NAMES ist nur markiert)."""
+    return _(ENCODING_NAMES[encoding]) if encoding in ENCODING_NAMES else encoding
 
 
 class LineNumbers(QWidget):
@@ -155,7 +161,7 @@ class RosterEditorDialog(QDialog):
     def __init__(self, sources, cached_text=None, parent=None):
         """sources: Settings.roster_sources; cached_text(url) liefert die geladene Fassung einer URL."""
         super().__init__(parent)
-        self.setWindowTitle('Roster bearbeiten')
+        self.setWindowTitle(_('Roster bearbeiten'))
         self.resize(900, 760)
         self.cached_text = cached_text or (lambda url: None)
         self.file = None          # roster.RosterFile der geoeffneten lokalen Datei
@@ -167,14 +173,14 @@ class RosterEditorDialog(QDialog):
         for source in sources:
             local = not roster_module.is_url(source)
             name = Path(source).name if local else roster_module.raw_url(source).rsplit('/', 1)[-1]
-            self.sources.addItem(name if local else f'{name}  (URL, nur lesbar)', source)
+            self.sources.addItem(name if local else _('{name}  (URL, nur lesbar)').format(name=name), source)
             self.sources.setItemData(self.sources.count() - 1, source, Qt.ItemDataRole.ToolTipRole)
         self.sources.currentIndexChanged.connect(self._source_chosen)
         self.find = QLineEdit()
-        self.find.setPlaceholderText('Suchen (Code, Name, Team) – Enter: weiter')
+        self.find.setPlaceholderText(_('Suchen (Code, Name, Team) – Enter: weiter'))
         self.find.setMinimumWidth(240)
         self.find.returnPressed.connect(self.find_next)
-        top.addWidget(QLabel('Datei'))
+        top.addWidget(QLabel(_('Datei')))
         top.addWidget(self.sources, 2)
         top.addWidget(self.find, 1)
         layout.addLayout(top)
@@ -200,18 +206,18 @@ class RosterEditorDialog(QDialog):
 
         self.status = QLabel()
         self.status.setWordWrap(True)
-        hint = QLabel('<small>Eine Zeile pro Code: <b>Code</b>, <b>Tab</b>, Ersetzung (z. B. '
-                      '<code>bn23⇥-23- Marius Erk (EC Bad Nauheim)</code>). Abschnitte mit '
-                      '<code>- Team -</code>. Tabs sind blau hinterlegt.</small>')
+        hint = QLabel('<small>' + _('Eine Zeile pro Code: <b>Code</b>, <b>Tab</b>, Ersetzung (z. B. '
+                                    '<code>bn23⇥-23- Marius Erk (EC Bad Nauheim)</code>). Abschnitte mit '
+                                    '<code>- Team -</code>. Tabs sind blau hinterlegt.') + '</small>')
         hint.setWordWrap(True)
         layout.addWidget(self.status)
         layout.addWidget(hint)
 
         buttons = QHBoxLayout()
         buttons.addStretch(1)
-        self.close_button = QPushButton('Schließen')
+        self.close_button = QPushButton(_('Schließen'))
         self.close_button.clicked.connect(self.close)
-        self.save_button = QPushButton('Speichern')
+        self.save_button = QPushButton(_('Speichern'))
         self.save_button.setDefault(True)
         self.save_button.clicked.connect(self.save)
         buttons.addWidget(self.close_button)
@@ -230,8 +236,8 @@ class RosterEditorDialog(QDialog):
             self._source_chosen(local)
         else:
             self.text.setReadOnly(True)
-            self.status.setText('Keine Roster-Quelle eingerichtet. Mit „Roster-Datei hinzufügen …“ eine '
-                                'Datei auswählen.')
+            self.status.setText(_('Keine Roster-Quelle eingerichtet. Mit „Roster-Datei hinzufügen …“ eine '
+                                  'Datei auswählen.'))
             self.save_button.setEnabled(False)
 
     # --- Laden ----------------------------------------------------------------
@@ -252,9 +258,9 @@ class RosterEditorDialog(QDialog):
             self.text.setPlainText(text or '')
             self.text.setReadOnly(True)
             self.save_button.setEnabled(False)
-            self._info = ('URL-Quelle, nur lesbar: angezeigt wird die zuletzt geladene Fassung. '
-                          'Ändern lässt sie sich nur dort, wo sie liegt.' if text is not None
-                          else 'URL-Quelle, noch nicht geladen.')
+            self._info = (_('URL-Quelle, nur lesbar: angezeigt wird die zuletzt geladene Fassung. '
+                            'Ändern lässt sie sich nur dort, wo sie liegt.') if text is not None
+                          else _('URL-Quelle, noch nicht geladen.'))
         else:
             try:
                 self.file = roster_module.read_file(source)
@@ -262,16 +268,17 @@ class RosterEditorDialog(QDialog):
                 self.text.setPlainText('')
                 self.text.setReadOnly(True)
                 self.save_button.setEnabled(False)
-                self._info = f'Nicht lesbar: {e.strerror or e}'
+                self._info = _('Nicht lesbar: {error}').format(error=e.strerror or e)
             else:
                 self.text.setPlainText(self.file.text)
                 self.text.setReadOnly(False)
                 self.save_button.setEnabled(True)
-                self._info = (f'{ENCODING_NAMES.get(self.file.encoding, self.file.encoding)}, '
-                              f'Zeilenenden {"Windows (CRLF)" if self.file.newline == chr(13) + chr(10) else "Unix (LF)"}')
+                newlines = 'Windows (CRLF)' if self.file.newline == chr(13) + chr(10) else 'Unix (LF)'
+                self._info = _('{encoding}, Zeilenenden {newlines}').format(
+                    encoding=encoding_name(self.file.encoding), newlines=newlines)
                 if self.file.lossy:
-                    self._info += (' – Achtung: die Datei enthält Bytes, die in Windows-1252 nicht vorkommen; '
-                                   'sie werden beim Speichern zu „�“')
+                    self._info += ' – ' + _('Achtung: die Datei enthält Bytes, die in Windows-1252 nicht '
+                                            'vorkommen; sie werden beim Speichern zu „�“')
         self.text.document().setModified(False)
         self._check()
 
@@ -290,18 +297,24 @@ class RosterEditorDialog(QDialog):
         self.highlighter.rehighlight()
         self.problems.clear()
         for problem in problems:
-            entry = QListWidgetItem(f'Zeile {problem.line}: {problem.message}')
+            entry = QListWidgetItem(_('Zeile {line}: {message}').format(line=problem.line, message=problem.message))
             entry.setData(Qt.ItemDataRole.UserRole, problem.line)
             if problem.serious:
                 entry.setForeground(QColor('#d64541'))
             self.problems.addItem(entry)
         self.problems.setVisible(bool(problems))
         serious = sum(1 for p in problems if p.serious)
-        summary = f'<b>{len(entries)} Codes, {len(teams)} Teams</b>'
+        codes = ngettext('{count} Code', '{count} Codes', len(entries)).format(count=len(entries))
+        team_count = ngettext('{count} Team', '{count} Teams', len(teams)).format(count=len(teams))
+        summary = f'<b>{codes}, {team_count}</b>'
         if problems:
-            summary += f' · <span style="color:#d64541">{serious} Problem(e)</span>' if serious else ''
-            summary += f' · {len(problems) - serious} Hinweis(e)' if len(problems) > serious else ''
-        modified = ' · <i>ungespeichert</i>' if self.text.document().isModified() else ''
+            notes = len(problems) - serious
+            if serious:
+                text = ngettext('{count} Problem', '{count} Probleme', serious).format(count=serious)
+                summary += f' · <span style="color:#d64541">{text}</span>'
+            if notes:
+                summary += ' · ' + ngettext('{count} Hinweis', '{count} Hinweise', notes).format(count=notes)
+        modified = ' · <i>' + _('ungespeichert') + '</i>' if self.text.document().isModified() else ''
         self.status.setText(f'{summary}{modified}<br><small>{getattr(self, "_info", "")}</small>')
 
     def _jump(self, entry):
@@ -337,29 +350,32 @@ class RosterEditorDialog(QDialog):
             changed_outside = False
         if changed_outside:
             answer = QMessageBox.question(
-                self, 'Datei wurde geändert', f'{path.name} wurde außerhalb von Captioner geändert, seit sie '
-                'hier geöffnet wurde. Trotzdem überschreiben?')
+                self, _('Datei wurde geändert'),
+                _('{name} wurde außerhalb von Captioner geändert, seit sie hier geöffnet wurde. '
+                  'Trotzdem überschreiben?').format(name=path.name))
             if answer != QMessageBox.StandardButton.Yes:
                 return False
         text = self.text.toPlainText()
         if not roster_module.parse(text):
-            QMessageBox.warning(self, 'Nicht gespeichert', 'Die Datei enthält keinen einzigen Code (Code, Tab, '
-                                'Ersetzung). So würde sie beim Laden als fehlerhaft gelten.')
+            QMessageBox.warning(self, _('Nicht gespeichert'),
+                                _('Die Datei enthält keinen einzigen Code (Code, Tab, '
+                                  'Ersetzung). So würde sie beim Laden als fehlerhaft gelten.'))
             return False
         encoding = None
         try:
             text.encode(self.file.encoding)
         except UnicodeEncodeError as e:
             answer = QMessageBox.question(
-                self, 'Kodierung', f'„{e.object[e.start:e.end]}“ gibt es in '
-                f'{ENCODING_NAMES.get(self.file.encoding, self.file.encoding)} nicht. Als UTF-8 speichern?')
+                self, _('Kodierung'),
+                _('„{characters}“ gibt es in {encoding} nicht. Als UTF-8 speichern?').format(
+                    characters=e.object[e.start:e.end], encoding=encoding_name(self.file.encoding)))
             if answer != QMessageBox.StandardButton.Yes:
                 return False
             encoding = 'utf-8'
         try:
             roster_module.write_file(self.file, text, encoding)
         except OSError as e:
-            QMessageBox.warning(self, 'Nicht gespeichert', f'{path}: {e.strerror or e}')
+            QMessageBox.warning(self, _('Nicht gespeichert'), f'{path}: {e.strerror or e}')
             return False
         self.text.document().setModified(False)
         self._source_chosen_info_refresh()
@@ -367,8 +383,8 @@ class RosterEditorDialog(QDialog):
         return True
 
     def _source_chosen_info_refresh(self):
-        self._info = (f'{ENCODING_NAMES.get(self.file.encoding, self.file.encoding)}, gespeichert '
-                      f'{Path(self.file.path).name}')
+        self._info = _('{encoding}, gespeichert {name}').format(
+            encoding=encoding_name(self.file.encoding), name=Path(self.file.path).name)
         self._check()
 
     # --- Schliessen -----------------------------------------------------------
@@ -377,7 +393,7 @@ class RosterEditorDialog(QDialog):
         if not self.text.document().isModified() or self.text.isReadOnly():
             return True
         answer = QMessageBox.question(
-            self, 'Ungespeicherte Änderungen', 'Änderungen am Roster speichern?',
+            self, _('Ungespeicherte Änderungen'), _('Änderungen am Roster speichern?'),
             QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel)
         if answer == QMessageBox.StandardButton.Save:
             return self.save()

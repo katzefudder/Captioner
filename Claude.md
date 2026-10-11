@@ -27,6 +27,7 @@ Bedienung: `readme.md`.
 | `ui/folderdialog.py` | „Ordner öffnen“ mit Mehrfachauswahl: macOS `NSOpenPanel` per ctypes, sonst Qt-Dialog |
 | `ui/rostereditor.py` | „Roster bearbeiten“: lokale Roster-Dateien mit Prüfung (`roster.check`), Speichern über `roster.write_file` |
 | `ui/about.py` | „Über Captioner“: Logo, `captioner.version()`, Link `captioner.WEBSITE` |
+| `i18n.py` | gettext: `_`, `ngettext`, `N_`, Sprache wählen (`resolve`, `setup`) |
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
@@ -126,6 +127,22 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   Code wird abgelehnt; außerhalb geänderte Dateien nur nach Rückfrage überschreiben.
   `roster.check` spiegelt `parse`: was dort ignoriert würde, ist ein Problem.
 
+## Übersetzungen (i18n)
+
+- gettext, `captioner/i18n.py`: Ausgangssprache **Deutsch** im Code, Katalog
+  `captioner/locale/en/LC_MESSAGES/captioner.po` (+ `.mo`, eingecheckt, gebündelt).
+- Jeder sichtbare Text in `_()`; mit Werten `_('… {name} …').format(name=…)` (nie f-Strings in
+  `_()`, `test_i18n` prüft das per AST); Mengen mit `ngettext`. Texte auf Modulebene (Keymap-
+  Labels, Filterlisten, `metadata.LABELS`, `geo.ATTRIBUTION`, Roster-`origin`) mit `N_()` markieren
+  und erst bei der Anzeige `_()`: beim Import ist die Sprache noch nicht gesetzt.
+- Werte, die im Code verglichen werden (Roster-`origin`), bleiben deutsche Schlüssel.
+- Neue/geänderte Texte: `make translations`, dann `.po` übersetzen, nochmal `make translations`.
+  `test_i18n` scheitert bei fehlender Übersetzung, abweichenden Platzhaltern, veralteter `.mo`.
+- „% s“ im Text hält Babel für einen C-Platzhalter: Prozentzeichen nicht vor Buchstaben.
+- Sprache: `Settings.language` ('' = System via `QLocale.system().uiLanguages()`), gesetzt in
+  `run()` vor dem Hauptfenster; Qt-eigene Texte (qtbase) in derselben Sprache. Tests laufen deutsch.
+- Im Titel-Format bleibt „gegen“ auch auf Englisch: die Personenerkennung liest genau das.
+
 ## Tastenkürzel
 
 - Menüleiste statt Werkzeugleiste (`_build_menus`; macOS: oben am Bildschirm, About/
@@ -197,7 +214,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 167 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 174 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

@@ -28,7 +28,7 @@ def test_edit_check_and_save(app, roster_file):
     dialog = RosterEditorDialog(['https://example.org/roster.txt', str(roster_file)])
     assert dialog.source == str(roster_file)          # lokale Datei zuerst, URL nur lesbar
     assert not dialog.text.isReadOnly()
-    assert '2 Codes, 1 Teams' in dialog.status.text() and 'Windows-1252' in dialog.status.text()
+    assert '2 Codes, 1 Team' in dialog.status.text() and 'Windows-1252' in dialog.status.text()
 
     dialog.text.appendPlainText('bn31 -31- Dean Döge (EC Bad Nauheim)')
     dialog._check()

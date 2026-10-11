@@ -10,6 +10,7 @@ auch direkt nach dem Speichern stimmen, bevor die Datei geschrieben ist.
 import os
 import re
 
+from .i18n import _
 from .scanner import Item, Metadata
 
 CAMERA_TAGS = [
@@ -107,7 +108,7 @@ def sections(raw, meta: Metadata, labels=()):
     focal = _first(raw, 'FocalLength')
     focal35 = _first(raw, 'FocalLengthIn35mmFormat')
     if focal and focal35 and focal35.split()[0] != focal.split()[0].split('.')[0]:
-        focal = f'{focal} (KB {focal35})'
+        focal = _('{focal} (KB {focal35})').format(focal=focal, focal35=focal35)
     aperture = _first(raw, 'Aperture')
     shutter = _first(raw, 'ShutterSpeed')
     size = _first(raw, 'ImageSize').replace('x', ' × ')
@@ -119,56 +120,57 @@ def sections(raw, meta: Metadata, labels=()):
         exposure_comp = ''
 
     camera = [
-        ('Aufgenommen', format_datetime(_first(raw, 'SubSecDateTimeOriginal', 'DateTimeOriginal'))),
-        ('Kamera', camera_name(_first(raw, 'Make'), _first(raw, 'Model'))),
-        ('Seriennummer', _first(raw, 'SerialNumber')),
-        ('Auslösungen', _first(raw, 'ShutterCount')),
-        ('Objektiv', _first(raw, 'LensID', 'LensModel')),
-        ('Brennweite', focal),
-        ('Blende', f'f/{aperture}' if aperture else ''),
-        ('Belichtungszeit', f'{shutter} s' if shutter else ''),
+        (_('Aufgenommen'), format_datetime(_first(raw, 'SubSecDateTimeOriginal', 'DateTimeOriginal'))),
+        (_('Kamera'), camera_name(_first(raw, 'Make'), _first(raw, 'Model'))),
+        (_('Seriennummer'), _first(raw, 'SerialNumber')),
+        (_('Auslösungen'), _first(raw, 'ShutterCount')),
+        (_('Objektiv'), _first(raw, 'LensID', 'LensModel')),
+        (_('Brennweite'), focal),
+        (_('Blende'), f'f/{aperture}' if aperture else ''),
+        (_('Belichtungszeit'), f'{shutter} s' if shutter else ''),
         ('ISO', _first(raw, 'ISO')),
-        ('Belichtungskorrektur', exposure_comp),
-        ('Programm', _first(raw, 'ExposureProgram')),
-        ('Messung', _first(raw, 'MeteringMode')),
-        ('Fokus', focus),
-        ('Weißabgleich', _first(raw, 'WhiteBalance')),
-        ('Blitz', _first(raw, 'Flash')),
-        ('Auflösung', size),
+        (_('Belichtungskorrektur'), exposure_comp),
+        (_('Programm'), _first(raw, 'ExposureProgram')),
+        (_('Messung'), _first(raw, 'MeteringMode')),
+        (_('Fokus'), focus),
+        (_('Weißabgleich'), _first(raw, 'WhiteBalance')),
+        (_('Blitz'), _first(raw, 'Flash')),
+        (_('Auflösung'), size),
         ('GPS', _first(raw, 'GPSPosition')),
     ]
     iptc = [
-        ('Titel', meta.headline),
-        ('Beschreibung', meta.caption),
-        ('Tags', ', '.join(meta.keywords)),
-        ('Stadt', meta.city),
-        ('Ort', meta.sublocation),
+        (_('Titel'), meta.headline),
+        (_('Beschreibung'), meta.caption),
+        (_('Tags'), ', '.join(meta.keywords)),
+        (_('Stadt'), meta.city),
+        (_('Ort'), meta.sublocation),
         # Ort und Rechte aus den Metadaten des Bildes: nach dem Speichern sofort aktuell
-        ('Bundesland', meta.state or _first(raw, 'Province-State', 'State')),
-        ('Land', meta.country or _first(raw, 'Country-PrimaryLocationName', 'Country')),
-        ('Fotograf', meta.creator or _first(raw, 'By-line', 'Creator', 'Artist')),
-        ('Position', meta.authors_position),
-        ('Credit', _first(raw, 'Credit')),
-        ('Copyright', meta.copyright or _first(raw, 'CopyrightNotice', 'Rights', 'Copyright')),
-        ('Copyright-URL', meta.web_statement),
-        ('Quelle', meta.source or _first(raw, 'Source')),
-        ('Kategorie', meta.category),
-        ('Beschriftet von', meta.caption_writer or _first(raw, 'Writer-Editor', 'CaptionWriter')),
-        ('Hinweise', _first(raw, 'SpecialInstructions', 'Instructions')),
+        (_('Bundesland'), meta.state or _first(raw, 'Province-State', 'State')),
+        (_('Land'), meta.country or _first(raw, 'Country-PrimaryLocationName', 'Country')),
+        (_('Fotograf'), meta.creator or _first(raw, 'By-line', 'Creator', 'Artist')),
+        (_('Position'), meta.authors_position),
+        (_('Credit'), _first(raw, 'Credit')),
+        (_('Copyright'), meta.copyright or _first(raw, 'CopyrightNotice', 'Rights', 'Copyright')),
+        (_('Copyright-URL'), meta.web_statement),
+        (_('Quelle'), meta.source or _first(raw, 'Source')),
+        (_('Kategorie'), meta.category),
+        (_('Beschriftet von'), meta.caption_writer or _first(raw, 'Writer-Editor', 'CaptionWriter')),
+        (_('Hinweise'), _first(raw, 'SpecialInstructions', 'Instructions')),
     ]
     label = meta.label
     if meta.color_class:
         label = f'{meta.color_class}' + (f' ({meta.label})' if meta.label else '')
     rating = [
-        ('Sterne', '★' * meta.rating + '☆' * (5 - meta.rating)),
-        ('Farbklasse', label),
-        ('Tag', 'ja' if meta.tagged else 'nein'),
+        (_('Sterne'), '★' * meta.rating + '☆' * (5 - meta.rating)),
+        (_('Farbklasse'), label),
+        (_('Tag'), _('ja') if meta.tagged else _('nein')),
     ]
-    files = [('Datei' if i == 0 else '', f'{name} · {format_size(size)}')
+    files = [(_('Datei') if i == 0 else '', f'{name} · {format_size(size)}')
              for i, (name, size) in enumerate(raw.get('_files', []))]
 
     result = []
-    for title, rows in (('Aufnahme', camera), ('IPTC / XMP', iptc), ('Bewertung', rating), ('Dateien', files)):
+    for title, rows in ((_('Aufnahme'), camera), ('IPTC / XMP', iptc), (_('Bewertung'), rating),
+                        (_('Dateien'), files)):
         rows = [(k, v) for k, v in rows if v]
         if rows:
             result.append((title, rows))

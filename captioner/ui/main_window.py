@@ -12,7 +12,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
                                QToolButton, QVBoxLayout, QWidget)
 
-from .. import WEBSITE, codes, config, geo, metadata, scanner, transfer
+from .. import WEBSITE, codes, config, geo, i18n, metadata, scanner, transfer
+from ..i18n import _, N_, ngettext
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
 from ..roster import Roster, RosterLoader
@@ -31,10 +32,10 @@ from .workers import MetadataWriter, RosterWorker, ScanWorker, ThumbnailLoader
 
 logger = logging.getLogger(__name__)
 
-TAG_FILTERS = [('Alle Tags', None), ('getaggt', True), ('nicht getaggt', False)]
+TAG_FILTERS = [(N_('Alle Tags'), None), (N_('getaggt'), True), (N_('nicht getaggt'), False)]
 
-RATING_FILTERS = [('Alle Sterne', None), ('★ und mehr', 1), ('★★ und mehr', 2), ('★★★ und mehr', 3),
-                  ('★★★★ und mehr', 4), ('★★★★★', 5), ('ohne Sterne', 0)]
+RATING_FILTERS = [(N_('Alle Sterne'), None), (N_('★ und mehr'), 1), (N_('★★ und mehr'), 2),
+                  (N_('★★★ und mehr'), 3), (N_('★★★★ und mehr'), 4), ('★★★★★', 5), (N_('ohne Sterne'), 0)]
 
 
 class RawCaptionStore:
@@ -172,36 +173,36 @@ class MainWindow(QMainWindow):
             return item
 
         role = QAction.MenuRole
-        file_menu = bar.addMenu('Ablage')
-        action(file_menu, 'Ordner öffnen …', self.choose_folder, QKeySequence.StandardKey.Open)
-        action(file_menu, 'Ordner in neuem Tab öffnen …', lambda: self.choose_folder(new_tab=True))
-        action(file_menu, 'Neu einlesen', lambda: self.folder and self.rescan(self.tab), QKeySequence('F5'))
+        file_menu = bar.addMenu(_('Ablage'))
+        action(file_menu, _('Ordner öffnen …'), self.choose_folder, QKeySequence.StandardKey.Open)
+        action(file_menu, _('Ordner in neuem Tab öffnen …'), lambda: self.choose_folder(new_tab=True))
+        action(file_menu, _('Neu einlesen'), lambda: self.folder and self.rescan(self.tab), QKeySequence('F5'))
         file_menu.addSeparator()
-        action(file_menu, 'Tab schließen', lambda: self.close_tab(self.tabs.currentIndex()))
+        action(file_menu, _('Tab schließen'), lambda: self.close_tab(self.tabs.currentIndex()))
         file_menu.addSeparator()
-        action(file_menu, 'Einstellungen …', self.edit_settings, QKeySequence.StandardKey.Preferences,
+        action(file_menu, _('Einstellungen …'), self.edit_settings, QKeySequence.StandardKey.Preferences,
                role.PreferencesRole)
-        action(file_menu, 'Beenden', self.close, QKeySequence.StandardKey.Quit, role.QuitRole)
+        action(file_menu, _('Beenden'), self.close, QKeySequence.StandardKey.Quit, role.QuitRole)
 
-        template_menu = bar.addMenu('Template')
-        action(template_menu, 'Neues Template …', lambda: self.edit_template(None))
-        action(template_menu, 'Template bearbeiten …',
+        template_menu = bar.addMenu(_('Template'))
+        action(template_menu, _('Neues Template …'), lambda: self.edit_template(None))
+        action(template_menu, _('Template bearbeiten …'),
                lambda: self.editor.template and self.edit_template(self.editor.template))
         template_menu.addSeparator()
-        action(template_menu, 'Template-Datei laden …', self.open_template_file)
-        action(template_menu, 'Template speichern unter …', self.save_template_as)
+        action(template_menu, _('Template-Datei laden …'), self.open_template_file)
+        action(template_menu, _('Template speichern unter …'), self.save_template_as)
         template_menu.addSeparator()
-        action(template_menu, 'Template auf Auswahl anwenden', self.apply_template)
+        action(template_menu, _('Template auf Auswahl anwenden'), self.apply_template)
 
-        roster_menu = bar.addMenu('Roster')
-        action(roster_menu, 'Roster bearbeiten …', self.edit_roster)
-        action(roster_menu, 'Roster neu laden', lambda: self.load_roster(force=True))
-        action(roster_menu, 'Roster-Datei hinzufügen …', self.add_roster_file)
+        roster_menu = bar.addMenu(_('Roster'))
+        action(roster_menu, _('Roster bearbeiten …'), self.edit_roster)
+        action(roster_menu, _('Roster neu laden'), lambda: self.load_roster(force=True))
+        action(roster_menu, _('Roster-Datei hinzufügen …'), self.add_roster_file)
 
-        help_menu = bar.addMenu('Hilfe')
-        action(help_menu, 'Tastenkürzel', self.show_shortcuts)
-        action(help_menu, 'Captioner-Website', lambda: QDesktopServices.openUrl(QUrl(WEBSITE)))
-        action(help_menu, 'Über Captioner', self.show_about, role=role.AboutRole)
+        help_menu = bar.addMenu(_('Hilfe'))
+        action(help_menu, _('Tastenkürzel'), self.show_shortcuts)
+        action(help_menu, _('Captioner-Website'), lambda: QDesktopServices.openUrl(QUrl(WEBSITE)))
+        action(help_menu, _('Über Captioner'), self.show_about, role=role.AboutRole)
 
     def show_about(self):
         AboutDialog(self).exec()
@@ -216,13 +217,13 @@ class MainWindow(QMainWindow):
         filters = QHBoxLayout()
         self.rating_filter = QComboBox()
         for label, value in RATING_FILTERS:
-            self.rating_filter.addItem(label, value)
+            self.rating_filter.addItem(_(label), value)
         self.color_filter = QComboBox()
         self.tag_filter = QComboBox()
         for label, value in TAG_FILTERS:
-            self.tag_filter.addItem(label, value)
-        self.uncaptioned_filter = QCheckBox('nur unbeschriftet')
-        self.folder_label = QLabel('Kein Ordner geöffnet')
+            self.tag_filter.addItem(_(label), value)
+        self.uncaptioned_filter = QCheckBox(_('nur unbeschriftet'))
+        self.folder_label = QLabel(_('Kein Ordner geöffnet'))
         filters.addWidget(self.folder_label, 1)
         filters.addWidget(self.tag_filter)
         filters.addWidget(self.rating_filter)
@@ -240,7 +241,7 @@ class MainWindow(QMainWindow):
         self.tabs.tabCloseRequested.connect(self.close_tab)
         self.tabs.currentChanged.connect(self._on_tab_changed)
         new_tab_button = QToolButton(text='+')
-        new_tab_button.setToolTip('Ordner in neuem Tab öffnen')
+        new_tab_button.setToolTip(_('Ordner in neuem Tab öffnen'))
         new_tab_button.clicked.connect(lambda: self.choose_folder(new_tab=True))
         tab_row = QHBoxLayout()
         tab_row.setSpacing(4)
@@ -288,11 +289,13 @@ class MainWindow(QMainWindow):
     def _fill_color_filter(self):
         self.color_filter.blockSignals(True)
         self.color_filter.clear()
-        self.color_filter.addItem('Alle Farben', None)
-        self.color_filter.addItem('ohne Farbe', 0)
+        self.color_filter.addItem(_('Alle Farben'), None)
+        self.color_filter.addItem(_('ohne Farbe'), 0)
         for n in range(1, 9):
             label = self.settings.labels[n - 1] if n <= len(self.settings.labels) else ''
-            self.color_filter.addItem(f'Farbklasse {n}' + (f' ({label})' if label else ''), n)
+            text = _('Farbklasse {number} ({label})').format(number=n, label=label) if label \
+                else _('Farbklasse {number}').format(number=n)
+            self.color_filter.addItem(text, n)
             self.color_filter.setItemData(self.color_filter.count() - 1, QColor(CLASS_COLORS[n]),
                                           Qt.ItemDataRole.DecorationRole)
         self.color_filter.blockSignals(False)
@@ -393,7 +396,7 @@ class MainWindow(QMainWindow):
     def choose_folder(self, new_tab=False):
         """Finder-Dialog mit Mehrfachauswahl (Cmd-/Shift-Klick); jeder Ordner ein Tab."""
         start = self.folder or self.settings.last_folder or str(Path.home())
-        folders = folderdialog.choose_folders(self, 'Ordner öffnen – mehrere mit ⌘-Klick', start)
+        folders = folderdialog.choose_folders(self, _('Ordner öffnen – mehrere mit ⌘-Klick'), start)
         if folders:
             self.open_folders(folders, new_tab=new_tab)
 
@@ -424,7 +427,10 @@ class MainWindow(QMainWindow):
             expanded += [str(f) for f in found] or [str(folder)]
         if len(expanded) > self.MANY_FOLDERS:
             answer = QMessageBox.question(
-                self, 'Viele Ordner', f'{len(expanded)} Ordner mit Bildern gefunden. Alle in Tabs öffnen?\n\n'
+                self, _('Viele Ordner'),
+                ngettext('{count} Ordner mit Bildern gefunden. Alle in Tabs öffnen?',
+                         '{count} Ordner mit Bildern gefunden. Alle in Tabs öffnen?',
+                         len(expanded)).format(count=len(expanded)) + '\n\n'
                 + '\n'.join(expanded[:10]) + ('\n…' if len(expanded) > 10 else ''))
             if answer != QMessageBox.StandardButton.Yes:
                 return []
@@ -452,14 +458,14 @@ class MainWindow(QMainWindow):
         return tab
 
     def rescan(self, tab, wait_for_writer=True):
-        if wait_for_writer and self.writer.pending_count() and not self._wait_for_writer('Neu einlesen'):
+        if wait_for_writer and self.writer.pending_count() and not self._wait_for_writer(_('Neu einlesen')):
             return
         tab.stop_scan()
         tab.all_items, tab.by_key, tab.filtered = [], {}, []
         tab.selected_keys.clear()
         tab.page = 0
         tab.model.set_items([])
-        self._set_tab_status(tab, f'{tab.folder} – wird eingelesen …')
+        self._set_tab_status(tab, _('{folder} – wird eingelesen …').format(folder=tab.folder))
         tab.scan_started = time.time()
         worker = ScanWorker(self.pool, tab.folder, self.settings.recursive)
         worker.tab = tab
@@ -497,14 +503,15 @@ class MainWindow(QMainWindow):
             return
         tab.model.refresh([item.key for item in chunk])
         loaded = sum(1 for item in tab.all_items if item.meta_loaded)
-        self._set_tab_status(tab, f'{tab.folder} – Metadaten {loaded}/{len(tab.all_items)} …')
+        self._set_tab_status(tab, _('{folder} – Metadaten {loaded}/{total} …').format(
+            folder=tab.folder, loaded=loaded, total=len(tab.all_items)))
         if tab is self.tab and self._selected_items():
             self._show_selection_in_editor()
 
     def _on_scan_failed(self, message):
         tab = self._scanning_tab()
         if tab is not None:
-            QMessageBox.warning(self, 'Einlesen fehlgeschlagen', f'{tab.folder}\n\n{message}')
+            QMessageBox.warning(self, _('Einlesen fehlgeschlagen'), f'{tab.folder}\n\n{message}')
 
     def _on_scan_finished(self):
         tab = self._scanning_tab()
@@ -512,7 +519,9 @@ class MainWindow(QMainWindow):
             return
         scanner.sort_items(tab.all_items)
         elapsed = time.time() - tab.scan_started
-        self._set_tab_status(tab, f'{tab.folder} – {len(tab.all_items)} Bilder ({elapsed:.1f} s)')
+        count = len(tab.all_items)
+        self._set_tab_status(tab, ngettext('{folder} – {count} Bild ({seconds} s)', '{folder} – {count} Bilder ({seconds} s)',
+                                           count).format(folder=tab.folder, count=count, seconds=f'{elapsed:.1f}'))
         if tab is self.tab:
             self.apply_filter(False)
 
@@ -533,7 +542,7 @@ class MainWindow(QMainWindow):
         if tab is None:
             return
         if self.copy_worker and self.copy_worker.isRunning() and self.copy_worker.target_tab is tab:
-            QMessageBox.information(self, 'Tab schließen', 'In diesen Ordner wird gerade kopiert.')
+            QMessageBox.information(self, _('Tab schließen'), _('In diesen Ordner wird gerade kopiert.'))
             return
         tab.stop_scan()
         self.tabs.removeTab(index)
@@ -585,13 +594,13 @@ class MainWindow(QMainWindow):
         """Hinweis unter dem Logo, solange die Galerie leer ist."""
         if not self.folder:
             keys = QKeySequence(QKeySequence.StandardKey.Open).toString(QKeySequence.SequenceFormat.NativeText)
-            text = f'Captioner\nOrdner öffnen ({keys}) oder einen Ordner hierher ziehen'
+            text = 'Captioner\n' + _('Ordner öffnen ({keys}) oder einen Ordner hierher ziehen').format(keys=keys)
         elif self.tab.scanning() and not self.all_items:
-            text = 'Ordner wird eingelesen …'
+            text = _('Ordner wird eingelesen …')
         elif not self.all_items:
-            text = 'Keine Bilder in diesem Ordner (JPG, NEF und andere RAWs, DNG, TIFF)'
+            text = _('Keine Bilder in diesem Ordner (JPG, NEF und andere RAWs, DNG, TIFF)')
         else:
-            text = 'Kein Bild passt zu den Filtern'
+            text = _('Kein Bild passt zu den Filtern')
         self.view.empty_text = text
         self.view.viewport().update()
 
@@ -617,8 +626,11 @@ class MainWindow(QMainWindow):
 
     def _update_pager(self):
         total = len(self.filtered)
-        self.page_label.setText(f'Seite {self.page + 1} / {self.page_count()} · {total} Bilder'
-                                + (f' · {len(self._selected_items())} ausgewählt' if self.selected_keys else ''))
+        text = ngettext('Seite {page} / {pages} · {count} Bild', 'Seite {page} / {pages} · {count} Bilder',
+                        total).format(page=self.page + 1, pages=self.page_count(), count=total)
+        if self.selected_keys:
+            text += ' · ' + _('{count} ausgewählt').format(count=len(self._selected_items()))
+        self.page_label.setText(text)
         self.prev_button.setEnabled(self.page > 0)
         self.next_page_button.setEnabled(self.page < self.page_count() - 1)
 
@@ -767,7 +779,7 @@ class MainWindow(QMainWindow):
         if not items:
             return
         self.snapshot = self.editor.current_fields()
-        self.statusBar().showMessage(f'Beschriftung von {items[0].name} kopiert', 5000)
+        self.statusBar().showMessage(_('Beschriftung von {name} kopiert').format(name=items[0].name), 5000)
 
     def paste_snapshot(self):
         """
@@ -780,12 +792,13 @@ class MainWindow(QMainWindow):
             return
         resolution = codes.resolve(snapshot['raw_caption'], self.roster, self.settings.code_delimiter)
         if resolution.unknown:
-            QMessageBox.warning(self, 'Nicht eingefügt', 'Unbekannte Codes in der kopierten Beschreibung: '
-                                + ', '.join(resolution.unknown))
+            QMessageBox.warning(self, _('Nicht eingefügt'), _('Unbekannte Codes in der kopierten Beschreibung: {codes}')
+                                .format(codes=', '.join(resolution.unknown)))
             return
         self.save_caption(dict(snapshot, resolution=resolution, caption_modified=True), 0)
         self._show_selection_in_editor()
-        self.statusBar().showMessage(f'Beschriftung in {len(items)} Bild(er) eingefügt', 5000)
+        self.statusBar().showMessage(ngettext('Beschriftung in {count} Bild eingefügt', 'Beschriftung in {count} Bilder eingefügt',
+                                              len(items)).format(count=len(items)), 5000)
 
     def save_and_close(self):
         """Wie "Save Changes and Close Dialog": speichern, zurueck in die Galerie bzw. aufs Bild."""
@@ -821,7 +834,7 @@ class MainWindow(QMainWindow):
                 **(template.fixed_values() if template else {})), self.places)
             problems = metadata.validate(meta)
             if problems:
-                QMessageBox.warning(self, 'Nicht gespeichert', f'{item.name}: ' + '; '.join(problems))
+                QMessageBox.warning(self, _('Nicht gespeichert'), f'{item.name}: ' + '; '.join(problems))
                 return
             planned.append((item, meta))
         for item, meta in planned:
@@ -832,10 +845,10 @@ class MainWindow(QMainWindow):
             self.last_raw_caption = fields['raw_caption']
         if fields['headline']:
             self.last_headline = fields['headline']
-        self.model.refresh([item.key for item, _ in planned])
+        self.model.refresh([item.key for item, _meta in planned])
         self._update_status()
         if self.viewer is not None and self.viewer.isVisible():
-            shown = next((item for item, _ in planned if item.key == self.viewer.key), None)
+            shown = next((item for item, _meta in planned if item.key == self.viewer.key), None)
             if shown is not None:
                 self.viewer.show_item(shown, self.viewer._image)
         if step:
@@ -853,7 +866,7 @@ class MainWindow(QMainWindow):
     def apply_template(self):
         template = self.editor.template
         if not template:
-            QMessageBox.information(self, 'Kein Template', 'Bitte zuerst ein Spiel-Template auswählen oder anlegen.')
+            QMessageBox.information(self, _('Kein Template'), _('Bitte zuerst ein Spiel-Template auswählen oder anlegen.'))
             return
         items = self._selected_items()
         for item in items:
@@ -878,7 +891,7 @@ class MainWindow(QMainWindow):
         item.error = None if ok else message
         self.loader.invalidate_details(key)  # Dateigroesse und Werte neu lesen
         if not ok:
-            self.statusBar().showMessage(f'Fehler: {message}', 15000)
+            self.statusBar().showMessage(_('Fehler: {message}').format(message=message), 15000)
         tab.model.refresh([key])
         self._update_status()
 
@@ -887,21 +900,22 @@ class MainWindow(QMainWindow):
         errors = sum(1 for tab in self.all_tabs() for item in tab.all_items if getattr(item, 'error', None))
         parts = []
         if pending:
-            parts.append(f'schreibe {pending} …')
+            parts.append(_('schreibe {count} …').format(count=pending))
         if errors:
-            parts.append(f'<span style="color:#d64541">{errors} Fehler</span>')
-        self.status_label.setText(' · '.join(parts) or 'alles gespeichert')
+            parts.append('<span style="color:#d64541">%s</span>'
+                         % ngettext('{count} Fehler', '{count} Fehler', errors).format(count=errors))
+        self.status_label.setText(' · '.join(parts) or _('alles gespeichert'))
         self.model.refresh()
 
     def _wait_for_writer(self, purpose):
-        dialog = QProgressDialog(f'Metadaten werden geschrieben ({purpose}) …', None, 0, 0, self)
+        dialog = QProgressDialog(_('Metadaten werden geschrieben ({purpose}) …').format(purpose=purpose), None, 0, 0, self)
         dialog.setWindowModality(Qt.WindowModality.WindowModal)
         dialog.show()
         QApplication.processEvents()
         ok = self.writer.flush(timeout=120)
         dialog.close()
         if not ok:
-            QMessageBox.warning(self, 'Schreiben dauert an', 'Es werden noch Metadaten geschrieben. Bitte kurz warten.')
+            QMessageBox.warning(self, _('Schreiben dauert an'), _('Es werden noch Metadaten geschrieben. Bitte kurz warten.'))
         return ok
 
     # --- Drag nach Lightroom ---------------------------------------------------
@@ -919,7 +933,7 @@ class MainWindow(QMainWindow):
             QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
             try:
                 if not self.writer.flush(timeout=120):
-                    QMessageBox.warning(self, 'Noch nicht bereit', 'Es werden noch Metadaten geschrieben.')
+                    QMessageBox.warning(self, _('Noch nicht bereit'), _('Es werden noch Metadaten geschrieben.'))
                     return None
             finally:
                 QApplication.restoreOverrideCursor()
@@ -930,7 +944,7 @@ class MainWindow(QMainWindow):
                 refused.append(f'{item.name}: {item.error}')
                 continue
             if item.raw and item.key in self.edited_keys and not (item.sidecar and item.sidecar.exists()):
-                refused.append(f'{item.name}: XMP-Sidecar fehlt')
+                refused.append(_('{name}: XMP-Sidecar fehlt').format(name=item.name))
                 continue
             accepted.append(item)
             for path in item.files:
@@ -938,8 +952,9 @@ class MainWindow(QMainWindow):
             if self.settings.drag_include_sidecars and item.raw and item.sidecar and item.sidecar.exists():
                 urls.append(QUrl.fromLocalFile(str(item.sidecar)))
         if refused:
-            QMessageBox.warning(self, 'Nicht alle Bilder übergeben',
-                                'Diese Bilder werden nicht gezogen, ihre Metadaten sind nicht sicher gespeichert:\n\n'
+            QMessageBox.warning(self, _('Nicht alle Bilder übergeben'),
+                                _('Diese Bilder werden nicht gezogen, ihre Metadaten sind nicht sicher gespeichert:')
+                                + '\n\n'
                                 + '\n'.join(refused[:20]) + ('\n…' if len(refused) > 20 else ''))
         # Fuer einen Drop auf einen anderen Tab: dort wird mit Sidecar kopiert
         self._drag_items = accepted
@@ -947,7 +962,9 @@ class MainWindow(QMainWindow):
             return None
         mime = QMimeData()
         mime.setUrls(urls)
-        self.statusBar().showMessage(f'{len(items) - len(refused)} Bilder ({len(urls)} Dateien) gezogen', 8000)
+        self.statusBar().showMessage(_('{images} ({files}) gezogen').format(
+            images=ngettext('{count} Bild', '{count} Bilder', len(accepted)).format(count=len(accepted)),
+            files=ngettext('{count} Datei', '{count} Dateien', len(urls)).format(count=len(urls))), 8000)
         return mime
 
     def dragEnterEvent(self, event):
@@ -979,10 +996,10 @@ class MainWindow(QMainWindow):
         if target is None or not items:
             return
         if not target.folder:
-            QMessageBox.information(self, 'Kopieren', 'In diesem Tab ist kein Ordner geöffnet.')
+            QMessageBox.information(self, _('Kopieren'), _('In diesem Tab ist kein Ordner geöffnet.'))
             return
         if self.copy_worker and self.copy_worker.isRunning():
-            QMessageBox.information(self, 'Kopieren', 'Es wird noch kopiert. Bitte warten, bis das fertig ist.')
+            QMessageBox.information(self, _('Kopieren'), _('Es wird noch kopiert. Bitte warten, bis das fertig ist.'))
             return
         files = []
         for item in items:
@@ -1000,22 +1017,24 @@ class MainWindow(QMainWindow):
         worker.progress.connect(self._on_copy_progress)
         worker.done.connect(self._on_copy_done)
         self.copy_worker = worker
-        self.statusBar().showMessage(f'Kopiere {len(groups)} Bilder nach {target.folder} …')
+        self.statusBar().showMessage(ngettext('Kopiere {count} Bild nach {folder} …', 'Kopiere {count} Bilder nach {folder} …',
+                                              len(groups)).format(count=len(groups), folder=target.folder))
         worker.start()
 
     def _on_copy_progress(self, done, total):
         target = self.copy_worker.target_tab if self.copy_worker else None
         name = tab_title(target.folder) if target else ''
-        self.statusBar().showMessage(f'Kopiere nach {name}: {done}/{total} …')
+        self.statusBar().showMessage(_('Kopiere nach {name}: {done}/{total} …').format(name=name, done=done, total=total))
 
     def _on_copy_done(self, copied, skipped, errors):
         target = self.copy_worker.target_tab
-        parts = [f'{copied} Bilder nach {tab_title(target.folder)} kopiert']
+        parts = [ngettext('{count} Bild nach {folder} kopiert', '{count} Bilder nach {folder} kopiert', copied)
+                 .format(count=copied, folder=tab_title(target.folder))]
         if skipped:
-            parts.append(f'{skipped} übersprungen')
+            parts.append(_('{count} übersprungen').format(count=skipped))
         self.statusBar().showMessage(', '.join(parts), 10000)
         if errors:
-            QMessageBox.warning(self, 'Nicht alles kopiert', '\n'.join(errors[:20]) + ('\n…' if len(errors) > 20 else ''))
+            QMessageBox.warning(self, _('Nicht alles kopiert'), '\n'.join(errors[:20]) + ('\n…' if len(errors) > 20 else ''))
         if copied and self.tabs.indexOf(target) >= 0:
             self.rescan(target)
 
@@ -1156,7 +1175,7 @@ class MainWindow(QMainWindow):
             self._save_places()
         self.editor.set_templates(templates, active_path)
         if errors:
-            self.statusBar().showMessage('Templates nicht geladen: ' + '; '.join(errors), 15000)
+            self.statusBar().showMessage(_('Templates nicht geladen: {errors}').format(errors='; '.join(errors)), 15000)
 
     def edit_template(self, template):
         dialog = TemplateDialog(template, self.places, self)
@@ -1167,7 +1186,7 @@ class MainWindow(QMainWindow):
             return
         new = dialog.template()
         if not (new.name or new.headline):
-            QMessageBox.warning(self, 'Template unvollständig', 'Bitte einen Namen eingeben.')
+            QMessageBox.warning(self, _('Template unvollständig'), _('Bitte einen Namen eingeben.'))
             return
         if template and template.path:
             if self.template_store.is_internal(template) and \
@@ -1180,25 +1199,25 @@ class MainWindow(QMainWindow):
         try:
             self.template_store.save(new)
         except OSError as e:
-            QMessageBox.warning(self, 'Template nicht gespeichert', str(e))
+            QMessageBox.warning(self, _('Template nicht gespeichert'), str(e))
             return
         self.refresh_templates(new.path)
 
     def open_template_file(self, path=None):
         if not path:
-            path, _ = QFileDialog.getOpenFileName(
-                self, 'Template-Datei laden', self.settings.last_folder or str(Path.home()),
-                'Spiel-Templates (*.toml);;Alle Dateien (*)')
+            path, _filter = QFileDialog.getOpenFileName(
+                self, _('Template-Datei laden'), self.settings.last_folder or str(Path.home()),
+                _('Spiel-Templates (*.toml)') + ';;' + _('Alle Dateien (*)'))
         if not path:
             return None
         try:
             template = template_files.load_file(path)
         except TemplateError as e:
-            QMessageBox.warning(self, 'Template nicht geladen', str(e))
+            QMessageBox.warning(self, _('Template nicht geladen'), str(e))
             return None
         self._remember_template_file(template)
         self.refresh_templates(template.path)
-        self.statusBar().showMessage(f'Template „{template.display_name()}“ geladen', 5000)
+        self.statusBar().showMessage(_('Template „{name}“ geladen').format(name=template.display_name()), 5000)
         return template
 
     def save_template_as(self, path=None):
@@ -1207,9 +1226,9 @@ class MainWindow(QMainWindow):
             return None
         if not path:
             start = Path(template.path).parent if template.path else Path.home()
-            path, _ = QFileDialog.getSaveFileName(
-                self, 'Template speichern unter', str(start / template_files.default_filename(template)),
-                'Spiel-Templates (*.toml)')
+            path, _filter = QFileDialog.getSaveFileName(
+                self, _('Template speichern unter'), str(start / template_files.default_filename(template)),
+                _('Spiel-Templates (*.toml)'))
         if not path:
             return None
         if not path.lower().endswith(template_files.FILE_SUFFIX):
@@ -1218,12 +1237,12 @@ class MainWindow(QMainWindow):
         try:
             template_files.save_file(copy, path)
         except OSError as e:
-            QMessageBox.warning(self, 'Template nicht gespeichert', str(e))
+            QMessageBox.warning(self, _('Template nicht gespeichert'), str(e))
             return None
         # Ab jetzt wird mit der gespeicherten Datei gearbeitet
         self._remember_template_file(copy)
         self.refresh_templates(copy.path)
-        self.statusBar().showMessage(f'Template gespeichert: {path}', 5000)
+        self.statusBar().showMessage(_('Template gespeichert: {path}').format(path=path), 5000)
         return copy
 
     def _remember_template_file(self, template):
@@ -1236,7 +1255,8 @@ class MainWindow(QMainWindow):
     def remove_template(self, template):
         if self.template_store.is_internal(template):
             answer = QMessageBox.question(
-                self, 'Template löschen', f'„{template.display_name()}“ löschen?\n{template.path}')
+                self, _('Template löschen'),
+                _('„{name}“ löschen?').format(name=template.display_name()) + f'\n{template.path}')
             if answer != QMessageBox.StandardButton.Yes:
                 return
             self.template_store.delete(template)
@@ -1248,8 +1268,8 @@ class MainWindow(QMainWindow):
 
     def add_roster_file(self, path=None):
         if not path:
-            path, _ = QFileDialog.getOpenFileName(self, 'Roster-Datei hinzufügen', str(Path.home()),
-                                                  ROSTER_FILE_FILTER)
+            path, _filter = QFileDialog.getOpenFileName(self, _('Roster-Datei hinzufügen'), str(Path.home()),
+                                                  _(ROSTER_FILE_FILTER))
         if not path:
             return
         if path not in self.settings.roster_sources:
@@ -1263,7 +1283,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def load_roster(self, force=False):
-        self.editor.set_roster_status('Roster wird geladen …')
+        self.editor.set_roster_status(_('Roster wird geladen …'))
         self.roster_loader.ttl_seconds = self.settings.roster_cache_ttl_minutes * 60
         worker = RosterWorker(self.roster_loader, self.settings.roster_sources, force)
         worker.loaded.connect(self._on_roster_loaded)
@@ -1273,18 +1293,24 @@ class MainWindow(QMainWindow):
     def _on_roster_loaded(self, roster):
         self.roster = roster
         self.editor.set_roster(roster, self.settings.code_delimiter)
-        lines = [f'<b>Roster:</b> {len(roster.entries)} Codes, {len(roster.teams)} Teams']
+        lines = ['<b>%s</b> %s, %s' % (
+            _('Roster:'), ngettext('{count} Code', '{count} Codes', len(roster.entries)).format(count=len(roster.entries)),
+            ngettext('{count} Team', '{count} Teams', len(roster.teams)).format(count=len(roster.teams)))]
         for status in roster.status:
             stamp = time.strftime('%d.%m. %H:%M', time.localtime(status.fetched_at)) if status.fetched_at else ''
             color = '' if status.ok and status.origin != 'letzte gute Version' else ' style="color:#d64541"'
             name = html.escape(status.source.rsplit('/', 1)[-1])
             detail = f' – {html.escape(status.message)}' if status.message else ''
-            lines.append(f'<span{color}>{name}: {status.origin} {stamp}{detail}</span>')
+            origin = html.escape(_(status.origin)) if status.origin else ''
+            lines.append(f'<span{color}>{name}: {origin} {stamp}{detail}</span>')
         if roster.conflicts:
-            lines.append(f'<span style="color:#d64541">{len(roster.conflicts)} widersprüchliche Codes: '
-                         + html.escape(', '.join(c[0] for c in roster.conflicts[:10])) + '</span>')
+            text = ngettext('{count} widersprüchlicher Code: {codes}', '{count} widersprüchliche Codes: {codes}',
+                            len(roster.conflicts)).format(count=len(roster.conflicts),
+                                                          codes=', '.join(c[0] for c in roster.conflicts[:10]))
+            lines.append(f'<span style="color:#d64541">{html.escape(text)}</span>')
         if not roster.is_usable:
-            lines.append('<span style="color:#d64541">Kein Roster verfügbar – Codes können nicht aufgelöst werden.</span>')
+            lines.append('<span style="color:#d64541">%s</span>'
+                         % html.escape(_('Kein Roster verfügbar – Codes können nicht aufgelöst werden.')))
         self.editor.set_roster_status('<br>'.join(lines))
 
     def edit_settings(self):
@@ -1296,7 +1322,7 @@ class MainWindow(QMainWindow):
         self._fill_color_filter()
         self.load_roster(force=True)
         if old_exiftool != self.settings.exiftool_path:
-            QMessageBox.information(self, 'ExifTool', 'Der neue ExifTool-Pfad gilt nach einem Neustart.')
+            QMessageBox.information(self, 'ExifTool', _('Der neue ExifTool-Pfad gilt nach einem Neustart.'))
         if old_recursive != self.settings.recursive:
             for tab in self.all_tabs():
                 if tab.folder:
@@ -1306,12 +1332,12 @@ class MainWindow(QMainWindow):
     # --- Beenden ----------------------------------------------------------------
 
     def closeEvent(self, event):
-        if self.writer.pending_count() and not self._wait_for_writer('Beenden'):
+        if self.writer.pending_count() and not self._wait_for_writer(_('Beenden')):
             event.ignore()
             return
         if self.copy_worker and self.copy_worker.isRunning():
-            answer = QMessageBox.question(self, 'Kopieren läuft', 'Es wird noch kopiert. Abbrechen und beenden?\n'
-                                          'Bereits kopierte Bilder bleiben, angefangene werden verworfen.')
+            answer = QMessageBox.question(self, _('Kopieren läuft'), _('Es wird noch kopiert. Abbrechen und beenden?\n'
+                                                            'Bereits kopierte Bilder bleiben, angefangene werden verworfen.'))
             if answer != QMessageBox.StandardButton.Yes:
                 event.ignore()
                 return
@@ -1338,13 +1364,17 @@ def run(argv):
     import signal
     from PySide6.QtCore import QTimer
 
+    from PySide6.QtCore import QLibraryInfo, QLocale, QTranslator
+
     reap_orphans()
     app = QApplication(argv)
     open_requests = OpenRequests(app)  # vor allem anderen, der Finder schickt sofort
-    # Qt-eigene Texte (Schliessen, Abbrechen, Dateidialoge) in der Systemsprache
-    from PySide6.QtCore import QLibraryInfo, QLocale, QTranslator
+    settings = config.Settings.load()
+    # Sprache aus den Einstellungen ('' = wie das System), vor dem ersten Text
+    lang = i18n.setup(i18n.resolve(getattr(settings, 'language', ''), QLocale.system().uiLanguages()))
+    # Qt-eigene Texte (Schliessen, Abbrechen, Dateidialoge) in derselben Sprache
     translator = QTranslator(app)
-    if translator.load(QLocale.system(), 'qtbase', '_', QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
+    if translator.load(QLocale(lang), 'qtbase', '_', QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
         app.installTranslator(translator)
     # SIGTERM/Strg+C: sauber beenden, damit Schreibauftraege fertig werden und
     # ExifTool-Prozesse nicht liegen bleiben. Der Timer gibt Python regelmaessig
@@ -1356,11 +1386,10 @@ def run(argv):
     heartbeat.timeout.connect(lambda: None)
     app.setApplicationName('Captioner')
     app.setOrganizationName('chuc')
-    settings = config.Settings.load()
     try:
         find_exiftool(settings.exiftool_path)
     except ExifToolError as e:
-        QMessageBox.critical(None, 'ExifTool fehlt', str(e))
+        QMessageBox.critical(None, _('ExifTool fehlt'), str(e))
         return 1
     folders = [arg for arg in argv[1:] if arg]  # make run ohne FOLDER uebergibt ""
     from .resources import app_icon

@@ -44,7 +44,8 @@ a = Analysis(
     ['run_captioner.py'],
     pathex=[],
     binaries=[],
-    datas=[('vendor/exiftool', 'exiftool'), ('captioner/resources', 'captioner/resources')],
+    datas=[('vendor/exiftool', 'exiftool'), ('captioner/resources', 'captioner/resources'),
+           ('captioner/locale', 'captioner/locale')],   # Uebersetzungen (gettext, siehe captioner/i18n.py)
     excludes=['PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets', 'PySide6.QtWebEngineQuick',
               'PySide6.Qt3DCore', 'PySide6.QtQuick', 'PySide6.QtQml', 'PySide6.QtPdf', 'tkinter'],
     noarchive=False,

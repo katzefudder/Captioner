@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (QComboBox, QCompleter, QFormLayout, QHBoxLayout, 
                                QToolButton, QVBoxLayout, QWidget)
 
 from .. import codes, geo, metadata
+from ..i18n import _, ngettext
 from .keymap import keys as binding_keys
 from .placepicker import PlacePickerDialog, place_completer, place_for_completion
 from ..templates import parse_headline, unique
@@ -141,22 +142,22 @@ class CaptionEditor(QWidget):
         self.template_box = QComboBox()
         self.template_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.template_box.currentIndexChanged.connect(self._template_selected)
-        self.edit_template_button = QPushButton('Bearbeiten …')
-        self.edit_template_button.setToolTip('Gewähltes Template anzeigen und ändern')
+        self.edit_template_button = QPushButton(_('Bearbeiten …'))
+        self.edit_template_button.setToolTip(_('Gewähltes Template anzeigen und ändern'))
         self.edit_template_button.clicked.connect(lambda: self.edit_template_requested.emit(self.template))
         self.template_menu = QMenu(self)
-        self.template_menu.addAction('Neues Template …', lambda: self.edit_template_requested.emit(None))
-        self.template_menu.addAction('Template-Datei laden …', self.open_template_requested)
+        self.template_menu.addAction(_('Neues Template …'), lambda: self.edit_template_requested.emit(None))
+        self.template_menu.addAction(_('Template-Datei laden …'), self.open_template_requested)
         self.template_menu.addSeparator()
-        self.save_as_action = self.template_menu.addAction('Speichern unter …', self.save_template_as_requested)
+        self.save_as_action = self.template_menu.addAction(_('Speichern unter …'), self.save_template_as_requested)
         self.remove_action = self.template_menu.addAction(
-            'Aus der Liste entfernen', lambda: self.template and self.remove_template_requested.emit(self.template))
+            _('Aus der Liste entfernen'), lambda: self.template and self.remove_template_requested.emit(self.template))
         more_button = QToolButton(text='⋯')
-        more_button.setToolTip('Neues Template, Datei laden, speichern unter, entfernen')
+        more_button.setToolTip(_('Neues Template, Datei laden, speichern unter, entfernen'))
         more_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         more_button.setMenu(self.template_menu)
         more_button.setStyleSheet('QToolButton::menu-indicator { image: none; width: 0; }')
-        template_row.addWidget(QLabel('Template:'))
+        template_row.addWidget(QLabel(_('Template:')))
         template_row.addWidget(self.template_box, 1)
         template_row.addWidget(self.edit_template_button)
         template_row.addWidget(more_button)
@@ -167,9 +168,9 @@ class CaptionEditor(QWidget):
         self.template_source.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.template_source)
 
-        self.apply_button = QPushButton('Template auf Auswahl anwenden')
-        self.apply_button.setToolTip('Titel, Ort und Tags des Templates in alle ausgewählten Bilder schreiben; '
-                                     'Beschreibungen bleiben erhalten')
+        self.apply_button = QPushButton(_('Template auf Auswahl anwenden'))
+        self.apply_button.setToolTip(_('Titel, Ort und Tags des Templates in alle ausgewählten Bilder schreiben; '
+                                       'Beschreibungen bleiben erhalten'))
         self.apply_button.clicked.connect(self.apply_template_requested)
         layout.addWidget(self.apply_button)
 
@@ -180,13 +181,14 @@ class CaptionEditor(QWidget):
         self.headline.setPlaceholderText('DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg')
         # Teams fuer die Code-Vorschlaege, wenn das Template keine vorgibt
         self.headline.textChanged.connect(self._update_completions)
-        self.headline_hint = QLabel('<small>Format „&lt;Anlass&gt; - &lt;Heim&gt; gegen &lt;Gast&gt;“, '
-                                    'sonst erkennt die Personenerkennung das Spiel nicht</small>')
+        self.headline_hint = QLabel('<small>' + html.escape(
+            _('Format „<Anlass> - <Heim> gegen <Gast>“, sonst erkennt die Personenerkennung das Spiel nicht'),
+            quote=False) + '</small>')
         self.headline_hint.setStyleSheet('color: #d64541;')
         self.headline_hint.setWordWrap(True)
         self.headline_hint.hide()
         self.caption = CodeTextEdit()
-        self.caption.setPlaceholderText('Zweikampf #bi99# gegen #bn23#')
+        self.caption.setPlaceholderText(_('Zweikampf #bi99# gegen #bn23#'))
         self.caption.setMinimumHeight(90)
         self.caption.textChanged.connect(self._update_preview)
         self.caption.submit.connect(lambda: self.submit(0))
@@ -196,17 +198,17 @@ class CaptionEditor(QWidget):
         self.preview.setTextFormat(Qt.TextFormat.RichText)
         # Tags wie die Beschreibung umgebrochen, aber niedriger
         self.keywords = WrappingLineEdit(lines=3)
-        self.keywords.setPlaceholderText('Tags, kommagetrennt')
+        self.keywords.setPlaceholderText(_('Tags, kommagetrennt'))
         self.keywords.textChanged.connect(self._update_preview)
         self.keywords.submit.connect(lambda: self.submit(0))
         self.city = QLineEdit()
-        self.city.setPlaceholderText('tippen für gemerkte Orte')
+        self.city.setPlaceholderText(_('tippen für gemerkte Orte'))
         self.sublocation = QLineEdit()
         for field in (self.headline, self.city, self.sublocation):
             field.textChanged.connect(self._update_preview)
             field.returnPressed.connect(lambda: self.submit(0))
-        self.map_button = QPushButton('Karte …')
-        self.map_button.setToolTip('Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)')
+        self.map_button = QPushButton(_('Karte …'))
+        self.map_button.setToolTip(_('Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)'))
         self.map_button.clicked.connect(self.pick_place)
         city_row = QHBoxLayout()
         city_row.addWidget(self.city, 1)
@@ -218,13 +220,13 @@ class CaptionEditor(QWidget):
         self.rights_hint.setWordWrap(True)
         self.rights_hint.setStyleSheet('color: gray;')
 
-        form.addRow('Titel', self.headline)
+        form.addRow(_('Titel'), self.headline)
         form.addRow('', self.headline_hint)
-        form.addRow('Beschreibung', self.caption)
+        form.addRow(_('Beschreibung'), self.caption)
         form.addRow('', self.preview)
-        form.addRow('Tags', self.keywords)
-        form.addRow('Stadt', city_row)
-        form.addRow('Ort', self.sublocation)
+        form.addRow(_('Tags'), self.keywords)
+        form.addRow(_('Stadt'), city_row)
+        form.addRow(_('Ort'), self.sublocation)
         form.addRow('', self.gps_hint)
         form.addRow('', self.rights_hint)
         layout.addLayout(form)
@@ -234,31 +236,32 @@ class CaptionEditor(QWidget):
         layout.addWidget(self.limits)
 
         buttons = QHBoxLayout()
-        self.save_button = QPushButton('Speichern')
+        self.save_button = QPushButton(_('Speichern'))
         self.save_button.clicked.connect(lambda: self.submit(0))
-        self.next_button = QPushButton('Speichern && weiter')
+        self.next_button = QPushButton(_('Speichern && weiter'))
         self.next_button.setDefault(True)
         self.next_button.clicked.connect(lambda: self.submit(1))
         buttons.addWidget(self.save_button)
         buttons.addWidget(self.next_button)
         layout.addLayout(buttons)
 
-        hint = QLabel(f'Enter speichert · {shortcut_text("save_next")} speichert und weiter · '
-                      f'{shortcut_text("save_close")} speichert und zurück zur Galerie · '
-                      f'{shortcut_text("shortcuts")} alle Tastenkürzel')
+        hint = QLabel(_('Enter speichert · {save_next} speichert und weiter · '
+                      '{save_close} speichert und zurück zur Galerie · {shortcuts} alle Tastenkürzel').format(
+            save_next=shortcut_text('save_next'), save_close=shortcut_text('save_close'),
+            shortcuts=shortcut_text('shortcuts')))
         hint.setWordWrap(True)
         hint.setStyleSheet('color: gray;')
         layout.addWidget(hint)
 
         self.roster_status = QLabel()
         self.roster_status.setWordWrap(True)
-        reload_button = QPushButton('Roster neu laden')
+        reload_button = QPushButton(_('Roster neu laden'))
         reload_button.clicked.connect(self.reload_roster_requested)
-        add_roster_button = QPushButton('Roster-Datei hinzufügen …')
-        add_roster_button.setToolTip('Roster-Datei (Code<Tab>Ersetzung) vom Rechner zusätzlich verwenden')
+        add_roster_button = QPushButton(_('Roster-Datei hinzufügen …'))
+        add_roster_button.setToolTip(_('Roster-Datei (Code<Tab>Ersetzung) vom Rechner zusätzlich verwenden'))
         add_roster_button.clicked.connect(self.add_roster_file_requested)
-        edit_roster_button = QPushButton('Roster bearbeiten …')
-        edit_roster_button.setToolTip('Die Roster-Datei(en) in einem Editor öffnen, der das Format prüft')
+        edit_roster_button = QPushButton(_('Roster bearbeiten …'))
+        edit_roster_button.setToolTip(_('Die Roster-Datei(en) in einem Editor öffnen, der das Format prüft'))
         edit_roster_button.clicked.connect(self.edit_roster_requested)
         roster_buttons = QHBoxLayout()
         roster_buttons.addWidget(reload_button)
@@ -323,7 +326,7 @@ class CaptionEditor(QWidget):
         self.templates = templates
         self.template_box.blockSignals(True)
         self.template_box.clear()
-        self.template_box.addItem('— kein Template —', None)
+        self.template_box.addItem(_('— kein Template —'), None)
         selected = 0
         names = [t.display_name() for t in templates]
         for index, template in enumerate(templates, start=1):
@@ -368,7 +371,7 @@ class CaptionEditor(QWidget):
         """Felder aus dem ersten ausgewaehlten Item fuellen."""
         self.set_enabled(bool(items))
         if not items:
-            self.selection_info.setText('Keine Auswahl')
+            self.selection_info.setText(_('Keine Auswahl'))
             for field in (self.headline, self.keywords, self.city, self.sublocation):
                 field.clear()
             self.caption.setPlainText('')
@@ -377,7 +380,7 @@ class CaptionEditor(QWidget):
         count = len(items)
         self.selection_info.setText(
             f'<b>{html.escape(item.name)}</b>' if count == 1
-            else f'<b>{count} Bilder ausgewählt</b> – Speichern schreibt in alle')
+            else _('<b>{count} Bilder ausgewählt</b> – Speichern schreibt in alle').format(count=count))
         meta = item.meta
         # Ohne festen Titel im Template: der zuletzt gespeicherte, damit man ihn nicht je Bild tippt
         headline = meta.headline or (self.template.headline if self.template else '') or carry_over_headline or ''
@@ -445,11 +448,11 @@ class CaptionEditor(QWidget):
             shown = shown.replace(token, f'<span style="color:#d64541;font-weight:bold">{token}</span>')
         parts = [f'<span style="color:gray">→</span> {shown}' if raw.strip() else '']
         if resolution.unknown:
-            parts.append('<span style="color:#d64541">Unbekannte Codes: '
-                         + ', '.join(html.escape(c) for c in resolution.unknown) + '</span>')
+            parts.append('<span style="color:#d64541">' + html.escape(_('Unbekannte Codes: {codes}').format(
+                codes=', '.join(resolution.unknown))) + '</span>')
         if resolution.persons:
-            parts.append('<span style="color:gray">Personen-Tags: '
-                         + html.escape(', '.join(resolution.persons)) + '</span>')
+            parts.append('<span style="color:gray">' + html.escape(_('Personen-Tags: {persons}').format(
+                persons=', '.join(resolution.persons))) + '</span>')
         self.preview.setText('<br>'.join(p for p in parts if p))
 
         meta = metadata.Metadata(headline=self.headline.text(), caption=text,
@@ -457,7 +460,7 @@ class CaptionEditor(QWidget):
                                  city=self.city.text(), sublocation=self.sublocation.text())
         problems = metadata.validate(meta)
         size = len(text.encode('utf-8'))
-        info = f'Beschreibung {size}/{metadata.LIMITS["caption"]} Bytes'
+        info = _('Beschreibung {size}/{limit} Bytes').format(size=size, limit=metadata.LIMITS['caption'])
         if problems:
             info += '<br><span style="color:#d64541">' + html.escape('; '.join(problems)) + '</span>'
         self.limits.setText(info)
@@ -473,14 +476,15 @@ class CaptionEditor(QWidget):
     def _update_rights_hint(self):
         """Eine Zeile mit Fotograf und Copyright, der Rest als Zahl; alles im Tooltip."""
         values = self.template.fixed_values() if self.template else {}
-        shown = [f'{metadata.LABELS[n]} {values[n]}' if n != 'copyright' else values[n]
+        shown = [f'{_(metadata.LABELS[n])} {values[n]}' if n != 'copyright' else values[n]
                  for n in self.RIGHTS_SUMMARY if n in values]
         rest = len(values) - len(shown)
         if rest:
-            shown.append(f'{rest} weitere' if shown else f'{rest} Felder')
-        self.rights_hint.setText('<small>Aus dem Template: ' + html.escape(' · '.join(shown)) + '</small>'
-                                 if values else '')
-        self.rights_hint.setToolTip('\n'.join(f'{metadata.LABELS[n]}: {v}' for n, v in values.items()))
+            shown.append(ngettext('{count} weiteres', '{count} weitere', rest).format(count=rest) if shown
+                         else ngettext('{count} Feld', '{count} Felder', rest).format(count=rest))
+        self.rights_hint.setText('<small>' + html.escape(_('Aus dem Template: {values}').format(
+            values=' · '.join(shown))) + '</small>' if values else '')
+        self.rights_hint.setToolTip('\n'.join(f'{_(metadata.LABELS[n])}: {v}' for n, v in values.items()))
         self.rights_hint.setVisible(bool(values))
 
     def _update_gps_hint(self, item):
@@ -492,11 +496,12 @@ class CaptionEditor(QWidget):
         meta = item.meta if item else metadata.Metadata()
         result = geo.apply_gps(dataclasses.replace(meta, city=place.city, sublocation=place.sublocation), book)
         if result.gps_changed:
-            self.gps_hint.setText(f'GPS wird gesetzt: {place.latitude:.5f}, {place.longitude:.5f}')
+            self.gps_hint.setText(_('GPS wird gesetzt: {latitude}, {longitude}').format(
+                latitude=f'{place.latitude:.5f}', longitude=f'{place.longitude:.5f}'))
         elif meta.latitude is not None and book.is_ours(meta.latitude, meta.longitude):
-            self.gps_hint.setText('GPS des Ortes ist gesetzt')
+            self.gps_hint.setText(_('GPS des Ortes ist gesetzt'))
         else:
-            self.gps_hint.setText('GPS der Kamera bleibt erhalten')
+            self.gps_hint.setText(_('GPS der Kamera bleibt erhalten'))
 
     def current_fields(self):
         """Was gerade im Panel steht; die Beschreibung als Rohtext mit Codes."""

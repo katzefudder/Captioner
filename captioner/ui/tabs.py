@@ -9,13 +9,14 @@ from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QMessage
                                QStackedWidget, QTabBar, QToolButton, QVBoxLayout, QWidget)
 
 from .. import transfer
+from ..i18n import _
 from .gallery import GalleryModel, GalleryView, TileDelegate
 
 
 def tab_title(folder):
     """'100NCZ_9' bzw. 'NIKON Z 9 › 100NCZ_9' fuer Ordner auf einem Wechseldatentraeger."""
     if not folder:
-        return 'Neuer Tab'
+        return _('Neuer Tab')
     path = Path(folder)
     parts = path.parts
     if len(parts) > 2 and parts[1] == 'Volumes':  # macOS: /Volumes/<Karte>/...
@@ -36,7 +37,7 @@ class FolderTab(QWidget):
         self.selected_keys = set()
         self.scan_worker = None
         self.scan_started = 0.0
-        self.status_text = 'Kein Ordner geöffnet'
+        self.status_text = _('Kein Ordner geöffnet')
 
         self.model = GalleryModel(loader)
         self.view = GalleryView()
@@ -51,8 +52,8 @@ class FolderTab(QWidget):
         pager.addWidget(self.page_label)
         pager.addWidget(self.next_page_button)
         pager.addStretch(1)
-        drag_hint = QLabel('Auswahl in Lightroom ziehen, um sie zu importieren, '
-                           'oder auf einen anderen Tab, um sie dorthin zu kopieren')
+        drag_hint = QLabel(_('Auswahl in Lightroom ziehen, um sie zu importieren, '
+                             'oder auf einen anderen Tab, um sie dorthin zu kopieren'))
         drag_hint.setStyleSheet('color: gray;')
         pager.addWidget(drag_hint)
 
@@ -184,26 +185,27 @@ class ConflictDialog(QDialog):
 
     def __init__(self, group, folder, remaining, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Datei existiert bereits')
+        self.setWindowTitle(_('Datei existiert bereits'))
         self.decision = None
         names = ', '.join(target.name for target in group.conflicts(folder))
         rename_to = transfer.free_stem(group, folder)
         layout = QVBoxLayout(self)
-        text = QLabel(f'<b>{names}</b> gibt es in <b>{Path(folder).name}</b> bereits.<br><br>'
-                      f'Überspringen lässt die vorhandene Datei, Umbenennen kopiert als '
-                      f'<b>{rename_to}</b>, Ersetzen überschreibt die vorhandene.')
+        text = QLabel(_('<b>{names}</b> gibt es in <b>{folder}</b> bereits.<br><br>'
+                        'Überspringen lässt die vorhandene Datei, Umbenennen kopiert als '
+                        '<b>{new_name}</b>, Ersetzen überschreibt die vorhandene.').format(
+                            names=names, folder=Path(folder).name, new_name=rename_to))
         text.setWordWrap(True)
         layout.addWidget(text)
-        self.apply_all = QCheckBox(f'Für alle weiteren Konflikte übernehmen ({remaining})')
+        self.apply_all = QCheckBox(_('Für alle weiteren Konflikte übernehmen ({count})').format(count=remaining))
         self.apply_all.setVisible(remaining > 0)
         layout.addWidget(self.apply_all)
         buttons = QHBoxLayout()
-        cancel = QPushButton('Abbrechen')
+        cancel = QPushButton(_('Abbrechen'))
         cancel.clicked.connect(self.reject)
         buttons.addWidget(cancel)
         buttons.addStretch(1)
-        for label, decision in (('Überspringen', transfer.SKIP), ('Umbenennen', transfer.RENAME),
-                                ('Ersetzen', transfer.REPLACE)):
+        for label, decision in ((_('Überspringen'), transfer.SKIP), (_('Umbenennen'), transfer.RENAME),
+                                (_('Ersetzen'), transfer.REPLACE)):
             button = QPushButton(label)
             button.clicked.connect(lambda _=False, d=decision: self._choose(d))
             if decision == transfer.RENAME:
@@ -213,7 +215,8 @@ class ConflictDialog(QDialog):
 
     def _choose(self, decision):
         if decision == transfer.REPLACE:
-            answer = QMessageBox.question(self, 'Ersetzen', 'Die vorhandene Datei wird überschrieben. Fortfahren?')
+            answer = QMessageBox.question(self, _('Ersetzen'),
+                                           _('Die vorhandene Datei wird überschrieben. Fortfahren?'))
             if answer != QMessageBox.StandardButton.Yes:
                 return
         self.decision = decision
@@ -260,7 +263,7 @@ class CopyWorker(QThread):
         errors = []
         for position, group in enumerate(self.groups):
             if self._cancel:
-                errors.append('abgebrochen')
+                errors.append(_('abgebrochen'))
                 break
             try:
                 if transfer.copy_group(group, self.folder, self.decisions.get(id(group))):

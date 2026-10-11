@@ -8,7 +8,7 @@ EXIFTOOL_DIR = vendor/exiftool
 
 POETRY = env -u VIRTUAL_ENV poetry
 
-.PHONY: install run test icons bundle verify dmg pkg installer notarize clean
+.PHONY: install run test icons translations bundle verify dmg pkg installer notarize clean
 
 install:
 	$(POETRY) install
@@ -22,6 +22,16 @@ test:
 # Alle Icons aus captioner/resources/logo.svg neu erzeugen (Ergebnis ist eingecheckt)
 icons:
 	$(POETRY) run python scripts/make_icons.py
+
+# Uebersetzungen: Texte herausziehen, Kataloge (.po) aktualisieren, kompilieren (.mo).
+# Die .po-Dateien von Hand (oder mit Poedit) uebersetzen; .po und .mo sind eingecheckt.
+LOCALES = captioner/locale
+translations:
+	$(POETRY) run pybabel extract -F babel.cfg -k _ -k N_ -k ngettext:1,2 --no-location \
+		--omit-header --sort-output -o $(LOCALES)/captioner.pot .
+	$(POETRY) run pybabel update -i $(LOCALES)/captioner.pot -d $(LOCALES) -D captioner \
+		--no-fuzzy-matching --ignore-obsolete
+	$(POETRY) run pybabel compile -d $(LOCALES) -D captioner --statistics
 
 $(EXIFTOOL_DIR)/exiftool:
 	rm -rf vendor && mkdir -p vendor

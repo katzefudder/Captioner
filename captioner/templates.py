@@ -18,6 +18,7 @@ from pathlib import Path
 import tomli_w
 
 from .geo import valid_coordinates
+from .i18n import _
 
 
 DEFAULT_CAPTION_SUFFIX = ', {headline}, {city}, {sublocation}, {date}'
@@ -178,23 +179,26 @@ def load_file(path):
         with open(path, 'rb') as handle:
             data = tomllib.load(handle)
     except OSError as e:
-        raise TemplateError(f'{path.name}: nicht lesbar ({e.strerror or e})')
+        raise TemplateError(_('{name}: nicht lesbar ({error})').format(name=path.name, error=e.strerror or e))
     except tomllib.TOMLDecodeError as e:
-        raise TemplateError(f'{path.name}: kein gültiges TOML ({e})')
+        raise TemplateError(_('{name}: kein gültiges TOML ({error})').format(name=path.name, error=e))
     # Dateien ohne Kennung stammen aus der ersten Version und sind gueltig
     if data.get('format', FORMAT_ID) != FORMAT_ID:
-        raise TemplateError(f'{path.name}: kein Captioner-Template (format = {data.get("format")!r})')
+        raise TemplateError(_('{name}: kein Captioner-Template (format = {format})')
+                            .format(name=path.name, format=repr(data.get('format'))))
     if int(data.get('version', 1)) > FORMAT_VERSION:
-        raise TemplateError(f'{path.name}: Template-Version {data["version"]} ist neuer als diese App')
+        raise TemplateError(_('{name}: Template-Version {version} ist neuer als diese App')
+                            .format(name=path.name, version=data['version']))
     _upgrade_v1(data)
     values = {key: data[key] for key in SERIALIZED_FIELDS if key in data}
     for key, value in values.items():
         expected = {'extra_tags': list, 'latitude': (int, float), 'longitude': (int, float)}.get(key, str)
         if not isinstance(value, expected) or isinstance(value, bool):
-            raise TemplateError(f'{path.name}: Feld {key!r} hat den falschen Typ')
+            raise TemplateError(_('{name}: Feld {field} hat den falschen Typ').format(name=path.name, field=repr(key)))
     if ('latitude' in values) != ('longitude' in values) or \
             ('latitude' in values and not valid_coordinates(values['latitude'], values['longitude'])):
-        raise TemplateError(f'{path.name}: latitude/longitude unvollständig oder außerhalb des gültigen Bereichs')
+        raise TemplateError(_('{name}: latitude/longitude unvollständig oder außerhalb des gültigen Bereichs')
+                            .format(name=path.name))
     template = MatchTemplate(**values)
     if not template.name:
         template.name = path.stem

@@ -17,7 +17,8 @@ from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkDiskCache, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import QToolButton, QWidget
 
-from .. import config, geo
+from .. import config, geo, i18n
+from ..i18n import _
 
 CACHE_BYTES = 300 * 1024 * 1024
 DEFAULT_CENTER = (51.1, 10.4)  # Deutschland
@@ -37,7 +38,7 @@ def network_manager(parent):
 def _request(url, prefer_cache=False):
     request = QNetworkRequest(QUrl(url))
     request.setHeader(QNetworkRequest.KnownHeaders.UserAgentHeader, geo.USER_AGENT)
-    request.setRawHeader(b'Accept-Language', b'de')
+    request.setRawHeader(b'Accept-Language', i18n.language().encode())  # Ortsnamen in der App-Sprache
     request.setTransferTimeout(15000)
     if prefer_cache:
         request.setAttribute(QNetworkRequest.Attribute.CacheLoadControlAttribute,
@@ -69,7 +70,7 @@ class MapView(QWidget):
         self._press = None
         self._press_center = None
         self._wheel = 0
-        for text, step, tip in (('+', 1, 'Heranzoomen'), ('−', -1, 'Herauszoomen')):
+        for text, step, tip in (('+', 1, _('Heranzoomen')), ('−', -1, _('Herauszoomen'))):
             button = QToolButton(self)
             button.setText(text)
             button.setToolTip(tip)
@@ -187,7 +188,7 @@ class MapView(QWidget):
 
     def _draw_attribution(self, painter):
         metrics = painter.fontMetrics()
-        text = geo.ATTRIBUTION
+        text = _(geo.ATTRIBUTION)
         rect = QRect(0, 0, metrics.horizontalAdvance(text) + 10, metrics.height() + 4)
         rect.moveBottomRight(self.rect().bottomRight())
         painter.fillRect(rect, QColor(255, 255, 255, 200))
@@ -308,12 +309,12 @@ class Geocoder(QObject):
         if error == QNetworkReply.NetworkError.OperationCanceledError:
             return
         if error != QNetworkReply.NetworkError.NoError:
-            self.failed.emit('Suche nicht möglich: keine Verbindung zum Kartendienst')
+            self.failed.emit(_('Suche nicht möglich: keine Verbindung zum Kartendienst'))
             return
         try:
             handler(json.loads(data.decode('utf-8')))
         except ValueError:
-            self.failed.emit('Unerwartete Antwort vom Kartendienst')
+            self.failed.emit(_('Unerwartete Antwort vom Kartendienst'))
 
     def _on_search(self, data):
         self.found.emit(geo.places_from_search(data))

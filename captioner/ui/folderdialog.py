@@ -15,6 +15,8 @@ import sys
 
 from PySide6.QtWidgets import QAbstractItemView, QFileDialog, QListView, QTreeView
 
+from ..i18n import _
+
 logger = logging.getLogger(__name__)
 
 NS_MODAL_RESPONSE_OK = 1
@@ -55,7 +57,7 @@ def _mac_panel(objc, title, start):
                             ('setAllowsMultipleSelection:', True), ('setCanCreateDirectories:', False)):
         objc.send(panel, selector, value, restype=None, argtypes=[ctypes.c_bool])
     objc.send(panel, 'setMessage:', objc.string(title), restype=None, argtypes=[ctypes.c_void_p])
-    objc.send(panel, 'setPrompt:', objc.string('Öffnen'), restype=None, argtypes=[ctypes.c_void_p])
+    objc.send(panel, 'setPrompt:', objc.string(_('Öffnen')), restype=None, argtypes=[ctypes.c_void_p])
     if start:
         url = objc.send(objc.cls('NSURL'), 'fileURLWithPath:', objc.string(str(start)), argtypes=[ctypes.c_void_p])
         objc.send(panel, 'setDirectoryURL:', url, restype=None, argtypes=[ctypes.c_void_p])

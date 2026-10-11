@@ -16,6 +16,7 @@ import re
 import shutil
 from pathlib import Path
 
+from .i18n import _, N_
 from .scanner import Item, Metadata, RAW_EXTENSIONS
 
 # IPTC-IIM-Grenzen in Bytes
@@ -61,9 +62,10 @@ RIGHTS_READ = {
     'source': ('Source',),
     'category': ('Category',),
 }
-LABELS = {'state': 'Bundesland', 'country': 'Land', 'creator': 'Fotograf', 'authors_position': 'Position',
-          'caption_writer': 'Beschriftet von', 'copyright': 'Copyright', 'web_statement': 'Copyright-URL',
-          'source': 'Quelle', 'category': 'Kategorie'}
+LABELS = {'state': N_('Bundesland'), 'country': N_('Land'), 'creator': N_('Fotograf'),
+          'authors_position': N_('Position'), 'caption_writer': N_('Beschriftet von'),
+          'copyright': N_('Copyright'), 'web_statement': N_('Copyright-URL'), 'source': N_('Quelle'),
+          'category': N_('Kategorie')}
 OBJECT_NAME_LIMIT = 64
 
 READ_TAGS = [
@@ -92,17 +94,17 @@ def validate(meta: Metadata):
     def check(label, value, limit):
         size = len(value.encode('utf-8'))
         if size > limit:
-            problems.append(f'{label}: {size} von max. {limit} Bytes')
+            problems.append(_('{label}: {size} von max. {limit} Bytes').format(label=label, size=size, limit=limit))
 
-    check('Titel', meta.headline, LIMITS['headline'])
-    check('Beschreibung', meta.caption, LIMITS['caption'])
-    check('Stadt', meta.city, LIMITS['city'])
-    check('Ort', meta.sublocation, LIMITS['sublocation'])
+    check(_('Titel'), meta.headline, LIMITS['headline'])
+    check(_('Beschreibung'), meta.caption, LIMITS['caption'])
+    check(_('Stadt'), meta.city, LIMITS['city'])
+    check(_('Ort'), meta.sublocation, LIMITS['sublocation'])
     for name, label in LABELS.items():
         if name in LIMITS:
-            check(label, getattr(meta, name), LIMITS[name])
+            check(_(label), getattr(meta, name), LIMITS[name])
     for keyword in meta.keywords:
-        check(f'Tag "{keyword}"', keyword, LIMITS['keyword'])
+        check(_('Tag "{keyword}"').format(keyword=keyword), keyword, LIMITS['keyword'])
     return problems
 
 
@@ -294,13 +296,13 @@ def image_data_hash(tool, path):
 def write_sidecar(tool, item: Item, meta: Metadata):
     target = item.sidecar_target
     if target is None:
-        raise WriteError(f'{item.name}: keine RAW-Datei fuer ein Sidecar')
+        raise WriteError(_('{name}: keine RAW-Datei fuer ein Sidecar').format(name=item.name))
     if target.exists():
         _check(tool.execute('-overwrite_original', *_xmp_args(meta), str(target)), target)
     else:
         _check(tool.execute(*_xmp_args(meta), '-o', str(target)), target)
         if not target.exists():
-            raise WriteError(f'{target.name}: Sidecar wurde nicht angelegt')
+            raise WriteError(_('{name}: Sidecar wurde nicht angelegt').format(name=target.name))
         item.sidecar = target
     return target
 
@@ -313,10 +315,11 @@ def write_embedded(tool, path: Path, meta: Metadata):
     try:
         _check(tool.execute(*_embedded_args(meta), '-o', str(temp), str(path)), path)
         if not temp.exists():
-            raise WriteError(f'{path.name}: ExifTool hat keine Datei geschrieben')
+            raise WriteError(_('{name}: ExifTool hat keine Datei geschrieben').format(name=path.name))
         after = image_data_hash(tool, temp)
         if not before or before != after:
-            raise WriteError(f'{path.name}: Bilddaten nach dem Schreiben veraendert, Original bleibt unangetastet')
+            raise WriteError(_('{name}: Bilddaten nach dem Schreiben veraendert, Original bleibt unangetastet')
+                             .format(name=path.name))
         shutil.copymode(path, temp)
         os.replace(temp, path)
     finally:

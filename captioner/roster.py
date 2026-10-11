@@ -20,6 +20,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .i18n import _, N_
+
 SECTION_PATTERN = re.compile(r'^-\s*(?P<team>.+?)\s*-$')
 GITHUB_BLOB_PATTERN = re.compile(
     r'^https?://github\.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/blob/(?P<rest>.+)$')
@@ -39,7 +41,7 @@ class Entry:
 class SourceStatus:
     source: str
     ok: bool
-    origin: str  # 'datei', 'netz', 'cache', 'letzte gute Version', 'fehlt'
+    origin: str  # 'datei', 'netz', 'cache', 'letzte gute Version', 'fehlt' (Schluessel; Anzeige mit _())
     message: str = ''
     fetched_at: float = None
 
@@ -168,20 +170,21 @@ def check(text):
             continue
         if '\t' not in line:
             if not SECTION_PATTERN.match(stripped):
-                problems.append(Problem(number, 'kein Tab zwischen Code und Ersetzung (und kein '
-                                                '„- Team -“): Zeile wird ignoriert', True))
+                problems.append(Problem(number, _('kein Tab zwischen Code und Ersetzung (und kein '
+                                                  '„- Team -“): Zeile wird ignoriert'), True))
             continue
         code, replacement = (part.strip() for part in line.split('\t', 1))
         if not code or not replacement:
-            problems.append(Problem(number, 'Code fehlt' if not code else 'Ersetzung fehlt', True))
+            problems.append(Problem(number, _('Code fehlt') if not code else _('Ersetzung fehlt'), True))
             continue
         if code in seen:
             first, previous = seen[code]
             if previous != replacement:
-                problems.append(Problem(number, f'„{code}“ steht schon in Zeile {first} mit anderer Ersetzung '
-                                                '(widersprüchlich, wird nicht verwendet)', True))
+                problems.append(Problem(number, _('„{code}“ steht schon in Zeile {line} mit anderer Ersetzung '
+                                                  '(widersprüchlich, wird nicht verwendet)')
+                                                .format(code=code, line=first), True))
             else:
-                problems.append(Problem(number, f'„{code}“ doppelt (wie Zeile {first})', False))
+                problems.append(Problem(number, _('„{code}“ doppelt (wie Zeile {line})').format(code=code, line=first), False))
             continue
         seen[code] = (number, replacement)
     return problems
@@ -223,29 +226,30 @@ class RosterLoader:
             try:
                 text = decode(path.read_bytes())
             except OSError as e:
-                return None, SourceStatus(source, False, 'fehlt', str(e))
+                return None, SourceStatus(source, False, N_('fehlt'), str(e))
             if not parse(text):
-                return None, SourceStatus(source, False, 'fehlt', 'keine Codes gefunden (Code und Ersetzung durch Tab getrennt?)')
-            return text, SourceStatus(source, True, 'datei', fetched_at=path.stat().st_mtime)
+                return None, SourceStatus(source, False, N_('fehlt'),
+                                          _('keine Codes gefunden (Code und Ersetzung durch Tab getrennt?)'))
+            return text, SourceStatus(source, True, N_('datei'), fetched_at=path.stat().st_mtime)
 
         cached = self._cache_file(source)
         if not force and cached.exists() and time.time() - cached.stat().st_mtime < self.ttl_seconds:
             return (cached.read_text(encoding='utf-8'),
-                    SourceStatus(source, True, 'cache', fetched_at=cached.stat().st_mtime))
+                    SourceStatus(source, True, N_('cache'), fetched_at=cached.stat().st_mtime))
 
         try:
             text = self._fetch(raw_url(source))
             if not parse(text):
-                raise ValueError('keine Codes gefunden (falsche URL oder HTML statt Textdatei?)')
+                raise ValueError(_('keine Codes gefunden (falsche URL oder HTML statt Textdatei?)'))
         except Exception as e:
             if cached.exists():
                 return (cached.read_text(encoding='utf-8'),
-                        SourceStatus(source, True, 'letzte gute Version',
-                                     f'nicht erreichbar: {e}', cached.stat().st_mtime))
-            return None, SourceStatus(source, False, 'fehlt', f'nicht erreichbar: {e}')
+                        SourceStatus(source, True, N_('letzte gute Version'),
+                                     _('nicht erreichbar: {error}').format(error=e), cached.stat().st_mtime))
+            return None, SourceStatus(source, False, N_('fehlt'), _('nicht erreichbar: {error}').format(error=e))
 
         cached.write_text(text, encoding='utf-8')
-        return text, SourceStatus(source, True, 'netz', fetched_at=time.time())
+        return text, SourceStatus(source, True, N_('netz'), fetched_at=time.time())
 
     def load(self, sources, force=False):
         roster = Roster()

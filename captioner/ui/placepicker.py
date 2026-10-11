@@ -11,9 +11,10 @@ from PySide6.QtWidgets import (QCompleter, QDialog, QDialogButtonBox, QFormLayou
                                QVBoxLayout, QWidget)
 
 from .. import geo
+from ..i18n import N_, _, ngettext
 from .mapview import Geocoder, MapView
 
-OFFLINE_TEXT = ('Diese Karte kann nur bei Verbindung mit dem Internet angezeigt werden.\n'
+OFFLINE_TEXT = N_('Diese Karte kann nur bei Verbindung mit dem Internet angezeigt werden.\n'
                 'Stadt und Ort lassen sich unten trotzdem eintragen; bereits gewählte Orte werden vorgeschlagen.')
 
 
@@ -32,7 +33,7 @@ def place_for_completion(book, text):
 class PlacePickerDialog(QDialog):
     def __init__(self, place: geo.Place, book: geo.PlaceBook, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Ort wählen')
+        self.setWindowTitle(_('Ort wählen'))
         self.resize(760, 680)
         self.book = book
         self.latitude = place.latitude if place else None
@@ -41,9 +42,9 @@ class PlacePickerDialog(QDialog):
 
         search_row = QHBoxLayout()
         self.query = QLineEdit()
-        self.query.setPlaceholderText('Adresse, PLZ oder Halle suchen, z. B. „61231 Bad Nauheim“')
+        self.query.setPlaceholderText(_('Adresse, PLZ oder Halle suchen, z. B. „61231 Bad Nauheim“'))
         self.query.returnPressed.connect(self.search)
-        self.search_button = QPushButton('Suchen')
+        self.search_button = QPushButton(_('Suchen'))
         self.search_button.clicked.connect(self.search)
         search_row.addWidget(self.query, 1)
         search_row.addWidget(self.search_button)
@@ -64,18 +65,18 @@ class PlacePickerDialog(QDialog):
         offline = QWidget()
         offline_layout = QVBoxLayout(offline)
         offline_layout.addStretch(1)
-        self.offline_label = QLabel(OFFLINE_TEXT)
+        self.offline_label = QLabel(_(OFFLINE_TEXT))
         self.offline_label.setWordWrap(True)
         self.offline_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         offline_layout.addWidget(self.offline_label)
-        retry = QPushButton('Erneut versuchen')
+        retry = QPushButton(_('Erneut versuchen'))
         retry.clicked.connect(self._retry)
         offline_layout.addWidget(retry, 0, Qt.AlignmentFlag.AlignHCenter)
         offline_layout.addStretch(1)
         self.stack.addWidget(offline)
         layout.addWidget(self.stack, 1)
 
-        self.status = QLabel('Auf die Karte klicken, um den Ort zu setzen. Ziehen verschiebt, Mausrad zoomt.')
+        self.status = QLabel(_('Auf die Karte klicken, um den Ort zu setzen. Ziehen verschiebt, Mausrad zoomt.'))
         self.status.setWordWrap(True)
         self.status.setStyleSheet('color: gray;')
         layout.addWidget(self.status)
@@ -87,9 +88,9 @@ class PlacePickerDialog(QDialog):
         self.city.setCompleter(place_completer(book, self))
         self.city.completer().activated.connect(self._known_place_chosen)
         self.coordinates = QLabel()
-        form.addRow('Stadt', self.city)
-        form.addRow('Ort / Halle', self.sublocation)
-        form.addRow('GPS', self.coordinates)
+        form.addRow(_('Stadt'), self.city)
+        form.addRow(_('Ort / Halle'), self.sublocation)
+        form.addRow(_('GPS'), self.coordinates)
         layout.addLayout(form)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -126,10 +127,10 @@ class PlacePickerDialog(QDialog):
 
     def _update_coordinates(self):
         if self.latitude is None:
-            self.coordinates.setText('<i>keine – nur Stadt und Ort werden geschrieben</i>')
+            self.coordinates.setText('<i>' + _('keine – nur Stadt und Ort werden geschrieben') + '</i>')
         else:
-            self.coordinates.setText(f'{self.latitude:.5f}, {self.longitude:.5f} '
-                                     '<small>(nur in Bilder ohne GPS der Kamera)</small>')
+            hint = _('(nur in Bilder ohne GPS der Kamera)')
+            self.coordinates.setText(f'{self.latitude:.5f}, {self.longitude:.5f} <small>{hint}</small>')
 
     def _fill(self, place):
         self._found_place = place
@@ -143,14 +144,14 @@ class PlacePickerDialog(QDialog):
 
     def search(self):
         if self.query.text().strip():
-            self.status.setText('Suche …')
+            self.status.setText(_('Suche …'))
             self.geocoder.search(self.query.text())
 
     def _found(self, places):
         self.results.clear()
         if not places:
             self.results.hide()
-            self.status.setText('Nichts gefunden. Anders formulieren oder direkt auf die Karte klicken.')
+            self.status.setText(_('Nichts gefunden. Anders formulieren oder direkt auf die Karte klicken.'))
             return
         for place in places:
             entry = QListWidgetItem(place.label)
@@ -159,7 +160,10 @@ class PlacePickerDialog(QDialog):
         self.results.setVisible(len(places) > 1)
         self.results.setCurrentRow(0)
         self._use_result(places[0])
-        self.status.setText(f'{len(places)} Treffer' + (' – den passenden in der Liste wählen.' if len(places) > 1 else ''))
+        if len(places) > 1:
+            self.status.setText(_('{count} Treffer – den passenden in der Liste wählen.').format(count=len(places)))
+        else:
+            self.status.setText(ngettext('{count} Treffer', '{count} Treffer', len(places)).format(count=len(places)))
 
     def _result_chosen(self, entry):
         self._use_result(entry.data(Qt.ItemDataRole.UserRole))
@@ -170,12 +174,12 @@ class PlacePickerDialog(QDialog):
 
     def _map_clicked(self, lat, lon):
         self._set_point(lat, lon)
-        self.status.setText('Ort wird ermittelt …')
+        self.status.setText(_('Ort wird ermittelt …'))
         self.geocoder.reverse(lat, lon)
 
     def _resolved(self, place):
         if place is None:
-            self.status.setText('Zu diesem Punkt ist keine Adresse bekannt; Stadt und Ort bitte eintragen.')
+            self.status.setText(_('Zu diesem Punkt ist keine Adresse bekannt; Stadt und Ort bitte eintragen.'))
             return
         self._fill(place)
         self.status.setText(place.label)
