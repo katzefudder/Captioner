@@ -63,6 +63,8 @@ class Settings:
     viewer_caption_panel: bool = False  # Beschriftungs-Panel in der Grossansicht
     language: str = ''           # '' = Systemsprache, sonst 'de'/'en'; siehe i18n.LANGUAGES
     spellcheck: str = 'auto'     # Beschreibung: 'auto' (macOS waehlt), 'de', 'en', 'off'
+    check_updates: bool = True   # einmal am Tag auf GitHub nach einem neuen Release fragen
+    last_update_check: float = 0.0
     exiftool_path: str = ''
     last_folder: str = ''
     # Offene Tabs beim Beenden (Ordnerpfade, in Reihenfolge) und der aktive; beim Start

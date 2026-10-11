@@ -18,6 +18,7 @@ Bedienung: `readme.md`.
 | `details.py` | EXIF/IPTC fürs Info-Panel: `read()` (Kamera aus RAW, IPTC Sidecar > eingebettet), `sections()` formatiert |
 | `transfer.py` | Kopieren zwischen Ordnern: Gruppen (RAW+JPG+Sidecar), Konflikte (überspringen/umbenennen/ersetzen) |
 | `keywords.py` | Gemerkte Stichwörter (`<cache>/keywords.json`) und Vorschläge fürs Tag-Feld |
+| `updates.py` | Versionsvergleich und GitHub-Release-Antwort (ohne Qt); `ui/updatecheck.py` fragt ab |
 | `undo.py` | Rückgängig/Wiederholen: Schritte mit Vorher/Nachher je Bild (Metadaten + Rohtext) |
 | `previews.py` | Kacheln/Großansicht aus eingebetteten JPEGs, Plattencache |
 | `exiftool.py` | `-stay_open`-Prozess, Pool pro OS-Thread, Aufräumen verwaister Prozesse |
@@ -72,6 +73,12 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   Gefüttert beim Speichern (nach vorn), beim Einlesen und aus Templates (nur ergänzen).
 - Codes im Titel: `editor.resolve_headline()`; unbekannte blockieren wie in der Beschreibung.
   Gespeichert wird der aufgelöste Titel (kein Rohtext); das Format wird am aufgelösten geprüft.
+
+## Updates
+
+- `UpdateChecker` fragt `api.github.com/repos/katzefudder/Captioner/releases/latest`; automatisch nur
+  gebündelt (`sys.frozen`), höchstens einmal am Tag (`Settings.last_update_check`). Ein privates
+  Repository liefert 404: automatisch still, von Hand mit Hinweis. Versionen numerisch vergleichen.
 
 ## Rechtschreibung
 
@@ -245,7 +252,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 187 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 192 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

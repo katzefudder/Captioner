@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 15:52+0200\n"
+"POT-Creation-Date: 2026-10-11 15:55+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -155,6 +155,9 @@ msgstr "Edit …"
 msgid "Beenden"
 msgstr "Quit"
 
+msgid "Beim Start nach Updates suchen (höchstens einmal am Tag, bei GitHub)"
+msgstr "Check for updates at startup (at most once a day, on GitHub)"
+
 msgid "Belichtungskorrektur"
 msgstr "Exposure compensation"
 
@@ -237,6 +240,18 @@ msgstr "State/Province"
 
 msgid "Cache für URLs"
 msgstr "Cache for URLs"
+
+#, python-brace-format
+msgid ""
+"Captioner {latest} ist verfügbar (installiert: {current}). Release-Seite "
+"öffnen?"
+msgstr ""
+"Captioner {latest} is available (installed: {current}). Open the release "
+"page?"
+
+#, python-brace-format
+msgid "Captioner {version} ist aktuell."
+msgstr "Captioner {version} is up to date."
 
 msgid "Captioner-Website"
 msgstr "Captioner website"
@@ -598,11 +613,21 @@ msgid ""
 "Datei auswählen."
 msgstr "No roster source set up. Choose a file with “Add roster file …”."
 
+msgid "Keine Updates"
+msgstr "No updates"
+
 msgid "Keine Vorschläge"
 msgstr "No suggestions"
 
 msgid "Kodierung"
 msgstr "Encoding"
+
+msgid ""
+"Konnte nicht prüfen, ob es eine neue Version gibt (keine Verbindung zu "
+"GitHub oder Repository nicht öffentlich)."
+msgstr ""
+"Could not check for a new version (no connection to GitHub, or the "
+"repository is not public)."
 
 #, python-brace-format
 msgid "Kopiere nach {name}: {done}/{total} …"
@@ -632,6 +657,9 @@ msgstr "Metering"
 #, python-brace-format
 msgid "Metadaten werden geschrieben ({purpose}) …"
 msgstr "Writing metadata ({purpose}) …"
+
+msgid "Nach Updates suchen …"
+msgstr "Check for updates …"
 
 msgid "Name"
 msgstr "Name"
@@ -1019,6 +1047,16 @@ msgstr "Unsaved changes"
 
 msgid "Unterordner mit einlesen"
 msgstr "Include subfolders"
+
+msgid "Update verfügbar"
+msgstr "Update available"
+
+#, python-brace-format
+msgid "Update {version} verfügbar"
+msgstr "Update {version} available"
+
+msgid "Updates"
+msgstr "Updates"
 
 msgid "Urheber und Rechte"
 msgstr "Creator and rights"

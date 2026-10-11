@@ -4,6 +4,7 @@ import dataclasses
 import html
 import json
 import logging
+import sys
 import time
 from pathlib import Path
 
@@ -11,9 +12,9 @@ from PySide6.QtCore import QEvent, QItemSelection, QItemSelectionModel, QMimeDat
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QHBoxLayout, QLineEdit, QTimeEdit,
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
-                               QToolButton, QVBoxLayout, QWidget)
+                               QPushButton, QToolButton, QVBoxLayout, QWidget)
 
-from .. import WEBSITE_LINK, codes, config, geo, i18n, keywords, metadata, scanner, transfer, undo
+from .. import WEBSITE_LINK, codes, config, geo, i18n, keywords, metadata, scanner, transfer, undo, updates, version
 from ..i18n import _, N_, ngettext
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
@@ -23,6 +24,7 @@ from ..templates import TemplateError, TemplateStore, unique
 from . import keymap
 from .dialogs import ROSTER_FILE_FILTER, SettingsDialog, ShortcutsDialog, TemplateDialog
 from .about import AboutDialog
+from .updatecheck import UpdateChecker
 from .editor import CaptionEditor
 from .rostereditor import RosterEditorDialog
 from . import folderdialog
@@ -166,6 +168,7 @@ class MainWindow(QMainWindow):
             self.open_folders(folders)
         self._restoring = False
         self._remember_tabs()
+        self._setup_update_check()
 
     # --- Aufbau ---------------------------------------------------------------
 
@@ -224,7 +227,63 @@ class MainWindow(QMainWindow):
         help_menu = bar.addMenu(_('Hilfe'))
         action(help_menu, _('Tastenkürzel'), self.show_shortcuts)
         action(help_menu, _('Captioner-Website'), lambda: QDesktopServices.openUrl(QUrl(WEBSITE_LINK)))
+        action(help_menu, _('Nach Updates suchen …'), lambda: self.check_updates(manual=True))
         action(help_menu, _('Über Captioner'), self.show_about, role=role.AboutRole)
+
+    # --- Updates -----------------------------------------------------------------
+
+    def _setup_update_check(self):
+        self.update_checker = UpdateChecker(self)
+        self.update_checker.found.connect(self._update_found)
+        self.update_checker.up_to_date.connect(self._update_none)
+        self.update_checker.failed.connect(self._update_failed)
+        self._manual_update_check = False
+        self.update_button = QPushButton()
+        self.update_button.setFlat(True)
+        self.update_button.setStyleSheet('color: #2f7de1; font-weight: bold;')
+        self.update_button.hide()
+        self.statusBar().addPermanentWidget(self.update_button)
+        # Nur die gebuendelte App fragt von selbst, hoechstens einmal am Tag
+        if (self.settings.check_updates and getattr(sys, 'frozen', False)
+                and updates.due(self.settings.last_update_check)):
+            QTimer.singleShot(3000, self.check_updates)
+
+    def check_updates(self, manual=False):
+        self._manual_update_check = manual
+        self.update_checker.check()
+
+    def _checked(self):
+        self.settings.last_update_check = time.time()
+        self.settings.save()
+
+    def _update_found(self, latest, url):
+        self._checked()
+        self.update_button.setText(_('Update {version} verfügbar').format(version=latest))
+        self.update_button.setToolTip(url)
+        try:
+            self.update_button.clicked.disconnect()
+        except (RuntimeError, TypeError):
+            pass
+        self.update_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(url)))
+        self.update_button.show()
+        if self._manual_update_check:
+            answer = QMessageBox.question(self, _('Update verfügbar'),
+                                          _('Captioner {latest} ist verfügbar (installiert: {current}). '
+                                            'Release-Seite öffnen?').format(latest=latest, current=version()))
+            if answer == QMessageBox.StandardButton.Yes:
+                QDesktopServices.openUrl(QUrl(url))
+
+    def _update_none(self, current):
+        self._checked()
+        if self._manual_update_check:
+            QMessageBox.information(self, _('Keine Updates'),
+                                    _('Captioner {version} ist aktuell.').format(version=current))
+
+    def _update_failed(self, detail):
+        if self._manual_update_check:
+            QMessageBox.information(self, _('Updates'), _('Konnte nicht prüfen, ob es eine neue Version gibt '
+                                                         '(keine Verbindung zu GitHub oder Repository nicht '
+                                                         'öffentlich).'))
 
     def show_about(self):
         AboutDialog(self).exec()

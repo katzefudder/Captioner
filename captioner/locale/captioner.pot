@@ -128,6 +128,9 @@ msgstr ""
 msgid "Beenden"
 msgstr ""
 
+msgid "Beim Start nach Updates suchen (höchstens einmal am Tag, bei GitHub)"
+msgstr ""
+
 msgid "Belichtungskorrektur"
 msgstr ""
 
@@ -209,6 +212,16 @@ msgid "Bundesland"
 msgstr ""
 
 msgid "Cache für URLs"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Captioner {latest} ist verfügbar (installiert: {current}). Release-Seite "
+"öffnen?"
+msgstr ""
+
+#, python-brace-format
+msgid "Captioner {version} ist aktuell."
 msgstr ""
 
 msgid "Captioner-Website"
@@ -549,10 +562,18 @@ msgid ""
 "Datei auswählen."
 msgstr ""
 
+msgid "Keine Updates"
+msgstr ""
+
 msgid "Keine Vorschläge"
 msgstr ""
 
 msgid "Kodierung"
+msgstr ""
+
+msgid ""
+"Konnte nicht prüfen, ob es eine neue Version gibt (keine Verbindung zu "
+"GitHub oder Repository nicht öffentlich)."
 msgstr ""
 
 #, python-brace-format
@@ -582,6 +603,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Metadaten werden geschrieben ({purpose}) …"
+msgstr ""
+
+msgid "Nach Updates suchen …"
 msgstr ""
 
 msgid "Name"
@@ -963,6 +987,16 @@ msgid "Ungespeicherte Änderungen"
 msgstr ""
 
 msgid "Unterordner mit einlesen"
+msgstr ""
+
+msgid "Update verfügbar"
+msgstr ""
+
+#, python-brace-format
+msgid "Update {version} verfügbar"
+msgstr ""
+
+msgid "Updates"
 msgstr ""
 
 msgid "Urheber und Rechte"

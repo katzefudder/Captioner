@@ -244,6 +244,9 @@ class SettingsDialog(QDialog):
             self.spellcheck.setEnabled(False)
             self.spellcheck.setToolTip(_('Nur unter macOS verfügbar'))
         form.addRow(_('Rechtschreibprüfung'), self.spellcheck)
+        self.check_updates = QCheckBox(_('Beim Start nach Updates suchen (höchstens einmal am Tag, bei GitHub)'))
+        self.check_updates.setChecked(getattr(settings, 'check_updates', True))
+        form.addRow('', self.check_updates)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.accept)
@@ -262,6 +265,7 @@ class SettingsDialog(QDialog):
         s.exiftool_path = self.exiftool.text().strip()
         s.language = self.language.currentData()
         s.spellcheck = self.spellcheck.currentData()
+        s.check_updates = self.check_updates.isChecked()
         return s
 
 

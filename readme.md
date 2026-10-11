@@ -367,6 +367,9 @@ zeigt der Editor nur an (zuletzt geladene Fassung).
 * **Sprache:** Automatisch (Systemsprache: Deutsch, sonst Englisch), Deutsch oder English.
   Gilt nach einem Neustart.
 * **Rechtschreibprüfung:** Automatisch (macOS wählt), Deutsch, Englisch oder Aus.
+* **Nach Updates suchen:** Die gebündelte App fragt beim Start höchstens einmal am Tag bei
+  GitHub nach dem neuesten Release; ist es neuer, erscheint unten rechts „Update … verfügbar“
+  (Klick öffnet die Release-Seite). Von Hand: Hilfe → „Nach Updates suchen …“.
 * **Code-Trennzeichen:** Default `#`.
 * **Farbmarkierungen:** Default `Red, Yellow, Green, Blue, Purple`.
   Für ein deutsches Lightroom `Rot, Gelb, Grün, Blau, Lila`.
