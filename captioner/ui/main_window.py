@@ -7,12 +7,12 @@ import time
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QItemSelection, QItemSelectionModel, QMimeData, QObject, Qt, QTimer, QUrl
-from PySide6.QtGui import QAction, QColor, QKeySequence, QShortcut
+from PySide6.QtGui import QAction, QColor, QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QHBoxLayout,
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
                                QToolButton, QVBoxLayout, QWidget)
 
-from .. import codes, config, geo, metadata, scanner, transfer
+from .. import WEBSITE, codes, config, geo, metadata, scanner, transfer
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
 from ..roster import Roster, RosterLoader
@@ -20,6 +20,7 @@ from .. import templates as template_files
 from ..templates import TemplateError, TemplateStore, unique
 from . import keymap
 from .dialogs import ROSTER_FILE_FILTER, SettingsDialog, ShortcutsDialog, TemplateDialog
+from .about import AboutDialog
 from .editor import CaptionEditor
 from .rostereditor import RosterEditorDialog
 from . import folderdialog
@@ -151,22 +152,57 @@ class MainWindow(QMainWindow):
 
     # --- Aufbau ---------------------------------------------------------------
 
+    def _build_menus(self):
+        """
+        Menueleiste; auf macOS oben am Bildschirm, "Ueber", "Einstellungen" und "Beenden"
+        wandern dort ins App-Menue "Captioner". Menuepunkte zu Befehlen mit Keymap-Kuerzel
+        (Tab schliessen, Template, F1) bekommen kein eigenes Kuerzel: zwei gleiche Kuerzel loest
+        Qt nicht aus, und Cmd+W gehoert in der Grossansicht dieser.
+        """
+        bar = self.menuBar()
+
+        def action(menu, text, handler, shortcut=None, role=None):
+            item = QAction(text, self)
+            if shortcut is not None:
+                item.setShortcut(shortcut)
+            if role is not None:
+                item.setMenuRole(role)
+            item.triggered.connect(lambda checked=False: handler())
+            menu.addAction(item)
+            return item
+
+        role = QAction.MenuRole
+        file_menu = bar.addMenu('Ablage')
+        action(file_menu, 'Ordner öffnen …', self.choose_folder, QKeySequence.StandardKey.Open)
+        action(file_menu, 'Ordner in neuem Tab öffnen …', lambda: self.choose_folder(new_tab=True))
+        action(file_menu, 'Neu einlesen', lambda: self.folder and self.rescan(self.tab), QKeySequence('F5'))
+        file_menu.addSeparator()
+        action(file_menu, 'Tab schließen', lambda: self.close_tab(self.tabs.currentIndex()))
+        file_menu.addSeparator()
+        action(file_menu, 'Einstellungen …', self.edit_settings, QKeySequence.StandardKey.Preferences,
+               role.PreferencesRole)
+        action(file_menu, 'Beenden', self.close, QKeySequence.StandardKey.Quit, role.QuitRole)
+
+        template_menu = bar.addMenu('Template')
+        action(template_menu, 'Template öffnen …', self.open_template_file)
+        action(template_menu, 'Template speichern unter …', self.save_template_as)
+        action(template_menu, 'Template auf Auswahl anwenden', self.apply_template)
+
+        roster_menu = bar.addMenu('Roster')
+        action(roster_menu, 'Roster bearbeiten …', self.edit_roster)
+        action(roster_menu, 'Roster neu laden', lambda: self.load_roster(force=True))
+        action(roster_menu, 'Roster-Datei hinzufügen …', self.add_roster_file)
+
+        help_menu = bar.addMenu('Hilfe')
+        action(help_menu, 'Tastenkürzel', self.show_shortcuts)
+        action(help_menu, 'Captioner-Website', lambda: QDesktopServices.openUrl(QUrl(WEBSITE)))
+        action(help_menu, 'Über Captioner', self.show_about, role=role.AboutRole)
+
+    def show_about(self):
+        AboutDialog(self).exec()
+
     def _build_ui(self):
-        toolbar = self.addToolBar('Hauptleiste')
-        toolbar.setMovable(False)
-        open_action = QAction('Ordner öffnen …', self, shortcut=QKeySequence.StandardKey.Open)
-        open_action.triggered.connect(self.choose_folder)
-        reload_action = QAction('Neu einlesen', self, shortcut=QKeySequence('F5'))
-        reload_action.triggered.connect(lambda: self.folder and self.rescan(self.tab))
-        settings_action = QAction('Einstellungen …', self, shortcut=QKeySequence.StandardKey.Preferences)
-        settings_action.triggered.connect(self.edit_settings)
-        shortcuts_action = QAction('Tastenkürzel', self)
-        shortcuts_action.triggered.connect(self.show_shortcuts)
-        roster_action = QAction('Roster bearbeiten …', self)
-        roster_action.triggered.connect(self.edit_roster)
-        for action in (open_action, reload_action, roster_action, settings_action, shortcuts_action):
-            toolbar.addAction(action)
-            self.addAction(action)
+        self._build_menus()
 
         central = QWidget()
         outer = QVBoxLayout(central)

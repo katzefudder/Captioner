@@ -116,6 +116,13 @@ Hardened Runtime braucht.
 6. **In Lightroom ziehen.** Die Auswahl (auch über mehrere Seiten) per Drag & Drop
    ins Lightroom-Raster; Lightroom öffnet den Import-Dialog.
 
+## Menüs
+
+Die Menüs stehen auf dem Mac oben in der Menüleiste des Bildschirms: **Captioner** (Über
+Captioner, Einstellungen `⌘,`, Beenden `⌘Q`), **Ablage** (Ordner öffnen `⌘O`, in neuem
+Tab, Neu einlesen `F5`, Tab schließen), **Template**, **Roster** und **Hilfe**
+(Tastenkürzel, [Captioner-Website](https://www.katzefudder.de/captioner)).
+
 ## Mehrere Ordner (Tabs)
 
 Jeder geöffnete Ordner bekommt einen Tab, z. B. je Ordner auf zwei Speicherkarten
@@ -147,7 +154,7 @@ Kopiert wird über eine Zwischendatei, ein Abbruch hinterlässt keine halben Bil
 ## Tastenkürzel
 
 Belegung wie in einem Workflow-Tool für die Auswahl von Fotos. `F1` (oder
-„Tastenkürzel" in der Werkzeugleiste) zeigt alle Kürzel für das aktuelle System.
+Hilfe → „Tastenkürzel“) zeigt alle Kürzel für das aktuelle System.
 
 | Aktion | macOS | Windows |
 |---|---|---|
@@ -317,7 +324,7 @@ Format: eine Zeile pro Code, Code und Ersetzung durch **Tab**
 getrennt, Abschnittsköpfe `- Team -`. Dateien dürfen UTF-8, UTF-16 oder Windows-1252
 sein. Lokale Dateien werden bei jedem Laden frisch gelesen.
 
-**Roster bearbeiten …** (Werkzeugleiste oder Panel) öffnet einen Editor für die lokalen
+**Roster bearbeiten …** (Menü „Roster“ oder Panel) öffnet einen Editor für die lokalen
 Roster-Dateien, mit Zeilennummern. Tabs sind blau hinterlegt, Abschnittsköpfe und Codes hervorgehoben.
 Zeilen, die beim Laden ignoriert würden (Leerzeichen statt Tab, fehlende Ersetzung), und
 widersprüchliche doppelte Codes sind rot markiert und unten aufgelistet; ein Klick springt

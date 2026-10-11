@@ -154,3 +154,30 @@ def test_add_roster_file(window, tmp_path):
     QtWidgets.QApplication.processEvents()
     assert window.settings.roster_sources == [str(path)]
     assert window.roster.lookup('x1')
+
+
+def test_menus_replace_the_toolbar(window):
+    from PySide6.QtGui import QAction
+    from PySide6.QtWidgets import QToolBar
+    assert window.findChildren(QToolBar) == []
+    menus = {a.text(): a.menu() for a in window.menuBar().actions()}
+    assert list(menus) == ['Ablage', 'Template', 'Roster', 'Hilfe']
+    entries = {a.text(): a for menu in menus.values() for a in menu.actions() if not a.isSeparator()}
+    assert entries['Einstellungen …'].menuRole() == QAction.MenuRole.PreferencesRole
+    assert entries['Über Captioner'].menuRole() == QAction.MenuRole.AboutRole
+    assert entries['Beenden'].menuRole() == QAction.MenuRole.QuitRole
+    # keine Doppelbelegung mit der Keymap (Qt loest doppelte Kuerzel gar nicht aus)
+    from captioner.ui import keymap
+    from PySide6.QtGui import QKeySequence
+    keymap_keys = {QKeySequence(k).toString() for b in keymap.BINDINGS for k in b.keys}
+    for entry in entries.values():
+        assert entry.shortcut().isEmpty() or entry.shortcut().toString() not in keymap_keys, entry.text()
+
+
+def test_about_dialog_links_to_the_website(app):
+    from captioner import WEBSITE, version
+    from captioner.ui.about import AboutDialog
+    dialog = AboutDialog()
+    assert WEBSITE == 'https://www.katzefudder.de/captioner'
+    assert f'href="{WEBSITE}"' in dialog.link.text() and dialog.link.openExternalLinks()
+    assert version() not in ('', None)
