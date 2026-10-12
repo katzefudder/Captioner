@@ -27,7 +27,7 @@ from .about import AboutDialog
 from .updatecheck import UpdateChecker
 from .editor import CaptionEditor
 from .rostereditor import RosterEditorDialog
-from . import folderdialog
+from . import folderdialog, instance
 from .viewer import Viewer
 from .gallery import CLASS_COLORS, ItemRole
 from .tabs import CopyWorker, FolderTab, FolderTabs, ask_conflicts, tab_title
@@ -91,6 +91,11 @@ class OpenRequests(QObject):
                 self.timer.start()
             return True
         return False
+
+    def add(self, paths):
+        """Ordner aus einem weiteren Start (Windows, ui/instance.py), gesammelt wie FileOpen."""
+        self.paths.extend(paths)
+        self.timer.start()
 
     def set_handler(self, handler):
         self.handler = handler
@@ -1623,6 +1628,18 @@ class MainWindow(QMainWindow):
         self.settings.save()
 
 
+def command_line_path(arg):
+    """
+    Explorer: "Mit Captioner oeffnen" auf einer Karte uebergibt "E:\\", und Windows liest
+    den Backslash vor dem Anfuehrungszeichen als Escape: an kommt E:". Hier repariert.
+    """
+    if sys.platform == 'win32':
+        arg = arg.rstrip('"')
+        if len(arg) == 2 and arg[1] == ':':
+            arg += '\\'
+    return arg
+
+
 def run(argv):
     import signal
     from PySide6.QtCore import QTimer
@@ -1654,11 +1671,17 @@ def run(argv):
     except ExifToolError as e:
         QMessageBox.critical(None, _('ExifTool fehlt'), str(e))
         return 1
-    folders = [arg for arg in argv[1:] if arg]  # make run ohne FOLDER uebergibt ""
+    folders = [arg for arg in map(command_line_path, argv[1:]) if arg]  # make run ohne FOLDER uebergibt ""
+    # Windows: laeuft schon eine App, bekommt sie die Ordner (Explorer startet je Ordner neu)
+    if sys.platform == 'win32' and instance.forward(folders):
+        return 0
     from .resources import app_icon
     app.setWindowIcon(app_icon())
     window = MainWindow(settings, folders)
     open_requests.set_handler(window.open_paths)
+    if sys.platform == 'win32':
+        app._instance_server = instance.InstanceServer(
+            lambda paths: open_requests.add(paths) if paths else window.open_paths([]), parent=app)
     app.aboutToQuit.connect(window.shutdown)
     window.show()
     return app.exec()

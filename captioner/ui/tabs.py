@@ -2,15 +2,19 @@
 Ordner-Tabs: je Tab ein Ordner mit eigener Galerie, Seite, Auswahl und Scan.
 Ziehen von Bildern auf einen anderen Tab (Reiter oder Galerie) kopiert sie dorthin.
 """
-from pathlib import Path
+import os
+import sys
+from pathlib import Path, PureWindowsPath
 
-from PySide6.QtCore import QObject, QThread, Qt, Signal
+from PySide6.QtCore import QObject, QStorageInfo, QThread, Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton,
                                QStackedWidget, QTabBar, QToolButton, QVBoxLayout, QWidget)
 
 from .. import transfer
 from ..i18n import _
 from .gallery import GalleryModel, GalleryView, TileDelegate
+
+WINDOWS = sys.platform == 'win32'
 
 
 def tab_title(folder):
@@ -21,7 +25,19 @@ def tab_title(folder):
     parts = path.parts
     if len(parts) > 2 and parts[1] == 'Volumes':  # macOS: /Volumes/<Karte>/...
         return f'{parts[2]} › {path.name}' if len(parts) > 3 else parts[2]
+    if WINDOWS:
+        # Windows: Karte als E:\DCIM\..., statt des Buchstabens die Laufwerksbezeichnung
+        path = PureWindowsPath(folder)
+        system = os.environ.get('SystemDrive', 'C:').upper()
+        if path.drive and path.drive.upper() != system:
+            label = volume_label(path.anchor) or path.drive
+            return f'{label} › {path.name}' if path.name else label
     return path.name or str(path)
+
+
+def volume_label(root):
+    """Bezeichnung des Datentraegers ('NIKON Z 9'), '' ohne Bezeichnung."""
+    return QStorageInfo(root).name()
 
 
 class FolderTab(QWidget):

@@ -45,11 +45,37 @@ make verify           # prüft dist/Captioner.app: arm64, Signatur, Info.plist
   dann sinkt die Angabe automatisch.
 * Die **Version** kommt aus `pyproject.toml` (`version = …`).
 
+## Windows-Version (x64)
+
+Auf einem Windows-Rechner mit Python 3.11 und Poetry (kein `make` nötig):
+
+```powershell
+poetry install
+poetry run python scripts/package_windows.py exiftool    # ExifTool 13.59 nach vendor/exiftool-windows
+poetry run python -m captioner D:\Fotos\Spiel           # Entwicklung (ExifTool auf dem PATH oder in den Einstellungen)
+poetry run python scripts/package_windows.py all         # dist/Captioner/ und dist/Captioner-<version>-x64-setup.exe
+```
+
+* `bundle` baut mit `Captioner-windows.spec` (onedir, Icon, Versionsressource) und prüft das
+  Ergebnis (`verify`: ExifTool im Bundle läuft, Version, Übersetzung). `installer` braucht
+  [Inno Setup 6](https://jrsoftware.org/isinfo.php) (`choco install innosetup`).
+* Der **Installer** (`packaging/captioner.iss`) installiert nach „Programme“ oder, ohne
+  Adminrechte, nur für den Benutzer. Wahlweise Desktop-Symbol und Explorer-Kontextmenü
+  **„Mit Captioner öffnen“** für Ordner, Laufwerke (Karte) und den Hintergrund eines Ordners.
+  Mehrere markierte Ordner landen als Tabs im schon laufenden Fenster.
+* Gebündelt ist das offizielle Windows-ExifTool (`exiftool.exe` + `exiftool_files/` mit
+  eigenem Perl), Prüfsumme fest in `scripts/package_windows.py`.
+* **Unsigniert:** SmartScreen warnt beim ersten Start („Weitere Informationen“ → „Trotzdem
+  ausführen“). Code-Signing steht in `BACKLOG.md`.
+* Unter Windows fehlen die Rechtschreibprüfung (nur macOS) und der Finder-Dialog mit
+  Mehrfachauswahl (stattdessen Qts Dialog, ebenfalls mit Mehrfachauswahl).
+
 ### Releases auf GitHub
 
 `.github/workflows/release.yml` baut bei jedem Push auf `main` (außer reinen
-Markdown-Änderungen) auf einem macOS-26-Runner, führt die Tests aus und veröffentlicht
-DMG und PKG als Release. Die Version ist `<major>.<minor>` aus `pyproject.toml` plus die
+Markdown-Änderungen) auf einem macOS-26-Runner und parallel auf `windows-latest`, führt auf
+beiden die Tests aus und veröffentlicht DMG, PKG und `setup.exe` als ein Release. Pull
+Requests bauen und testen nur. Die Version ist `<major>.<minor>` aus `pyproject.toml` plus die
 fortlaufende Laufnummer des Workflows, z. B. `0.1.17` mit Tag `v0.1.17`. Für eine neue
 Minor-Version `pyproject.toml` hochsetzen. Manuell: Actions → Release → „Run workflow".
 Die Releases sind ad-hoc signiert (siehe unten).
@@ -160,7 +186,8 @@ werden übersprungen.
 **Aus dem Finder öffnen** (gebündelte App): Ordner oder Karten im Finder markieren und aufs
 Captioner-Symbol im Dock ziehen, oder Rechtsklick → „Öffnen mit“ → Captioner. Läuft die App
 schon, kommen die Ordner als neue Tabs dazu. macOS kennt diese Fähigkeit erst, nachdem die
-App einmal aus `/Programme` gestartet wurde. Jeder Tab hat eigene Seite und Auswahl; Filter und Beschriftungs-Panel
+App einmal aus `/Programme` gestartet wurde. Unter Windows: Rechtsklick auf Ordner oder
+Laufwerk → „Mit Captioner öffnen“ (Option im Installer). Jeder Tab hat eigene Seite und Auswahl; Filter und Beschriftungs-Panel
 gelten für den aktiven Tab.
 
 **Kopieren zwischen Tabs:** Bilder aus der Galerie auf den Reiter eines anderen Tabs ziehen

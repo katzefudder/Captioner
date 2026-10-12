@@ -234,11 +234,13 @@ def test_copy_next_paste_while_typing(window):
 @requires_exiftool
 def test_next_and_previous_image_in_gallery(window):
     window.view.setFocus()
-    press(window.view, Qt.Key.Key_N, CMD)
+    # Cmd+N/B auf macOS, Strg+M/Alt+B unter Windows
+    nxt, prev = (QKeySequence(keymap.keys(command)[1])[0] for command in ('next_image', 'prev_image'))
+    press(window.view, nxt.key(), nxt.keyboardModifiers())
     assert window._selected_items() == [window.filtered[1]]
-    press(window.view, Qt.Key.Key_N, CMD)            # auf die naechste Seite (2 pro Seite)
+    press(window.view, nxt.key(), nxt.keyboardModifiers())   # auf die naechste Seite (2 pro Seite)
     assert window._selected_items() == [window.filtered[2]] and window.page == 1
-    press(window.view, Qt.Key.Key_B, CMD)
+    press(window.view, prev.key(), prev.keyboardModifiers())
     assert window._selected_items() == [window.filtered[1]] and window.page == 0
 
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-11 15:55+0200\n"
+"POT-Creation-Date: 2026-10-12 00:52+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -1386,6 +1386,14 @@ msgid ""
 msgstr "{name}: image data changed after writing, the original is left untouched"
 
 #, python-brace-format
+msgid ""
+"{name}: Datei ist von einem anderen Programm geöffnet (z. B. Explorer-"
+"Vorschau, Lightroom), Original bleibt unangetastet"
+msgstr ""
+"{name}: file is open in another program (e.g. Explorer preview, "
+"Lightroom), original left untouched"
+
+#, python-brace-format
 msgid "{name}: ExifTool hat keine Datei geschrieben"
 msgstr "{name}: ExifTool did not write a file"
 
@@ -1408,6 +1416,10 @@ msgstr "{name}: template version {version} is newer than this app"
 #, python-brace-format
 msgid "{name}: XMP-Sidecar fehlt"
 msgstr "{name}: XMP sidecar missing"
+
+#, python-brace-format
+msgid "{name}: Ziel ist von einem anderen Programm geöffnet"
+msgstr "{name}: target is open in another program"
 
 #, python-brace-format
 msgid "{name}: existiert schon in {folder}"

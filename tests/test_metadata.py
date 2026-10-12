@@ -1,4 +1,5 @@
 import shutil
+import sys
 
 import pytest
 
@@ -45,7 +46,8 @@ def test_jpeg_gets_iptc_xmp_and_exif(tool, tmp_path):
     assert record['Rating'] == 4
     assert record['Label'] == 'Green'
     assert metadata.image_data_hash(tool, path) == before
-    assert path.stat().st_mode & 0o777 == 0o640
+    if sys.platform != 'win32':  # Windows kennt keine POSIX-Rechte
+        assert path.stat().st_mode & 0o777 == 0o640
     assert not list(tmp_path.glob('.*captioner-tmp*'))
 
 
@@ -247,3 +249,37 @@ def test_short_category_also_goes_into_iptc(tool, tmp_path):
     metadata.write_item(tool, item, Metadata(headline='x', category='SPO'))
     record = tool.json('-G', '-XMP-photoshop:Category', '-IPTC:Category', str(path))[0]
     assert record['XMP:Category'] == record['IPTC:Category'] == 'SPO'
+
+
+def test_locked_file_is_retried_then_reported(tool, tmp_path, monkeypatch):
+    """Windows: Explorer/Virenscanner sperren kurz; erst nachfassen, dann klar melden."""
+    from captioner import files
+    path = make_jpeg(tmp_path / 'a.jpg')
+    item = scanner.scan(tmp_path)[0]
+    calls = []
+    real_replace = files.os.replace
+
+    def locked_twice(source, target):
+        calls.append(target)
+        if len(calls) <= 2:
+            raise PermissionError(32, 'Der Prozess kann nicht auf die Datei zugreifen')
+        real_replace(source, target)
+
+    monkeypatch.setattr(files, 'ATTEMPTS', 3)
+    monkeypatch.setattr(files, 'DELAY', 0)
+    monkeypatch.setattr(files.os, 'replace', locked_twice)
+    metadata.write_item(tool, item, META)
+    assert len(calls) == 3 and read(tool, path, '-IPTC:Headline')['Headline'] == META.headline
+
+    calls.clear()
+
+    def always_locked(source, target):
+        calls.append(target)
+        raise PermissionError(32, 'gesperrt')
+
+    monkeypatch.setattr(files.os, 'replace', always_locked)
+    with pytest.raises(metadata.WriteError, match='anderen Programm'):
+        metadata.write_item(tool, item, Metadata(headline='DEL 2 - X gegen Y'))
+    assert len(calls) == 3
+    assert read(tool, path, '-IPTC:Headline')['Headline'] == META.headline   # Original unangetastet
+    assert not list(tmp_path.glob('.*captioner-tmp*'))

@@ -16,6 +16,7 @@ import re
 import shutil
 from pathlib import Path
 
+from .files import replace_file
 from .i18n import _, N_
 from .scanner import Item, Metadata, RAW_EXTENSIONS
 
@@ -328,7 +329,11 @@ def write_embedded(tool, path: Path, meta: Metadata):
             raise WriteError(_('{name}: Bilddaten nach dem Schreiben veraendert, Original bleibt unangetastet')
                              .format(name=path.name))
         shutil.copymode(path, temp)
-        os.replace(temp, path)
+        try:
+            replace_file(temp, path)
+        except PermissionError:
+            raise WriteError(_('{name}: Datei ist von einem anderen Programm geöffnet (z. B. Explorer-Vorschau, '
+                               'Lightroom), Original bleibt unangetastet').format(name=path.name))
     finally:
         if temp.exists():
             temp.unlink()

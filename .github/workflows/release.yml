@@ -1,38 +1,53 @@
-# Baut bei jedem Push auf main die macOS-App (arm64), testet sie und veroeffentlicht
-# DMG und PKG als GitHub-Release. Versionsnummer: <major>.<minor> aus pyproject.toml
-# plus fortlaufende Laufnummer des Workflows, z. B. 0.1.17 (Tag v0.1.17).
+# Baut bei jedem Push auf main die macOS-App (arm64) und die Windows-Version (x64), testet
+# beide und veroeffentlicht DMG, PKG und setup.exe als ein GitHub-Release. Versionsnummer:
+# <major>.<minor> aus pyproject.toml plus fortlaufende Laufnummer des Workflows, z. B. 0.1.17
+# (Tag v0.1.17).
+#
+# Pull Requests und andere Branches (von Hand gestartet) bauen und testen nur; veroeffentlicht
+# wird ausschliesslich von main.
 name: Release
 
 on:
   push:
     branches: [main]
     paths-ignore: ['**.md', '.gitignore']
+  pull_request:
+    paths-ignore: ['**.md', '.gitignore']
   workflow_dispatch:
 
 concurrency:
-  group: release
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
   contents: write
 
 jobs:
-  release:
-    # Apple Silicon; PySide6 6.12 verlangt ohnehin macOS 26 (siehe Claude.md, Paketierung)
-    runs-on: macos-26
-    env:
-      QT_QPA_PLATFORM: offscreen
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-
       - name: Versionsnummer
         id: version
         run: |
           base=$(python3 -c "import tomllib; v = tomllib.load(open('pyproject.toml', 'rb'))['project']['version']; print('.'.join(v.split('.')[:2]))")
           version="$base.${{ github.run_number }}"
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "CAPTIONER_VERSION=$version" >> "$GITHUB_ENV"
           echo "Captioner $version"
+
+  macos:
+    needs: version
+    # Apple Silicon; PySide6 6.12 verlangt ohnehin macOS 26 (siehe Claude.md, Paketierung)
+    runs-on: macos-26
+    env:
+      QT_QPA_PLATFORM: offscreen
+      CAPTIONER_VERSION: ${{ needs.version.outputs.version }}
+    outputs:
+      min_os: ${{ steps.min_os.outputs.min_os }}
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         id: python
@@ -60,16 +75,97 @@ jobs:
       - run: make test
       - run: make installer
 
+      - name: Mindest-macOS
+        id: min_os
+        run: echo "min_os=$(plutil -extract LSMinimumSystemVersion raw dist/Captioner.app/Contents/Info.plist)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            dist/Captioner-${{ env.CAPTIONER_VERSION }}-arm64.dmg
+            dist/Captioner-${{ env.CAPTIONER_VERSION }}-arm64.pkg
+          if-no-files-found: error
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    env:
+      QT_QPA_PLATFORM: offscreen
+      CAPTIONER_VERSION: ${{ needs.version.outputs.version }}
+      PYTHONUTF8: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        id: python
+        with:
+          python-version: '3.11'
+
+      - name: Poetry
+        run: pipx install poetry
+
+      - name: Poetry-Venv aus dem Cache
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ runner.arch }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Gebuendeltes ExifTool aus dem Cache
+        uses: actions/cache@v4
+        with:
+          path: vendor/exiftool-windows
+          key: exiftool-windows-${{ hashFiles('scripts/package_windows.py') }}
+
+      - run: poetry install
+
+      # Dasselbe ExifTool, das gebuendelt wird, auch fuer die Tests (auf den PATH)
+      - name: ExifTool
+        run: |
+          poetry run python scripts/package_windows.py exiftool
+          "$PWD\vendor\exiftool-windows" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - run: poetry run python -m pytest
+
+      - name: Inno Setup
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+
+      - run: poetry run python scripts/package_windows.py all
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/Captioner-${{ env.CAPTIONER_VERSION }}-x64-setup.exe
+          if-no-files-found: error
+
+  release:
+    needs: [version, macos, windows]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
       - name: Release veroeffentlichen
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ needs.version.outputs.version }}
+          MIN_OS: ${{ needs.macos.outputs.min_os }}
         run: |
-          min_os=$(plutil -extract LSMinimumSystemVersion raw dist/Captioner.app/Contents/Info.plist)
           gh release create "v$VERSION" \
             dist/Captioner-$VERSION-arm64.dmg \
             dist/Captioner-$VERSION-arm64.pkg \
+            dist/Captioner-$VERSION-x64-setup.exe \
+            --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Captioner $VERSION" \
             --generate-notes \
-            --notes "Mac mit Apple Silicon, macOS $min_os oder neuer. Ad-hoc signiert: nach dem Download einmal Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“, oder \`xattr -dr com.apple.quarantine /Applications/Captioner.app\`."
+            --notes "**macOS:** Mac mit Apple Silicon, macOS $MIN_OS oder neuer (DMG oder PKG). Ad-hoc signiert: nach dem Download einmal Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“, oder \`xattr -dr com.apple.quarantine /Applications/Captioner.app\`.
+
+          **Windows:** Windows 10/11, 64 Bit (\`Captioner-$VERSION-x64-setup.exe\`). Unsigniert: SmartScreen warnt beim ersten Start → „Weitere Informationen“ → „Trotzdem ausführen“."
