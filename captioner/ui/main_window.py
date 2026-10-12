@@ -500,6 +500,8 @@ class MainWindow(QMainWindow):
         tab.view.mime_factory = self.build_drag_mime
         tab.view.selectionModel().selectionChanged.connect(self._on_selection_changed)
         tab.view.files_dropped.connect(lambda t=tab: self.copy_dragged_to(t))
+        # Doppelklick auf eine Kachel: Grossansicht wie mit der Leertaste (erster Klick macht sie aktuell)
+        tab.view.doubleClicked.connect(lambda index: self.open_viewer())
         tab.prev_button.clicked.connect(lambda: self.go_to_page(self.page - 1))
         tab.next_page_button.clicked.connect(lambda: self.go_to_page(self.page + 1))
         index = self.tabs.addTab(tab, tab_title(folder))
