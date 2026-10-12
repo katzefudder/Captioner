@@ -1,0 +1,41 @@
+# Dependabot: woechentlich Updates als Pull Requests. Jeder PR laeuft durch release.yml
+# (Tests und Build auf macOS und Windows), veroeffentlicht wird erst nach dem Merge auf main.
+#
+# Nicht abgedeckt: ExifTool (Version/Pruefsumme im Makefile und in
+# scripts/package_windows.py) - von Hand nach exiftool.org/ver.txt.
+version: 2
+updates:
+  # Python-Abhaengigkeiten aus pyproject.toml / poetry.lock
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: deps
+    groups:
+      # Kleine Updates gesammelt in einem PR, damit nicht jede Woche fuenf Builds laufen
+      kleine-updates:
+        update-types: [minor, patch]
+        exclude-patterns: [pyside6, shiboken6, pyinstaller]
+      # PySide6 und PyInstaller einzeln: koennen das Mindest-macOS heben bzw. das Bundle
+      # aendern (Claude.md, Paketierung: nach einem Update otool -L / UNUSED pruefen)
+    ignore:
+      # Major-Versionen schliesst pyproject.toml ohnehin aus (pyside6 <7 usw.)
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+
+  # Versionen der Actions in .github/workflows
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Europe/Berlin
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']

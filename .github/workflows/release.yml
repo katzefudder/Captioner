@@ -10,7 +10,7 @@ name: Release
 on:
   push:
     branches: [main]
-    paths-ignore: ['**.md', '.gitignore']
+    paths-ignore: ['**.md', '.gitignore', '.github/dependabot.yml']
   pull_request:
     paths-ignore: ['**.md', '.gitignore']
   workflow_dispatch:

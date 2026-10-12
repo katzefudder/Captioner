@@ -231,6 +231,9 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   `windows` (`windows-latest`), `release` (nur Push/Dispatch auf `main`; PRs bauen und
   testen nur). Version `<major>.<minor>` aus `pyproject.toml` + `github.run_number`, über
   `CAPTIONER_VERSION` an beide Specs. Lädt DMG, PKG und `setup.exe` als Release `v<version>` hoch.
+- Dependabot (`.github/dependabot.yml`): montags pip (Poetry) und Actions; kleine Updates
+  gruppiert, PySide6/shiboken6/PyInstaller einzeln (Mindest-macOS, `UNUSED`). ExifTool deckt
+  Dependabot nicht ab: Version/Prüfsumme im `Makefile` und in `scripts/package_windows.py`.
 
 ## Windows (x64)
 
