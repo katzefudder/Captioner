@@ -58,6 +58,9 @@ Name: "contextmenu"; Description: "{cm:ContextMenu}"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Lizenzen sichtbar neben der Exe (im Bundle liegen sie zusaetzlich unter _internal)
+Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+Source: "..\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion
 
 [InstallDelete]
 ; Reste einer frueheren Version (z. B. entfernte Qt-Plugins) nicht liegen lassen

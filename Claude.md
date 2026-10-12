@@ -253,6 +253,13 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Reiter: Laufwerk ≠ Systemlaufwerk → Laufwerksbezeichnung (`tabs.volume_label`, `QStorageInfo`).
 - Installer: Inno Setup, `packaging/captioner.iss`; `AppId` nie ändern (Updates).
 
+## Lizenz
+
+- GPL-3.0-or-later (`LICENSE`, `pyproject.toml`). Fremdlizenzen in `licenses/` (Übersicht
+  `licenses/README.md`), von beiden Specs gebündelt. Neue gebündelte Abhängigkeit → Lizenztext
+  dort ergänzen. Das „.dng“ im Logo stammt aus Apples American Typewriter (Pfade); Schriftlizenz
+  ungeklärt, ggf. durch eine freie Schrift ersetzen.
+
 ## Fallstricke
 
 - **`threading.local` funktioniert im `QThreadPool` nicht**: PySide legt dort pro Aufruf

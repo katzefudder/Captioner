@@ -411,3 +411,14 @@ kompiliert sie (`.mo`, eingecheckt). Die Tests schlagen fehl, solange ein Text k
 Übersetzung hat oder Platzhalter wie `{name}` nicht übereinstimmen. Eine neue Sprache:
 `pybabel init -i captioner/locale/captioner.pot -d captioner/locale -D captioner -l fr`,
 übersetzen, in `captioner/i18n.py` bei `LANGUAGES` eintragen.
+
+## Lizenz
+
+Captioner ist freie Software unter der **GNU General Public License v3.0 oder später**
+(`LICENSE`): nutzen, verändern und weitergeben erlaubt, auch für bezahlte Aufträge; wer eine
+veränderte Fassung weitergibt, muss deren Quelltext ebenfalls unter der GPL freigeben.
+
+Gebündelte Software (Qt/PySide6, ExifTool, Python, Pillow u. a.) steht unter eigenen
+Lizenzen, Übersicht und Texte in `licenses/`. Beide Bundles enthalten `LICENSE` und
+`licenses/`; der Windows-Installer legt sie zusätzlich neben `Captioner.exe`. Bei einer neuen
+gebündelten Abhängigkeit deren Lizenztext dort ergänzen.
