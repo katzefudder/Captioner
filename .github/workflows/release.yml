@@ -28,7 +28,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Versionsnummer
         id: version
         run: |
@@ -47,9 +47,9 @@ jobs:
     outputs:
       min_os: ${{ steps.min_os.outputs.min_os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         id: python
         with:
           python-version: '3.11'
@@ -60,13 +60,13 @@ jobs:
           brew install exiftool
 
       - name: Poetry-Venv aus dem Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ runner.arch }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
 
       - name: Gebuendeltes ExifTool aus dem Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor/exiftool
           key: exiftool-${{ hashFiles('Makefile') }}
@@ -79,7 +79,7 @@ jobs:
         id: min_os
         run: echo "min_os=$(plutil -extract LSMinimumSystemVersion raw dist/Captioner.app/Contents/Info.plist)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: macos
           path: |
@@ -98,9 +98,9 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         id: python
         with:
           python-version: '3.11'
@@ -109,13 +109,13 @@ jobs:
         run: pipx install poetry
 
       - name: Poetry-Venv aus dem Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ runner.arch }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
 
       - name: Gebuendeltes ExifTool aus dem Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor/exiftool-windows
           key: exiftool-windows-${{ hashFiles('scripts/package_windows.py') }}
@@ -136,7 +136,7 @@ jobs:
 
       - run: poetry run python scripts/package_windows.py all
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: dist/Captioner-${{ env.CAPTIONER_VERSION }}-x64-setup.exe
@@ -148,12 +148,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Nur die Aenderungsliste; vor dem Download, weil checkout den Arbeitsordner leert
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: CHANGELOG.md
           sparse-checkout-cone-mode: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
