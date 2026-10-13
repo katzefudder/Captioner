@@ -114,7 +114,7 @@ Hardened Runtime braucht.
    DNG, TIFF. RAW+JPG mit gleichem Namen sind eine Kachel. Jeder Ordner bekommt einen
    eigenen **Tab**, siehe „Mehrere Ordner“.
 2. **Template** wählen; **„Bearbeiten …“** daneben zeigt und ändert es, unter `⋯` gibt es
-   „Neues Template …“ und **„Template-Datei laden …“** für eine Datei vom Rechner. Ein Template trägt: Ort, Urheber und Rechte (Fotograf, Copyright, …),
+   „Neues Template …“, **„Neues Template aus diesem …“** und **„Template-Datei laden …“** für eine Datei vom Rechner. Ein Template trägt: Ort, Urheber und Rechte (Fotograf, Copyright, …),
    Zusatz-Tags, Anhang und optional ein fester Titel (siehe „Templates als Dateien“).
    Ohne festen Titel taugt ein Template für jedes Spiel: den **Titel**
    (`DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg`) trägst du im Panel ein, die
@@ -359,6 +359,9 @@ Im Panel neben der Template-Auswahl (dieselben Befehle im Menü „Template“):
 * `⋯` → **Speichern unter …** schreibt das aktuelle Template in eine neue Datei, z. B. zum
   Weitergeben. Danach wird mit der neuen Datei gearbeitet.
 * `⋯` → **Neues Template …** legt eines im Konfigurationsordner an (siehe unten).
+* `⋯` → **Neues Template aus diesem …** übernimmt alle Werte des gewählten Templates in ein neues
+  („… (Kopie)“), wechselt dorthin und öffnet es zum Bearbeiten, z. B. für das Auswärtsspiel.
+  Abbrechen verwirft die Kopie. Auch im Menü **Template**.
 * `⋯` → **Aus der Liste entfernen** nimmt ein Template aus der Liste. Dateien außerhalb des Konfigurationsordners
   werden dabei **nie gelöscht**, nur Templates im Konfigurationsordner (mit Rückfrage).
 

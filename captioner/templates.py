@@ -271,7 +271,16 @@ class TemplateStore:
             return save_file(template, template.path)
         if not template.name:
             template.name = template.headline or 'Unbenannt'
-        return save_file(template, self.directory / default_filename(template))
+        return save_file(template, self._free_path(default_filename(template)))
+
+    def _free_path(self, filename):
+        """Neues Template nie ueber ein vorhandenes gleichen Namens schreiben: name-2.toml usw."""
+        path = self.directory / filename
+        stem, number = path.stem, 2
+        while path.exists():
+            path = self.directory / f'{stem}-{number}{FILE_SUFFIX}'
+            number += 1
+        return path
 
     def delete(self, template: MatchTemplate):
         """Loescht nur Templates im Konfigurationsverzeichnis, nie fremde Dateien."""

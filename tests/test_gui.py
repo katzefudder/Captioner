@@ -187,3 +187,58 @@ def test_about_dialog_links_to_the_website(app):
     assert f'href="{html.escape(WEBSITE_LINK)}"' in dialog.link.text() and dialog.link.openExternalLinks()
     assert '>www.katzefudder.de/captioner</a>' in dialog.link.text()
     assert version() not in ('', None)
+
+
+def _template_dialog(monkeypatch, accept, name=None):
+    from captioner.ui import main_window
+    shown = []
+
+    def fake_exec(dialog):
+        shown.append(dialog.name.text())
+        if name is not None:
+            dialog.name.setText(name)
+        return accept
+    monkeypatch.setattr(main_window.TemplateDialog, 'exec', fake_exec)
+    return shown
+
+
+def test_copy_template_switches_and_opens_copy(window, monkeypatch):
+    from captioner.templates import MatchTemplate
+    original = MatchTemplate(name='DEL 2 Heim', city='Bad Nauheim', sublocation='Colonel-Knight-Stadion',
+                             extra_tags=['Eishockey'], copyright='© 2026 Test')
+    window.template_store.save(original)
+    window.refresh_templates(original.path)
+    shown = _template_dialog(monkeypatch, True, name='DEL 2 Auswärts')
+
+    window.copy_template(window.editor.template)
+
+    assert shown == ['DEL 2 Heim (Kopie)']
+    current = window.editor.template
+    assert current.name == 'DEL 2 Auswärts' and current.path != original.path
+    assert (current.city, current.sublocation, current.extra_tags, current.copyright) == \
+        ('Bad Nauheim', 'Colonel-Knight-Stadion', ['Eishockey'], '© 2026 Test')
+    names = sorted(t.name for t in window.template_store.list()[0])
+    assert names == ['DEL 2 Auswärts', 'DEL 2 Heim']
+
+
+def test_copy_template_cancel_removes_copy(window, monkeypatch):
+    from captioner.templates import MatchTemplate
+    original = MatchTemplate(name='DEL 2 Heim', city='Bad Nauheim')
+    window.template_store.save(original)
+    window.refresh_templates(original.path)
+    _template_dialog(monkeypatch, False)
+
+    window.copy_template(window.editor.template)
+
+    assert window.editor.template.path == original.path
+    assert [t.name for t in window.template_store.list()[0]] == ['DEL 2 Heim']
+
+
+def test_new_template_never_overwrites_same_name(tmp_path):
+    from captioner.templates import MatchTemplate, TemplateStore
+    store = TemplateStore(tmp_path / 'templates')
+    first, second = MatchTemplate(name='Heim', city='A'), MatchTemplate(name='Heim', city='B')
+    store.save(first)
+    store.save(second)
+    assert first.path != second.path
+    assert sorted(t.city for t in store.list()[0]) == ['A', 'B']

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-12 00:52+0200\n"
+"POT-Creation-Date: 2026-10-13 18:23+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -670,11 +670,17 @@ msgstr "Reload"
 msgid "Neuer Tab"
 msgstr "New tab"
 
+msgid "Neues Template aus dem gewählten …"
+msgstr "New template from the selected one …"
+
+msgid "Neues Template aus diesem …"
+msgstr "New template from this one …"
+
 msgid "Neues Template …"
 msgstr "New template …"
 
-msgid "Neues Template, Datei laden, speichern unter, entfernen"
-msgstr "New template, load file, save as, remove"
+msgid "Neues Template, aus diesem, Datei laden, speichern unter, entfernen"
+msgstr "New template, from this one, load file, save as, remove"
 
 msgid "Nicht alle Bilder übergeben"
 msgstr "Not all images handed over"
@@ -1370,6 +1376,10 @@ msgstr "{label}: {size} of max. {limit} bytes"
 #, python-brace-format
 msgid "{name}  (URL, nur lesbar)"
 msgstr "{name}  (URL, read-only)"
+
+#, python-brace-format
+msgid "{name} (Kopie)"
+msgstr "{name} (copy)"
 
 #, python-brace-format
 msgid ""

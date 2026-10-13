@@ -216,6 +216,8 @@ class MainWindow(QMainWindow):
 
         template_menu = bar.addMenu(_('Template'))
         action(template_menu, _('Neues Template …'), lambda: self.edit_template(None))
+        action(template_menu, _('Neues Template aus dem gewählten …'),
+               lambda: self.editor.template and self.copy_template(self.editor.template))
         action(template_menu, _('Template bearbeiten …'),
                lambda: self.editor.template and self.edit_template(self.editor.template))
         template_menu.addSeparator()
@@ -379,6 +381,7 @@ class MainWindow(QMainWindow):
         self.editor.apply_template_requested.connect(self.apply_template)
         self.editor.template_changed.connect(self._on_template_changed)
         self.editor.edit_template_requested.connect(self.edit_template)
+        self.editor.copy_template_requested.connect(self.copy_template)
         self.editor.open_template_requested.connect(self.open_template_file)
         self.editor.save_template_as_requested.connect(self.save_template_as)
         self.editor.remove_template_requested.connect(self.remove_template)
@@ -1452,11 +1455,11 @@ class MainWindow(QMainWindow):
         if dialog.places_changed:
             self._save_places()
         if not accepted:
-            return
+            return False
         new = dialog.template()
         if not (new.name or new.headline):
             QMessageBox.warning(self, _('Template unvollständig'), _('Bitte einen Namen eingeben.'))
-            return
+            return False
         if template and template.path:
             if self.template_store.is_internal(template) and \
                     template_files.default_filename(new) != Path(template.path).name:
@@ -1469,8 +1472,26 @@ class MainWindow(QMainWindow):
             self.template_store.save(new)
         except OSError as e:
             QMessageBox.warning(self, _('Template nicht gespeichert'), str(e))
-            return
+            return False
         self.refresh_templates(new.path)
+        return True
+
+    def copy_template(self, template):
+        """
+        Neues Template mit allen Werten des gewaehlten: als Kopie speichern, dorthin wechseln
+        und zum Bearbeiten oeffnen. Abbrechen nimmt die Kopie wieder weg, das alte bleibt gewaehlt.
+        """
+        copy = dataclasses.replace(template, path='',
+                                   name=_('{name} (Kopie)').format(name=template.display_name()))
+        try:
+            self.template_store.save(copy)
+        except OSError as e:
+            QMessageBox.warning(self, _('Template nicht gespeichert'), str(e))
+            return
+        self.refresh_templates(copy.path)
+        if not self.edit_template(copy):
+            self.template_store.delete(copy)
+            self.refresh_templates(template.path)
 
     def open_template_file(self, path=None):
         if not path:

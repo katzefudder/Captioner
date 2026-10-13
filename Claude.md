@@ -156,6 +156,9 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   im XMP, das IIM-Feld wird dann geleert statt abgeschnitten. Ohne Titel im Template übernimmt ein unbeschriftetes Bild den
   zuletzt gespeicherten (`last_headline`); Code-Vorschläge nehmen die Teams dann aus dem
   Titel (`templates.parse_headline`, gleiches Muster wie `matches.py`).
+- „Neues Template aus diesem“ (`MainWindow.copy_template`): Kopie speichern, wählen, `edit_template`
+  öffnen; Abbrechen löscht die Kopie wieder. Neue Templates überschreiben nie ein gleichnamiges
+  (`TemplateStore._free_path` → `name-2.toml`).
 - Templates werden über ihren **Pfad** identifiziert (`Settings.last_template`), nicht
   über den Namen. Externe Dateien stehen in `Settings.template_files`, werden beim
   Bearbeiten in dieselbe Datei zurückgeschrieben und **nie gelöscht**; `TemplateStore.delete`
@@ -283,7 +286,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 197 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 201 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

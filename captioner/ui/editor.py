@@ -205,6 +205,7 @@ class CaptionEditor(QWidget):
     apply_template_requested = Signal()
     template_changed = Signal(object)
     edit_template_requested = Signal(object)   # None = neues Template
+    copy_template_requested = Signal(object)   # neues Template mit den Werten dieses
     open_template_requested = Signal()
     save_template_as_requested = Signal()
     remove_template_requested = Signal(object)
@@ -234,13 +235,15 @@ class CaptionEditor(QWidget):
         self.edit_template_button.clicked.connect(lambda: self.edit_template_requested.emit(self.template))
         self.template_menu = QMenu(self)
         self.template_menu.addAction(_('Neues Template …'), lambda: self.edit_template_requested.emit(None))
+        self.copy_action = self.template_menu.addAction(
+            _('Neues Template aus diesem …'), lambda: self.template and self.copy_template_requested.emit(self.template))
         self.template_menu.addAction(_('Template-Datei laden …'), self.open_template_requested)
         self.template_menu.addSeparator()
         self.save_as_action = self.template_menu.addAction(_('Speichern unter …'), self.save_template_as_requested)
         self.remove_action = self.template_menu.addAction(
             _('Aus der Liste entfernen'), lambda: self.template and self.remove_template_requested.emit(self.template))
         more_button = QToolButton(text='⋯')
-        more_button.setToolTip(_('Neues Template, Datei laden, speichern unter, entfernen'))
+        more_button.setToolTip(_('Neues Template, aus diesem, Datei laden, speichern unter, entfernen'))
         more_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         more_button.setMenu(self.template_menu)
         more_button.setStyleSheet('QToolButton::menu-indicator { image: none; width: 0; }')
@@ -449,7 +452,7 @@ class CaptionEditor(QWidget):
         self.template_source.setText(f'<small>{html.escape(Path(path).name)}</small>' if path else '')
         self.template_source.setToolTip(path)
         self.template_source.setVisible(bool(path))
-        for widget in (self.save_as_action, self.remove_action, self.edit_template_button):
+        for widget in (self.copy_action, self.save_as_action, self.remove_action, self.edit_template_button):
             widget.setEnabled(self.template is not None)
         self._update_completions()
         self.template_changed.emit(self.template)

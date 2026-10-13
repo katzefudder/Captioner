@@ -617,10 +617,16 @@ msgstr ""
 msgid "Neuer Tab"
 msgstr ""
 
+msgid "Neues Template aus dem gewählten …"
+msgstr ""
+
+msgid "Neues Template aus diesem …"
+msgstr ""
+
 msgid "Neues Template …"
 msgstr ""
 
-msgid "Neues Template, Datei laden, speichern unter, entfernen"
+msgid "Neues Template, aus diesem, Datei laden, speichern unter, entfernen"
 msgstr ""
 
 msgid "Nicht alle Bilder übergeben"
@@ -1310,6 +1316,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{name}  (URL, nur lesbar)"
+msgstr ""
+
+#, python-brace-format
+msgid "{name} (Kopie)"
 msgstr ""
 
 #, python-brace-format
