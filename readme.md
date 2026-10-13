@@ -77,7 +77,9 @@ Markdown-Änderungen) auf einem macOS-26-Runner und parallel auf `windows-latest
 beiden die Tests aus und veröffentlicht DMG, PKG und `setup.exe` als ein Release. Pull
 Requests bauen und testen nur. Die Version ist `<major>.<minor>` aus `pyproject.toml` plus die
 fortlaufende Laufnummer des Workflows, z. B. `0.1.17` mit Tag `v0.1.17`. Für eine neue
-Minor-Version `pyproject.toml` hochsetzen. Manuell: Actions → Release → „Run workflow".
+Minor-Version `pyproject.toml` hochsetzen und in `CHANGELOG.md` einen Abschnitt
+`## <major>.<minor>` anlegen: Er steht oben in den Release-Notizen. Manuell: Actions → Release →
+„Run workflow".
 Die Releases sind ad-hoc signiert (siehe unten).
 
 ### Signieren und Notarisieren

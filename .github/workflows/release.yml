@@ -147,6 +147,12 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
+      # Nur die Aenderungsliste; vor dem Download, weil checkout den Arbeitsordner leert
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: CHANGELOG.md
+          sparse-checkout-cone-mode: false
+
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -158,6 +164,14 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           MIN_OS: ${{ needs.macos.outputs.min_os }}
         run: |
+          # Abschnitt "## <major>.<minor>" aus CHANGELOG.md, dann die Hinweise zur Installation
+          awk -v v="${VERSION%.*}" '/^## / { p = ($2 == v); next } p' CHANGELOG.md > notes.md
+          cat >> notes.md <<EOF
+
+          **macOS:** Mac mit Apple Silicon, macOS $MIN_OS oder neuer (DMG oder PKG). Ad-hoc signiert: nach dem Download einmal Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“, oder \`xattr -dr com.apple.quarantine /Applications/Captioner.app\`.
+
+          **Windows:** Windows 10/11, 64 Bit (\`Captioner-$VERSION-x64-setup.exe\`). Unsigniert: SmartScreen warnt beim ersten Start → „Weitere Informationen“ → „Trotzdem ausführen“.
+          EOF
           gh release create "v$VERSION" \
             dist/Captioner-$VERSION-arm64.dmg \
             dist/Captioner-$VERSION-arm64.pkg \
@@ -166,6 +180,4 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "Captioner $VERSION" \
             --generate-notes \
-            --notes "**macOS:** Mac mit Apple Silicon, macOS $MIN_OS oder neuer (DMG oder PKG). Ad-hoc signiert: nach dem Download einmal Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“, oder \`xattr -dr com.apple.quarantine /Applications/Captioner.app\`.
-
-          **Windows:** Windows 10/11, 64 Bit (\`Captioner-$VERSION-x64-setup.exe\`). Unsigniert: SmartScreen warnt beim ersten Start → „Weitere Informationen“ → „Trotzdem ausführen“."
+            --notes-file notes.md

@@ -1,6 +1,6 @@
 [project]
 name = "captioner"
-version = "0.1.0"
+version = "0.2.0"
 description = "Fotos sichten, bewerten und beschriften, vor dem Import in Lightroom (ADR 0001)"
 authors = [
     {name = "Florian Dehn",email = "flo@katzefudder.de"}
