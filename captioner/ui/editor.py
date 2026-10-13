@@ -7,6 +7,7 @@ und blockieren das Speichern (ADR 0001, Punkt 5).
 import dataclasses
 import html
 import re
+import sys
 from pathlib import Path
 
 from PySide6.QtCore import QStringListModel, Qt, Signal
@@ -21,6 +22,15 @@ from ..i18n import _, ngettext
 from .keymap import keys as binding_keys
 from .placepicker import PlacePickerDialog, place_completer, place_for_completion
 from ..templates import parse_headline, unique
+
+
+def template_folder_label():
+    """Menuepunkt mit dem Dateimanager des Systems."""
+    if sys.platform == 'darwin':
+        return _('Template-Ordner im Finder öffnen')
+    if sys.platform == 'win32':
+        return _('Template-Ordner im Explorer öffnen')
+    return _('Template-Ordner öffnen')
 
 
 def shortcut_text(command):
@@ -206,6 +216,7 @@ class CaptionEditor(QWidget):
     template_changed = Signal(object)
     edit_template_requested = Signal(object)   # None = neues Template
     copy_template_requested = Signal(object)   # neues Template mit den Werten dieses
+    open_template_folder_requested = Signal()  # Konfigurationsordner der Templates im Dateimanager
     open_template_requested = Signal()
     save_template_as_requested = Signal()
     remove_template_requested = Signal(object)
@@ -237,13 +248,15 @@ class CaptionEditor(QWidget):
         self.template_menu.addAction(_('Neues Template …'), lambda: self.edit_template_requested.emit(None))
         self.copy_action = self.template_menu.addAction(
             _('Neues Template aus diesem …'), lambda: self.template and self.copy_template_requested.emit(self.template))
-        self.template_menu.addAction(_('Template-Datei laden …'), self.open_template_requested)
+        self.template_menu.addAction(_('Template-Datei laden …'), self.open_template_requested.emit)
         self.template_menu.addSeparator()
-        self.save_as_action = self.template_menu.addAction(_('Speichern unter …'), self.save_template_as_requested)
+        self.save_as_action = self.template_menu.addAction(_('Speichern unter …'), self.save_template_as_requested.emit)
         self.remove_action = self.template_menu.addAction(
             _('Aus der Liste entfernen'), lambda: self.template and self.remove_template_requested.emit(self.template))
+        self.template_menu.addSeparator()
+        self.template_menu.addAction(template_folder_label(), self.open_template_folder_requested.emit)
         more_button = QToolButton(text='⋯')
-        more_button.setToolTip(_('Neues Template, aus diesem, Datei laden, speichern unter, entfernen'))
+        more_button.setToolTip(_('Neues Template, aus diesem, Datei laden, speichern unter, entfernen, Ordner öffnen'))
         more_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         more_button.setMenu(self.template_menu)
         more_button.setStyleSheet('QToolButton::menu-indicator { image: none; width: 0; }')
@@ -312,12 +325,17 @@ class CaptionEditor(QWidget):
         self.rights_hint = QLabel()
         self.rights_hint.setWordWrap(True)
         self.rights_hint.setStyleSheet('color: gray;')
+        # Festes Datum im Template, das nicht zum Bild passt (vorbereitet und vergessen zu leeren?)
+        self.date_hint = QLabel()
+        self.date_hint.setWordWrap(True)
+        self.date_hint.hide()
 
         form.addRow(_('Titel'), self.headline)
         form.addRow('', self.headline_preview)
         form.addRow('', self.headline_hint)
         form.addRow(_('Beschreibung'), self.caption)
         form.addRow('', self.preview)
+        form.addRow('', self.date_hint)
         form.addRow(_('Tags'), self.keywords)
         form.addRow(_('Stadt'), city_row)
         form.addRow(_('Ort'), self.sublocation)
@@ -510,8 +528,8 @@ class CaptionEditor(QWidget):
     def _strip_suffix(self, caption, item):
         if self.template:
             meta = item.meta
-            suffix = self.template.suffix_for(item.taken_at, headline=meta.headline,
-                                              city=meta.city, sublocation=meta.sublocation)
+            suffix = self.template.suffix_for(item.taken_at, headline=meta.headline, city=meta.city,
+                                              sublocation=meta.sublocation, **self.template.field_values(meta))
             if suffix and caption.endswith(suffix):
                 return caption[:-len(suffix)]
         return caption
@@ -563,7 +581,8 @@ class CaptionEditor(QWidget):
         if self.template and text:
             text = self.template.compose_caption(
                 text, item.taken_at if item else '', headline=headline,
-                city=self.city.text().strip(), sublocation=self.sublocation.text().strip())
+                city=self.city.text().strip(), sublocation=self.sublocation.text().strip(),
+                **(self.template.field_values(item.meta) if item else {}))
         shown = html.escape(text)
         for code in resolution.unknown:
             token = html.escape(f'{self.delimiter}{code}{self.delimiter}')
@@ -591,6 +610,15 @@ class CaptionEditor(QWidget):
         self.next_button.setEnabled(not blocked and self.headline.isEnabled())
         self._update_gps_hint(item)
         self._update_rights_hint()
+        self._update_date_hint(item)
+
+    def _update_date_hint(self, item):
+        mismatch = self.template.date_mismatch(item.taken_at) if self.template and item else None
+        if mismatch:
+            self.date_hint.setText('<small style="color:#e67e22">' + html.escape(
+                _('Datum aus dem Template: {fixed} – aufgenommen am {taken}').format(
+                    fixed=mismatch[0], taken=mismatch[1])) + '</small>')
+        self.date_hint.setVisible(bool(mismatch))
 
     # Im Kurztext zuerst, was man am ehesten pruefen will
     RIGHTS_SUMMARY = ('creator', 'copyright')

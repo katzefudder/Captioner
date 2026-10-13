@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-13 18:23+0200\n"
+"POT-Creation-Date: 2026-10-13 19:07+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -167,6 +167,9 @@ msgstr "Shutter speed"
 msgid "Beschreibung"
 msgstr "Caption"
 
+msgid "Beschreibung des Bildes"
+msgstr "caption of the image"
+
 msgid "Beschreibung und Tags"
 msgstr "Caption and tags"
 
@@ -289,6 +292,13 @@ msgstr "File …"
 msgid "Dateien"
 msgstr "Files"
 
+msgid "Datum"
+msgstr "Date"
+
+#, python-brace-format
+msgid "Datum aus dem Template: {fixed} – aufgenommen am {taken}"
+msgstr "Date from the template: {fixed} – taken on {taken}"
+
 msgid "Der neue ExifTool-Pfad gilt nach einem Neustart."
 msgstr "The new ExifTool path takes effect after a restart."
 
@@ -381,6 +391,9 @@ msgstr ""
 msgid "Entfernen"
 msgstr "Remove"
 
+msgid "Ergebnis:"
+msgstr "Result:"
+
 msgid "Erneut versuchen"
 msgstr "Try again"
 
@@ -464,6 +477,14 @@ msgstr "Error: {error}"
 msgid "Fehler: {message}"
 msgstr "Error: {message}"
 
+#, python-brace-format
+msgid ""
+"Fester Text für {date} im Anhang, z. B. um ein Template für ein kommendes"
+" Spiel vorzubereiten. Danach wieder leeren."
+msgstr ""
+"Fixed text for {date} in the suffix, e.g. to prepare a template for an "
+"upcoming game. Clear it afterwards."
+
 msgid "Fokus"
 msgstr "Focus"
 
@@ -488,6 +509,10 @@ msgid ""
 "Fotos sichten, bewerten und beschriften, bevor sie in Lightroom "
 "importiert werden."
 msgstr "Review, rate and caption photos before importing them into Lightroom."
+
+#, python-brace-format
+msgid "Fügt {placeholder} in den Anhang ein"
+msgstr "Inserts {placeholder} into the suffix"
 
 #, python-brace-format
 msgid "Für alle weiteren Konflikte übernehmen ({count})"
@@ -679,8 +704,10 @@ msgstr "New template from this one …"
 msgid "Neues Template …"
 msgstr "New template …"
 
-msgid "Neues Template, aus diesem, Datei laden, speichern unter, entfernen"
-msgstr "New template, from this one, load file, save as, remove"
+msgid ""
+"Neues Template, aus diesem, Datei laden, speichern unter, entfernen, "
+"Ordner öffnen"
+msgstr "New template, from this one, load file, save as, remove, open folder"
 
 msgid "Nicht alle Bilder übergeben"
 msgstr "Not all images handed over"
@@ -756,6 +783,9 @@ msgstr "Location / arena"
 msgid "Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)"
 msgstr "Choose the location on the map or by address search (OpenStreetMap)"
 
+msgid "Ort aus dem Panel"
+msgstr "location from the panel"
+
 msgid "Ort wird ermittelt …"
 msgstr "Looking up location …"
 
@@ -766,9 +796,8 @@ msgstr "Choose location"
 msgid "Personen-Tags: {persons}"
 msgstr "Person tags: {persons}"
 
-#, python-brace-format
-msgid "Platzhalter: {headline}, {city}, {sublocation}, {date}"
-msgstr "Placeholders: {headline}, {city}, {sublocation}, {date}"
+msgid "Platzhalter – Klick fügt ihn an der Cursorposition ein"
+msgstr "Placeholders – click to insert at the cursor"
 
 msgid "Position"
 msgstr "Position"
@@ -885,6 +914,9 @@ msgstr "Language"
 msgid "Stadt"
 msgstr "City"
 
+msgid "Stadt aus dem Panel"
+msgstr "city from the panel"
+
 msgid "Sterne"
 msgstr "Stars"
 
@@ -981,6 +1013,18 @@ msgstr "Load template file"
 msgid "Template-Datei laden …"
 msgstr "Load template file …"
 
+msgid "Template-Ordner"
+msgstr "Template folder"
+
+msgid "Template-Ordner im Explorer öffnen"
+msgstr "Open template folder in Explorer"
+
+msgid "Template-Ordner im Finder öffnen"
+msgstr "Show template folder in Finder"
+
+msgid "Template-Ordner öffnen"
+msgstr "Open template folder"
+
 msgid "Template:"
 msgstr "Template:"
 
@@ -990,6 +1034,9 @@ msgstr "Templates not loaded: {errors}"
 
 msgid "Titel"
 msgstr "Headline"
+
+msgid "Titel aus dem Panel"
+msgstr "title from the panel"
 
 msgid ""
 "Titel nicht im Format „<Anlass> - <Heim> gegen <Gast>“ – die "
@@ -1111,6 +1158,10 @@ msgid_plural "Wiederholt: {action} ({count} Bilder)"
 msgstr[0] "Redone: {action} ({count} image)"
 msgstr[1] "Redone: {action} ({count} images)"
 
+#, python-brace-format
+msgid "Wird über {placeholder} an die Beschreibung angehängt"
+msgstr "Appended to the caption via {placeholder}"
+
 msgid "XMP-Sidecars mit in den Drag legen"
 msgstr "Include XMP sidecars when dragging"
 
@@ -1183,6 +1234,9 @@ msgstr "no codes found (wrong URL, or HTML instead of a text file?)"
 
 msgid "keine – nur Stadt und Ort werden geschrieben"
 msgstr "none – only city and location are written"
+
+msgid "leer = Aufnahmedatum des Bildes, z. B. 18.10.26"
+msgstr "empty = capture date of the image, e.g. 18.10.26"
 
 msgid "leer = automatisch suchen"
 msgstr "empty = find automatically"
@@ -1346,6 +1400,10 @@ msgstr "{encoding}, line endings {newlines}"
 #, python-brace-format
 msgid "{encoding}, gespeichert {name}"
 msgstr "{encoding}, saved {name}"
+
+#, python-brace-format
+msgid "{field} (vom Bild)"
+msgstr "{field} (from the image)"
 
 #, python-brace-format
 msgid "{focal} (KB {focal35})"

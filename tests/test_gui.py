@@ -242,3 +242,100 @@ def test_new_template_never_overwrites_same_name(tmp_path):
     store.save(second)
     assert first.path != second.path
     assert sorted(t.city for t in store.list()[0]) == ['A', 'B']
+
+
+def test_open_template_folder(window, monkeypatch):
+    from captioner.ui import main_window
+    opened = []
+    monkeypatch.setattr(main_window.QDesktopServices, 'openUrl', lambda url: opened.append(url.toLocalFile()) or True)
+    actions = [a for a in window.editor.template_menu.actions() if a.text().startswith('Template-Ordner')]
+    actions += [a for m in window.menuBar().actions() if m.menu()
+                for a in m.menu().actions() if a.text().startswith('Template-Ordner')]
+    assert len(actions) == 2
+
+    for action in actions:   # ueber das Menue, nicht die Methode: so faellt eine falsche Verbindung auf
+        action.trigger()
+
+    assert opened == [str(window.template_store.directory)] * 2
+
+
+def test_template_menu_entries_emit(window):
+    """Eintraege im Menue "⋯" muessen ihr Signal ausloesen (ein Signal ist kein Slot fuer addAction)."""
+    editor = window.editor
+    emitted = []
+    for signal in (editor.open_template_requested, editor.save_template_as_requested,
+                   editor.open_template_folder_requested):
+        signal.disconnect()
+        signal.connect(lambda name=signal: emitted.append(name))
+    names = ('Template-Datei laden …', 'Speichern unter …', 'Template-Ordner')
+    for action in editor.template_menu.actions():
+        if action.text().startswith(names):
+            action.setEnabled(True)   # "Speichern unter" ist ohne Template gesperrt
+            action.trigger()
+    assert len(emitted) == 3
+
+
+def test_template_dialog_shows_where_suffix_values_come_from(app):
+    from captioner.templates import MatchTemplate
+    from captioner.ui.dialogs import PLACEHOLDER_COLORS, SUFFIX_PLACEHOLDERS, TemplateDialog
+    dialog = TemplateDialog(MatchTemplate(name='Heim', headline='DEL 2 - A gegen B', city='Bad Nauheim',
+                                          sublocation='', caption_suffix=', {headline}, {city}'))
+    preview = dialog.suffix_preview.text()
+    assert f'color:{PLACEHOLDER_COLORS["headline"]}">DEL 2 - A gegen B<' in preview
+    assert f'color:{PLACEHOLDER_COLORS["city"]}">Bad Nauheim<' in preview
+    labels = {key: label.text() for key, (label, _text) in dialog._source_labels.items()}
+    assert '●' in labels['headline'] and '●' in labels['city'] and '●' not in labels['sublocation']
+
+    dialog.suffix.setCursorPosition(len(', {head'))
+    assert dialog.placeholder_at_cursor() == 'headline'
+    dialog.suffix.setCursorPosition(1)
+    assert dialog.placeholder_at_cursor() is None
+
+    from PySide6.QtWidgets import QPushButton
+    chips = {b.text(): b for b in dialog.placeholder_legend.findChildren(QPushButton)}
+    assert len(chips) == len(SUFFIX_PLACEHOLDERS)
+    dialog.suffix.setCursorPosition(len(dialog.suffix.text()))
+    chips['{sublocation}'].click()                   # Klick auf den Chip in der Legende
+    assert dialog.suffix.text() == ', {headline}, {city}{sublocation}'
+    assert '●' in dialog._source_labels['sublocation'][0].text()
+    # leerer Ort im Template: Wert kommt beim Speichern aus dem Panel
+    assert 'Ort aus dem Panel' in dialog.suffix_preview.text()
+    dialog._insert_placeholder('creator')
+    assert 'Fotograf (vom Bild)' in dialog.suffix_preview.text()   # leer: Wert des Bildes
+    dialog.creator.setText('Florian Dehn')
+    assert f'color:{PLACEHOLDER_COLORS["creator"]}">Florian Dehn<' in dialog.suffix_preview.text()
+    assert '●' in dialog._source_labels['creator'][0].text()
+
+
+def test_suffix_mark_wraps_only_filled_values():
+    from captioner.templates import MatchTemplate
+    template = MatchTemplate(headline='T', city='', caption_suffix=', {headline}, {city}, {date}')
+    marked = template.suffix_for('2026:03:01 18:00:00', mark=lambda key, value: f'[{key}:{value}]')
+    assert marked == ', [headline:T], [date:01.03.26]'
+
+
+def test_template_dialog_fixed_date(app):
+    from captioner.templates import MatchTemplate
+    from captioner.ui.dialogs import PLACEHOLDER_COLORS, TemplateDialog
+    dialog = TemplateDialog(MatchTemplate(name='Sonntag', caption_suffix=', {city}, {date}'))
+    assert 'Datum (vom Bild)' in dialog.suffix_preview.text()
+    assert '●' in dialog._source_labels['date'][0].text()
+    dialog.date.setText('18.10.26')
+    assert f'color:{PLACEHOLDER_COLORS["date"]}">18.10.26<' in dialog.suffix_preview.text()
+    assert dialog.template().date == '18.10.26'
+
+
+def test_panel_warns_when_fixed_date_differs(app):
+    from captioner.scanner import Item
+    from captioner.templates import MatchTemplate
+    from captioner.ui.editor import CaptionEditor
+    editor = CaptionEditor()
+    template = MatchTemplate(name='Sonntag', date='18.10.26')
+    editor.set_templates([template])
+    editor.template_box.setCurrentIndex(1)
+    item = Item(key='a', embedded=[Path('/tmp/a.jpg')], taken_at='2026:10:13 19:30:00')
+    editor._update_date_hint(item)
+    assert not editor.date_hint.isHidden() and '18.10.26' in editor.date_hint.text()
+    item.taken_at = '2026:10:18 19:30:00'
+    editor._update_date_hint(item)
+    assert editor.date_hint.isHidden()

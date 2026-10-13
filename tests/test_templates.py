@@ -201,3 +201,28 @@ caption_suffix = ", {headline}, {city}, {sublocation}, {date}"
     text = path.read_text(encoding='utf-8')
     assert 'version = 2' in text and 'home' not in text
     assert templates.load_file(path) == loaded
+
+
+def test_suffix_with_rights_fields_uses_image_value_when_template_is_empty():
+    from captioner.scanner import Metadata
+    from captioner.templates import MatchTemplate
+    t = MatchTemplate(headline='DEL 2 - A gegen B', creator='Florian Dehn',
+                      caption_suffix=', {headline}, Foto: {creator}, {copyright}, {source}')
+    meta = Metadata(creator='Kamera-Artist', copyright='© 2026 Bild')
+    values = t.field_values(meta)
+    assert values['creator'] == 'Florian Dehn'        # Template gefuellt: gewinnt
+    assert values['copyright'] == '© 2026 Bild'       # Template leer: Wert des Bildes
+    assert t.compose_caption('Jubel', **values) == 'Jubel, DEL 2 - A gegen B, Foto: Florian Dehn, © 2026 Bild'
+
+
+def test_fixed_date_replaces_capture_date(tmp_path):
+    from captioner.templates import MatchTemplate, load_file, save_file
+    t = MatchTemplate(name='Sonntag', headline='DEL 2 - A gegen B', caption_suffix=', {headline}, {date}', date='18.10.26')
+    assert t.compose_caption('Jubel', '2026:10:13 19:30:00') == 'Jubel, DEL 2 - A gegen B, 18.10.26'
+    assert t.date_mismatch('2026:10:13 19:30:00') == ('18.10.26', '13.10.26')
+    assert t.date_mismatch('2026:10:18 19:30:00') is None
+    save_file(t, tmp_path / 'sonntag.toml')
+    assert load_file(tmp_path / 'sonntag.toml').date == '18.10.26'
+    t.date = ''
+    assert t.compose_caption('Jubel', '2026:10:13 19:30:00') == 'Jubel, DEL 2 - A gegen B, 13.10.26'
+    assert t.date_mismatch('2026:10:13 19:30:00') is None

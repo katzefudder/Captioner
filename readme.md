@@ -116,6 +116,18 @@ Hardened Runtime braucht.
 2. **Template** wählen; **„Bearbeiten …“** daneben zeigt und ändert es, unter `⋯` gibt es
    „Neues Template …“, **„Neues Template aus diesem …“** und **„Template-Datei laden …“** für eine Datei vom Rechner. Ein Template trägt: Ort, Urheber und Rechte (Fotograf, Copyright, …),
    Zusatz-Tags, Anhang und optional ein fester Titel (siehe „Templates als Dateien“).
+   Im Anhang gibt es für jedes Feld einen Platzhalter: `{headline}` = Titel, `{city}` = Stadt,
+   `{sublocation}` = Ort / Halle, `{state}`, `{country}`, `{creator}` (Fotograf),
+   `{authors_position}`, `{caption_writer}`, `{copyright}`, `{web_statement}`, `{source}`,
+   `{category}` und `{date}` = Datum. Ist ein Ort-/Rechte-Feld im Template leer, wird
+   der Wert des Bildes eingesetzt (wie beim Speichern); leere Platzhalter fallen samt Komma weg.
+   **Datum** im Template ist normalerweise leer: dann steht bei `{date}` das Aufnahmedatum des
+   Bildes. Zum Vorbereiten eines Spiels (z. B. heute schon für Sonntag) kann man dort einen
+   festen Text wie `18.10.26` eintragen; passt er nicht zum Aufnahmedatum eines Bildes, warnt das
+   Panel orange. Danach wieder leeren.
+   Im Template-Dialog sind die Platzhalter farbig: Die Felder, deren Wert angehängt wird, tragen
+   einen Punkt in derselben Farbe, „Ergebnis“ zeigt den fertigen Anhang, und ein Klick auf einen
+   Platzhalter in der Legende fügt ihn ein.
    Ohne festen Titel taugt ein Template für jedes Spiel: den **Titel**
    (`DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg`) trägst du im Panel ein, die
    folgenden Bilder übernehmen ihn, und die Code-Vorschläge zeigen die Spieler dieser
@@ -317,7 +329,8 @@ sublocation = "Colonel-Knight-Stadion"
 state = "Hessen"
 country = "Deutschland"
 extra_tags = ["Eishockey", "DEL2", "Saison 2026/27"]
-caption_suffix = ", {headline}, {city}, {sublocation}, {date}"
+caption_suffix = ", {headline}, {city}, {sublocation}, {date}"   # auch {creator}, {copyright}, …
+date = ""                         # optional fester Text für {date}, sonst Aufnahmedatum
 creator = "Florian Dehn"
 authors_position = "Fotograf"
 caption_writer = "Florian Dehn"
@@ -362,6 +375,8 @@ Im Panel neben der Template-Auswahl (dieselben Befehle im Menü „Template“):
 * `⋯` → **Neues Template aus diesem …** übernimmt alle Werte des gewählten Templates in ein neues
   („… (Kopie)“), wechselt dorthin und öffnet es zum Bearbeiten, z. B. für das Auswärtsspiel.
   Abbrechen verwirft die Kopie. Auch im Menü **Template**.
+* `⋯` → **Template-Ordner im Finder öffnen** (Windows: im Explorer) zeigt den
+  Konfigurationsordner mit den Templates. Auch im Menü **Template**.
 * `⋯` → **Aus der Liste entfernen** nimmt ein Template aus der Liste. Dateien außerhalb des Konfigurationsordners
   werden dabei **nie gelöscht**, nur Templates im Konfigurationsordner (mit Rückfrage).
 

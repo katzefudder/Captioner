@@ -156,6 +156,11 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   im XMP, das IIM-Feld wird dann geleert statt abgeschnitten. Ohne Titel im Template übernimmt ein unbeschriftetes Bild den
   zuletzt gespeicherten (`last_headline`); Code-Vorschläge nehmen die Teams dann aus dem
   Titel (`templates.parse_headline`, gleiches Muster wie `matches.py`).
+- Anhang (`caption_suffix`): Platzhalter = `templates.SUFFIX_FIELDS` (Titel, Stadt, Ort + `FIXED_FIELDS`)
+  und `{date}` (`MatchTemplate.date` als fester Text, sonst Aufnahmedatum; `date_mismatch` → Hinweis
+  `date_hint` im Panel). Ort/Rechte setzen Aufrufer über `template.field_values(item.meta)` ein (Template,
+  sonst Wert des Bildes), überall gleich: Speichern, Template anwenden, Vorschau, `_strip_suffix`.
+  Farben/Legende im Dialog: `dialogs.SUFFIX_PLACEHOLDERS` (Feld-Widgets heißen wie die Platzhalter).
 - „Neues Template aus diesem“ (`MainWindow.copy_template`): Kopie speichern, wählen, `edit_template`
   öffnen; Abbrechen löscht die Kopie wieder. Neue Templates überschreiben nie ein gleichnamiges
   (`TemplateStore._free_path` → `name-2.toml`).
@@ -286,7 +291,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 201 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 209 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

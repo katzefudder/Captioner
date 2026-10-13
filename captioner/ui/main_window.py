@@ -25,7 +25,7 @@ from . import keymap
 from .dialogs import ROSTER_FILE_FILTER, SettingsDialog, ShortcutsDialog, TemplateDialog
 from .about import AboutDialog
 from .updatecheck import UpdateChecker
-from .editor import CaptionEditor
+from .editor import CaptionEditor, template_folder_label
 from .rostereditor import RosterEditorDialog
 from . import folderdialog, instance
 from .viewer import Viewer
@@ -225,6 +225,8 @@ class MainWindow(QMainWindow):
         action(template_menu, _('Template speichern unter …'), self.save_template_as)
         template_menu.addSeparator()
         action(template_menu, _('Template auf Auswahl anwenden'), self.apply_template)
+        template_menu.addSeparator()
+        action(template_menu, template_folder_label(), self.open_template_folder)
 
         roster_menu = bar.addMenu(_('Roster'))
         action(roster_menu, _('Roster bearbeiten …'), self.edit_roster)
@@ -382,6 +384,7 @@ class MainWindow(QMainWindow):
         self.editor.template_changed.connect(self._on_template_changed)
         self.editor.edit_template_requested.connect(self.edit_template)
         self.editor.copy_template_requested.connect(self.copy_template)
+        self.editor.open_template_folder_requested.connect(self.open_template_folder)
         self.editor.open_template_requested.connect(self.open_template_file)
         self.editor.save_template_as_requested.connect(self.save_template_as)
         self.editor.remove_template_requested.connect(self.remove_template)
@@ -1084,7 +1087,7 @@ class MainWindow(QMainWindow):
                 if template and caption:
                     caption = template.compose_caption(
                         caption, item.taken_at, headline=fields['headline'],
-                        city=fields['city'], sublocation=fields['sublocation'])
+                        city=fields['city'], sublocation=fields['sublocation'], **template.field_values(item.meta))
                 persons = resolution.persons
             else:
                 caption = item.meta.caption
@@ -1141,7 +1144,8 @@ class MainWindow(QMainWindow):
         for item in items:
             # Ohne Heim/Gast gibt das Template keinen Titel vor: der des Bildes bleibt
             headline = template.headline or item.meta.headline
-            caption = template.compose_caption(item.meta.caption, item.taken_at, headline=headline) \
+            caption = template.compose_caption(item.meta.caption, item.taken_at, headline=headline,
+                                               **template.field_values(item.meta)) \
                 if item.meta.caption else ''
             persons = codes.persons_in(caption, self.roster)
             self._enqueue(item, geo.apply_gps(dataclasses.replace(
@@ -1492,6 +1496,13 @@ class MainWindow(QMainWindow):
         if not self.edit_template(copy):
             self.template_store.delete(copy)
             self.refresh_templates(template.path)
+
+    def open_template_folder(self):
+        """Konfigurationsordner der Templates im Finder/Explorer (dort liegen alle ausser geladenen Dateien)."""
+        folder = self.template_store.directory
+        folder.mkdir(parents=True, exist_ok=True)
+        if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder))):
+            QMessageBox.information(self, _('Template-Ordner'), str(folder))
 
     def open_template_file(self, path=None):
         if not path:

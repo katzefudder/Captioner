@@ -140,6 +140,9 @@ msgstr ""
 msgid "Beschreibung"
 msgstr ""
 
+msgid "Beschreibung des Bildes"
+msgstr ""
+
 msgid "Beschreibung und Tags"
 msgstr ""
 
@@ -260,6 +263,13 @@ msgstr ""
 msgid "Dateien"
 msgstr ""
 
+msgid "Datum"
+msgstr ""
+
+#, python-brace-format
+msgid "Datum aus dem Template: {fixed} – aufgenommen am {taken}"
+msgstr ""
+
 msgid "Der neue ExifTool-Pfad gilt nach einem Neustart."
 msgstr ""
 
@@ -337,6 +347,9 @@ msgid ""
 msgstr ""
 
 msgid "Entfernen"
+msgstr ""
+
+msgid "Ergebnis:"
 msgstr ""
 
 msgid "Erneut versuchen"
@@ -420,6 +433,12 @@ msgstr ""
 msgid "Fehler: {message}"
 msgstr ""
 
+#, python-brace-format
+msgid ""
+"Fester Text für {date} im Anhang, z. B. um ein Template für ein kommendes"
+" Spiel vorzubereiten. Danach wieder leeren."
+msgstr ""
+
 msgid "Fokus"
 msgstr ""
 
@@ -439,6 +458,10 @@ msgstr ""
 msgid ""
 "Fotos sichten, bewerten und beschriften, bevor sie in Lightroom "
 "importiert werden."
+msgstr ""
+
+#, python-brace-format
+msgid "Fügt {placeholder} in den Anhang ein"
 msgstr ""
 
 #, python-brace-format
@@ -626,7 +649,9 @@ msgstr ""
 msgid "Neues Template …"
 msgstr ""
 
-msgid "Neues Template, aus diesem, Datei laden, speichern unter, entfernen"
+msgid ""
+"Neues Template, aus diesem, Datei laden, speichern unter, entfernen, "
+"Ordner öffnen"
 msgstr ""
 
 msgid "Nicht alle Bilder übergeben"
@@ -703,6 +728,9 @@ msgstr ""
 msgid "Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)"
 msgstr ""
 
+msgid "Ort aus dem Panel"
+msgstr ""
+
 msgid "Ort wird ermittelt …"
 msgstr ""
 
@@ -713,8 +741,7 @@ msgstr ""
 msgid "Personen-Tags: {persons}"
 msgstr ""
 
-#, python-brace-format
-msgid "Platzhalter: {headline}, {city}, {sublocation}, {date}"
+msgid "Platzhalter – Klick fügt ihn an der Cursorposition ein"
 msgstr ""
 
 msgid "Position"
@@ -832,6 +859,9 @@ msgstr ""
 msgid "Stadt"
 msgstr ""
 
+msgid "Stadt aus dem Panel"
+msgstr ""
+
 msgid "Sterne"
 msgstr ""
 
@@ -928,6 +958,18 @@ msgstr ""
 msgid "Template-Datei laden …"
 msgstr ""
 
+msgid "Template-Ordner"
+msgstr ""
+
+msgid "Template-Ordner im Explorer öffnen"
+msgstr ""
+
+msgid "Template-Ordner im Finder öffnen"
+msgstr ""
+
+msgid "Template-Ordner öffnen"
+msgstr ""
+
 msgid "Template:"
 msgstr ""
 
@@ -936,6 +978,9 @@ msgid "Templates nicht geladen: {errors}"
 msgstr ""
 
 msgid "Titel"
+msgstr ""
+
+msgid "Titel aus dem Panel"
 msgstr ""
 
 msgid ""
@@ -1052,6 +1097,10 @@ msgid_plural "Wiederholt: {action} ({count} Bilder)"
 msgstr[0] ""
 msgstr[1] ""
 
+#, python-brace-format
+msgid "Wird über {placeholder} an die Beschreibung angehängt"
+msgstr ""
+
 msgid "XMP-Sidecars mit in den Drag legen"
 msgstr ""
 
@@ -1123,6 +1172,9 @@ msgid "keine Codes gefunden (falsche URL oder HTML statt Textdatei?)"
 msgstr ""
 
 msgid "keine – nur Stadt und Ort werden geschrieben"
+msgstr ""
+
+msgid "leer = Aufnahmedatum des Bildes, z. B. 18.10.26"
 msgstr ""
 
 msgid "leer = automatisch suchen"
@@ -1286,6 +1338,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{encoding}, gespeichert {name}"
+msgstr ""
+
+#, python-brace-format
+msgid "{field} (vom Bild)"
 msgstr ""
 
 #, python-brace-format

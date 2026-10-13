@@ -38,6 +38,9 @@ def parse_headline(text):
 FIXED_FIELDS = ('state', 'country', 'creator', 'authors_position', 'caption_writer',
                 'copyright', 'web_statement', 'source', 'category')
 
+# Platzhalter im Anhang ({city} usw.): Feldnamen wie in scanner.Metadata, dazu {date}
+SUFFIX_FIELDS = ('headline', 'city', 'sublocation') + FIXED_FIELDS
+
 
 @dataclass
 class MatchTemplate:
@@ -60,6 +63,8 @@ class MatchTemplate:
     # Wird an jede Bildunterschrift gehaengt, wie bisher im Workflow-Tool fuer die Auswahl von Fotos:
     # "..., DEL 2 - EC Bad Nauheim gegen Eisbaeren Regensburg, Bad Nauheim, Colonel-Knight-Stadion, 01.03.26"
     caption_suffix: str = DEFAULT_CAPTION_SUFFIX
+    # Fester Text fuer {date}, z. B. "18.10.26" fuer ein Spiel, das erst kommt; leer = Aufnahmedatum
+    date: str = ''
     # Koordinaten des Ortes (Karten-Picker), damit sie mit der Datei weitergegeben
     # werden; fehlen in der Datei, solange keine gesetzt sind
     latitude: float = None
@@ -82,26 +87,33 @@ class MatchTemplate:
         """Gefuellte Ort-/Rechte-Felder, die beim Speichern in jedes Bild gehen."""
         return {name: getattr(self, name) for name in FIXED_FIELDS if getattr(self, name)}
 
+    def date_mismatch(self, taken_at):
+        """Festes Datum, das nicht zum Aufnahmedatum passt: (Template, Bild), sonst None."""
+        fixed, taken = self.date.strip(), format_date(taken_at)
+        return (fixed, taken) if fixed and taken and fixed != taken else None
+
     def display_name(self):
         return self.name or self.headline or 'Unbenannt'
 
-    def suffix_for(self, taken_at='', headline=None, city=None, sublocation=None):
+    def field_values(self, meta):
+        """Ort/Rechte, wie sie nach dem Speichern im Bild stehen: Template, sonst Wert des Bildes."""
+        return {name: getattr(self, name) or getattr(meta, name, '') or '' for name in FIXED_FIELDS}
+
+    def suffix_for(self, taken_at='', date=None, mark=None, **fields):
         """
-        Suffix mit eingesetzten Werten; leere Platzhalter fallen samt Komma weg.
-        Uebergebene Werte (die tatsaechlich gespeicherten Felder) haben Vorrang
-        vor denen des Templates.
+        Suffix mit eingesetzten Werten ({headline}, {city}, ... aus SUFFIX_FIELDS, {date});
+        leere Platzhalter fallen samt Komma weg. Uebergebene Felder (die tatsaechlich
+        gespeicherten Werte, siehe field_values) haben Vorrang vor denen des Templates.
+        date: fertiger Text; sonst das feste Datum des Templates, sonst aus taken_at.
+        mark(key, value): umhuellt jeden eingesetzten Wert (Vorschau im Template-Dialog).
         """
         if not self.caption_suffix:
             return ''
-        values = {
-            'headline': self.headline if headline is None else headline,
-            'city': self.city if city is None else city,
-            'sublocation': self.sublocation if sublocation is None else sublocation,
-            'date': format_date(taken_at),
-        }
+        values = {name: getattr(self, name) if fields.get(name) is None else fields[name] for name in SUFFIX_FIELDS}
+        values['date'] = date if date is not None else (self.date.strip() or format_date(taken_at))
         text = self.caption_suffix
         for key, value in values.items():
-            text = text.replace('{' + key + '}', value)
+            text = text.replace('{' + key + '}', mark(key, value) if mark and value else value)
         text = re.sub(r'(,\s*)+,', ',', text)
         return re.sub(r',\s*$', '', text)
 
@@ -151,6 +163,7 @@ def slug(name):
 #     country = "Deutschland"
 #     extra_tags = ["Eishockey", "DEL2"]
 #     caption_suffix = ", {headline}, {city}, {sublocation}, {date}"
+#     date = ""                  # optional fester Text fuer {date}, sonst Aufnahmedatum
 #     creator = "Florian Dehn"
 #     authors_position = "Fotograf"
 #     caption_writer = "Florian Dehn"
