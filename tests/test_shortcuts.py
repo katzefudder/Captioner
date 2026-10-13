@@ -232,6 +232,19 @@ def test_copy_next_paste_while_typing(window):
 
 
 @requires_exiftool
+def test_double_click_opens_viewer(window):
+    view, target = window.view, window.filtered[1]
+    rect = view.visualRect(window.model.index(window.filtered.index(target) % 2, 0))
+    # wie echt: erst ein Klick (macht die Kachel aktuell), dann der Doppelklick
+    QTest.mouseClick(view.viewport(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, rect.center())
+    QTest.mouseDClick(view.viewport(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, rect.center())
+    QtWidgets.QApplication.processEvents()
+    assert window.viewer is not None and window.viewer.isVisible()
+    assert window.viewer.key == target.key
+    window.viewer.close()
+
+
+@requires_exiftool
 def test_next_and_previous_image_in_gallery(window):
     window.view.setFocus()
     # Cmd+N/B auf macOS, Strg+M/Alt+B unter Windows
