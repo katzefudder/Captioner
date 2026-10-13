@@ -53,6 +53,9 @@ msgstr ""
 msgid "Aktion"
 msgstr ""
 
+msgid "Aktionen"
+msgstr ""
+
 msgid "Alle Dateien (*)"
 msgstr ""
 
@@ -128,6 +131,12 @@ msgstr ""
 msgid "Beenden"
 msgstr ""
 
+msgid "Bei contentcredentials.org prüfen …"
+msgstr ""
+
+msgid "Beim Signieren"
+msgstr ""
+
 msgid "Beim Start nach Updates suchen (höchstens einmal am Tag, bei GitHub)"
 msgstr ""
 
@@ -193,6 +202,9 @@ msgstr ""
 msgid "Bilder pro Seite"
 msgstr ""
 
+msgid "Bildschirmfoto"
+msgstr ""
+
 msgid "Bitte einen Namen eingeben."
 msgstr ""
 
@@ -233,6 +245,19 @@ msgstr ""
 msgid "Code-Trennzeichen"
 msgstr ""
 
+#, python-brace-format
+msgid "Content Credentials ({file}): {state}"
+msgstr ""
+
+msgid "Content Credentials gültig"
+msgstr ""
+
+msgid "Content Credentials ungültig"
+msgstr ""
+
+msgid "Content Credentials: alle"
+msgstr ""
+
 msgid "Copyright"
 msgstr ""
 
@@ -240,6 +265,9 @@ msgid "Copyright-URL"
 msgstr ""
 
 msgid "Credit"
+msgstr ""
+
+msgid "Das Manifest enthält keine Beschriftung zum Vergleichen."
 msgstr ""
 
 msgid "Datei"
@@ -298,6 +326,9 @@ msgid ""
 msgstr ""
 
 msgid "Diese Übersicht"
+msgstr ""
+
+msgid "Dieses Bild hat keine Content Credentials."
 msgstr ""
 
 msgid "EXIF wird gelesen …"
@@ -371,6 +402,9 @@ msgstr ""
 msgid "ExifTool wurde unerwartet beendet"
 msgstr ""
 
+msgid "Farbe angepasst"
+msgstr ""
+
 msgid "Farbklasse"
 msgstr ""
 
@@ -420,7 +454,16 @@ msgstr ""
 msgid "Fehler: {message}"
 msgstr ""
 
+msgid "Feld"
+msgstr ""
+
+msgid "Filter angewendet"
+msgstr ""
+
 msgid "Fokus"
+msgstr ""
+
+msgid "Format umgewandelt"
 msgstr ""
 
 msgid ""
@@ -497,6 +540,9 @@ msgstr ""
 msgid "Großansicht: auf Stelle zoomen"
 msgstr ""
 
+msgid "Größe geändert"
+msgstr ""
+
 msgid "Halle, Stadion"
 msgstr ""
 
@@ -504,6 +550,23 @@ msgid "Heranzoomen"
 msgstr ""
 
 msgid "Herauszoomen"
+msgstr ""
+
+msgid "Herkunft"
+msgstr ""
+
+msgid "Herkunft (Content Credentials) …"
+msgstr ""
+
+msgid "Herkunft anzeigen …"
+msgstr ""
+
+#, python-brace-format
+msgid "Herkunft – {name}"
+msgstr ""
+
+#, python-brace-format
+msgid "Herkunft: {source}"
 msgstr ""
 
 msgid "Hessen"
@@ -530,7 +593,19 @@ msgstr ""
 msgid "Ins Wörterbuch aufnehmen"
 msgstr ""
 
+msgid "Jetzt"
+msgstr ""
+
+msgid "KI-generiert"
+msgstr ""
+
 msgid "Kamera"
+msgstr ""
+
+msgid "Kamera-Aufnahme"
+msgstr ""
+
+msgid "Kamera-Aufnahme (berechnet)"
 msgstr ""
 
 msgid "Karte …"
@@ -598,11 +673,37 @@ msgstr ""
 msgid "Lightroom-Label für Farbklasse 1, 2, 3, …"
 msgstr ""
 
+msgid "Manifest"
+msgstr ""
+
+#, python-brace-format
+msgid "Manifest im Sidecar {name}"
+msgstr ""
+
+msgid "Manifest in der Datei"
+msgstr ""
+
 msgid "Messung"
+msgstr ""
+
+msgid "Metadaten bearbeitet"
 msgstr ""
 
 #, python-brace-format
 msgid "Metadaten werden geschrieben ({purpose}) …"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Mittlere Abweichung der Vorschaubilder: {percent} %. Grober Vergleich in "
+"Vorschaugröße: hell ist, was sich geändert hat; Kompression zählt mit, "
+"ein Beweis ist das nicht."
+msgstr ""
+
+msgid "Montage"
+msgstr ""
+
+msgid "Montage aus Aufnahmen"
 msgstr ""
 
 msgid "Nach Updates suchen …"
@@ -646,6 +747,9 @@ msgid "Noch nicht bereit"
 msgstr ""
 
 msgid "Nur getaggte zeigen"
+msgstr ""
+
+msgid "Nur ins RAW-Sidecar schreiben"
 msgstr ""
 
 msgid "Nur nicht getaggte zeigen"
@@ -717,6 +821,10 @@ msgstr ""
 msgid "Programm"
 msgstr ""
 
+#, python-brace-format
+msgid "Prüfergebnis: {codes}"
+msgstr ""
+
 msgid "Quelle"
 msgstr ""
 
@@ -778,10 +886,24 @@ msgid_plural "Rückgängig: {action} ({count} Bilder)"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Scan eines Abzugs"
+msgstr ""
+
+msgid "Scan eines Dias"
+msgstr ""
+
+msgid "Scan eines Negativs"
+msgstr ""
+
 msgid "Schließen"
 msgstr ""
 
 msgid "Schreiben dauert an"
+msgstr ""
+
+msgid ""
+"Schreibt Captioner Titel, Beschreibung, Sterne oder Farben in die Datei, "
+"werden sie ungültig: Prüfprogramme zeigen das Bild dann als verändert."
 msgstr ""
 
 #, python-brace-format
@@ -791,6 +913,13 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid "Seriennummer"
+msgstr ""
+
+#, python-brace-format
+msgid "Sidecar {name}"
+msgstr ""
+
+msgid "Signiert"
 msgstr ""
 
 msgid "Slider unten"
@@ -824,6 +953,9 @@ msgid "Sprache"
 msgstr ""
 
 msgid "Stadt"
+msgstr ""
+
+msgid "Status"
 msgstr ""
 
 msgid "Sterne"
@@ -942,6 +1074,9 @@ msgid ""
 "Beschreibungen bleiben erhalten"
 msgstr ""
 
+msgid "Trotzdem in die Datei schreiben"
+msgstr ""
+
 msgid "URL (GitHub-Links wie im Browser gehen auch):"
 msgstr ""
 
@@ -989,6 +1124,12 @@ msgstr ""
 msgid "Unterordner mit einlesen"
 msgstr ""
 
+msgid "Unterschied"
+msgstr ""
+
+msgid "Unterzeichner"
+msgstr ""
+
 msgid "Update verfügbar"
 msgstr ""
 
@@ -999,7 +1140,17 @@ msgstr ""
 msgid "Updates"
 msgstr ""
 
+msgid "Urheber"
+msgstr ""
+
 msgid "Urheber und Rechte"
+msgstr ""
+
+#, python-brace-format
+msgid "Urheber: {authors}"
+msgstr ""
+
+msgid "Verlauf"
 msgstr ""
 
 #, python-brace-format
@@ -1080,7 +1231,16 @@ msgstr ""
 msgid "abgebrochen"
 msgstr ""
 
+msgid "algorithmisch erzeugt"
+msgstr ""
+
+msgid "algorithmisch verbessert"
+msgstr ""
+
 msgid "alles gespeichert"
+msgstr ""
+
+msgid "bearbeitet"
 msgstr ""
 
 msgid "cache"
@@ -1089,17 +1249,54 @@ msgstr ""
 msgid "datei"
 msgstr ""
 
+msgid "digitale Kunst"
+msgstr ""
+
+msgid "eingefügt"
+msgstr ""
+
 #, python-brace-format
 msgid "eingepasst ({percent} %)"
+msgstr ""
+
+msgid "entfernt"
+msgstr ""
+
+msgid "erstellt"
 msgstr ""
 
 msgid "fehlt"
 msgstr ""
 
+msgid "gedreht/gespiegelt"
+msgstr ""
+
+msgid "geschwärzt"
+msgstr ""
+
 msgid "getaggt"
 msgstr ""
 
+msgid "gezeichnet"
+msgstr ""
+
+msgid "geöffnet"
+msgstr ""
+
+msgid "gültig, Unterzeichner unbekannt"
+msgstr ""
+
+msgid "gültig, Unterzeichner vertrauenswürdig"
+msgstr ""
+
 msgid "https://… (Nutzungsbedingungen, Lizenz)"
+msgstr ""
+
+#, python-brace-format
+msgid "im Netz: {url}"
+msgstr ""
+
+msgid "in der Datei"
 msgstr ""
 
 msgid "ja"
@@ -1110,10 +1307,16 @@ msgid ""
 "ignoriert"
 msgstr ""
 
+msgid "kein Vorschaubild im Manifest"
+msgstr ""
+
 msgid "keine Codes gefunden (Code und Ersetzung durch Tab getrennt?)"
 msgstr ""
 
 msgid "keine Codes gefunden (falsche URL oder HTML statt Textdatei?)"
+msgstr ""
+
+msgid "keine Vorschau"
 msgstr ""
 
 msgid "keine – nur Stadt und Ort werden geschrieben"
@@ -1134,10 +1337,22 @@ msgstr ""
 msgid "lädt …"
 msgstr ""
 
+msgid "mit Content Credentials"
+msgstr ""
+
+msgid "mit KI-Anteilen"
+msgstr ""
+
 msgid "nein"
 msgstr ""
 
 msgid "netz"
+msgstr ""
+
+msgid "neu kodiert"
+msgstr ""
+
+msgid "neu verpackt"
 msgstr ""
 
 #, python-brace-format
@@ -1150,6 +1365,9 @@ msgstr ""
 msgid "nur unbeschriftet"
 msgstr ""
 
+msgid "ohne Content Credentials"
+msgstr ""
+
 msgid "ohne Farbe"
 msgstr ""
 
@@ -1160,16 +1378,35 @@ msgstr ""
 msgid "schreibe {count} …"
 msgstr ""
 
+#, python-brace-format
+msgid "signiert von {signer}"
+msgstr ""
+
 msgid "tippen für gemerkte Orte"
 msgstr ""
 
+msgid "unbekanntes Programm"
+msgstr ""
+
 msgid "ungespeichert"
+msgstr ""
+
+msgid "ungültig"
+msgstr ""
+
+msgid "ungültig: Datei seit dem Signieren verändert"
+msgstr ""
+
+msgid "veröffentlicht"
 msgstr ""
 
 msgid "wer beschriftet"
 msgstr ""
 
 msgid "z. B. DEL 2 Heimspiele"
+msgstr ""
+
+msgid "zugeschnitten"
 msgstr ""
 
 #, python-brace-format
@@ -1189,6 +1426,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{count} Bild nach {folder} kopiert"
 msgid_plural "{count} Bilder nach {folder} kopiert"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} Bild trägt gültige Content Credentials."
+msgid_plural "{count} Bilder tragen gültige Content Credentials."
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1233,6 +1476,10 @@ msgid "{count} Problem"
 msgid_plural "{count} Probleme"
 msgstr[0] ""
 msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} Schritte"
+msgstr ""
 
 #, python-brace-format
 msgid "{count} Team"
@@ -1394,6 +1641,9 @@ msgid "Änderungen am Roster speichern?"
 msgstr ""
 
 msgid "Öffnen"
+msgstr ""
+
+msgid "Öffnet die Prüfseite im Browser; hochgeladen wird die Datei dort von Hand."
 msgstr ""
 
 msgid "Über Captioner"

@@ -12,6 +12,7 @@ Captioner itself is licensed under the GNU General Public License v3.0 or later
 | Pillow | image previews | MIT-CMU (incl. bundled libjpeg, libtiff, zlib …) | `Pillow.txt` |
 | platformdirs | settings and cache folders | MIT | `platformdirs.txt` |
 | tomli-w | writing settings and templates | MIT | `tomli-w.txt` |
+| c2pa-python, c2pa-rs (Adobe, Content Authenticity Initiative) | reading Content Credentials | MIT OR Apache-2.0 (used under MIT) | `c2pa.txt` |
 | PyInstaller bootloader | starting the bundled app | GPL-2.0-or-later with bootloader exception | `PyInstaller.txt` |
 
 Map tiles and place search come from OpenStreetMap at runtime

@@ -1,7 +1,7 @@
 """
 Hintergrundarbeit. Die UI wartet nie auf eine Datei (ADR 0001, Punkt 2).
 
-* ScanWorker: Ordner einlesen, Metadaten in Bloecken nachladen
+* ScanWorker: Ordner einlesen, Metadaten in Bloecken nachladen, danach Content Credentials
 * ThumbnailLoader: Kacheln im QThreadPool, nur fuer gewuenschte Items
 * MetadataWriter: eine Schreib-Warteschlange; pro Item gewinnt der letzte Stand.
   flush() blockiert, bis alles geschrieben ist - das braucht der Drag-Start.
@@ -14,7 +14,7 @@ import threading
 from PySide6.QtCore import QObject, QRunnable, QThread, QThreadPool, Signal
 from PySide6.QtGui import QImage
 
-from .. import details, metadata, previews, scanner
+from .. import credentials, details, metadata, previews, scanner
 from ..exiftool import ExifTool
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,10 @@ logger = logging.getLogger(__name__)
 class ScanWorker(QThread):
     scanned = Signal(list)        # alle Items, nach Dateiname
     chunk_loaded = Signal(list)   # Items mit frisch gelesenen Metadaten
+    credentials_loaded = Signal(list)  # Items mit geprueften Content Credentials (item.credentials)
     failed = Signal(str)
+
+    CREDENTIALS_CHUNK = 50
 
     def __init__(self, pool, folder, recursive):
         super().__init__()
@@ -46,11 +49,34 @@ class ScanWorker(QThread):
                 if self._cancel:
                     return
                 self.chunk_loaded.emit(chunk)
+            self._read_credentials(items)
         except Exception as e:
             logger.exception('Scan fehlgeschlagen')
             self.failed.emit(str(e))
         finally:
             tool.close()
+
+    def _read_credentials(self, items):
+        """Nach den Metadaten: ein paar ms je Datei, ohne Manifest fast nichts (ADR 0002)."""
+        if not credentials.available():
+            return
+        chunk = []
+        for item in items:
+            if self._cancel:
+                return
+            if item.credentials is None:
+                try:
+                    item.credentials = credentials.read_item(item)
+                except Exception as e:
+                    logger.warning('Content Credentials von %s nicht lesbar: %s', item.name, e)
+                    item.credentials = []
+            if item.credentials:
+                chunk.append(item)
+            if len(chunk) >= self.CREDENTIALS_CHUNK:
+                self.credentials_loaded.emit(chunk)
+                chunk = []
+        if chunk:
+            self.credentials_loaded.emit(chunk)
 
 
 class _Signals(QObject):
@@ -238,6 +264,12 @@ class MetadataWriter(QThread):
             except Exception as e:
                 ok, message = False, str(e)
                 logger.warning('Schreiben fehlgeschlagen: %s', e)
+            if item.credentials:
+                # Geschriebene Dateien neu pruefen: das Abzeichen zeigt dann "veraendert"
+                try:
+                    item.credentials = credentials.read_item(item)
+                except Exception as e:
+                    logger.warning('Content Credentials von %s nicht lesbar: %s', item.name, e)
             with self._cond:
                 self._busy = None
                 idle = not self._jobs

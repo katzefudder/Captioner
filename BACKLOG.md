@@ -36,6 +36,12 @@ FTP/SFTP hochladen, direkt aus der Auswahl. Zugangsdaten im Schlüsselbund, nich
 Serien; Serien automatisch gruppieren (Aufnahmen weniger als ~0,5 s auseinander) und in der
 Galerie zusammenklappen.
 
+### Content Credentials: Signieren und Vertrauensliste (ADR 0002, Schritte 5–6)
+Lesen, Warnen und Anzeigen stehen. Offen: Signieren mit eigenem Zertifikat (Schlüssel im
+Schlüsselbund, TSA-URL, zuerst beim Ausspielen; neu signieren mit dem Original als
+`parentOf`-Zutat), C2PA-Vertrauensliste bündeln (erst dann „vertrauenswürdig“/grün).
+Windows: Größe der DLL im Bundle prüfen. Lizenzen der Rust-Crates in `libc2pa_c` ergänzen.
+
 ## Verteilen
 
 ### Signieren und Notarisieren (macOS)

@@ -287,7 +287,9 @@ class InfoPanel(QTextBrowser):
         self.setMinimumWidth(260)
         self.setStyleSheet('QTextBrowser { background: #1b1b1b; color: #ddd; border: none; padding: 8px; }')
 
-    def show_sections(self, sections, loading=False):
+    PROVENANCE_LINK = 'captioner:provenance'
+
+    def show_sections(self, sections, loading=False, provenance=False):
         parts = ['<style>td { padding: 2px 6px 2px 0; vertical-align: top; } '
                  'td.k { color: #8a8a8a; white-space: nowrap; } h4 { margin: 12px 0 4px 0; color: #fff; }</style>']
         for title, rows in sections:
@@ -297,6 +299,9 @@ class InfoPanel(QTextBrowser):
             parts.append('</table>')
         if loading:
             parts.append('<p style="color:#8a8a8a">' + html.escape(_('EXIF wird gelesen …')) + '</p>')
+        if provenance:
+            parts.append(f'<p><a style="color:#5a9cf0" href="{self.PROVENANCE_LINK}">'
+                         + html.escape(_('Herkunft anzeigen …')) + '</a></p>')
         self.setHtml(''.join(parts))
 
 
@@ -308,6 +313,7 @@ class Viewer(QDialog):
     navigate = Signal(int)
     info_toggled = Signal(bool)
     caption_toggled = Signal(bool)   # Beschriftungs-Panel ein/aus; das Hauptfenster haengt es ein
+    provenance_requested = Signal()  # Link "Herkunft anzeigen" im Info-Panel (Content Credentials)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -324,6 +330,8 @@ class Viewer(QDialog):
         self.info.setWordWrap(True)
         self.info.setContentsMargins(12, 6, 12, 10)
         self.info_panel = InfoPanel()
+        self.info_panel.anchorClicked.connect(
+            lambda url: url.toString() == InfoPanel.PROVENANCE_LINK and self.provenance_requested.emit())
         # Platz fuer das Beschriftungs-Panel des Hauptfensters (wird hierher umgehaengt).
         # Scrollbar statt Quetschen: das Panel ist oft hoeher als die Grossansicht
         self.caption_slot = QScrollArea()
@@ -425,11 +433,12 @@ class Viewer(QDialog):
     def _render_details(self):
         if self._item is None:
             return
-        sections = details_module.sections(self._raw_details or {}, self._item.meta, self.labels)
+        sections = details_module.sections(self._raw_details or {}, self._item.meta, self.labels,
+                                           self._item.credentials)
         loading = self._raw_details is None
         if self._raw_details and '_error' in self._raw_details:
             sections.append((_('Fehler'), [('ExifTool', self._raw_details['_error'])]))
-        self.info_panel.show_sections(sections, loading)
+        self.info_panel.show_sections(sections, loading, provenance=bool(self._item.credentials))
 
     def _slider_moved(self, value):
         if getattr(self, '_syncing', False):

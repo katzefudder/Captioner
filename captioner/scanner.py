@@ -65,6 +65,11 @@ class Item:
     meta: Metadata = field(default_factory=Metadata)
     meta_loaded: bool = False
     error: str = None         # letzter Schreibfehler
+    # Content Credentials (credentials.Credentials je Datei mit Manifest); None = noch nicht
+    # geprueft. protect_embedded: nur das RAW-Sidecar schreiben, JPG/DNG bleiben unberuehrt,
+    # damit ihr Manifest gueltig bleibt (ADR 0002).
+    credentials: list = None
+    protect_embedded: bool = False
 
     @property
     def name(self):

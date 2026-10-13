@@ -10,6 +10,7 @@ auch direkt nach dem Speichern stimmen, bevor die Datei geschrieben ist.
 import os
 import re
 
+from . import credentials as credentials_module
 from .i18n import _
 from .scanner import Item, Metadata
 
@@ -101,8 +102,49 @@ def camera_name(make, model):
     return f'{make} {model}'
 
 
-def sections(raw, meta: Metadata, labels=()):
-    """[(Titel, [(Feld, Wert), ...]), ...] - nur Felder mit Inhalt."""
+def format_timestamp(value):
+    """ISO-Zeit aus einem C2PA-Zeitstempel: '2026-10-13T09:15:02+00:00' -> '13.10.2026 09:15:02 UTC'"""
+    match = re.match(r'(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2}:\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})?', value or '')
+    if not match:
+        return value or ''
+    year, month, day, time, zone = match.groups()
+    zone = 'UTC' if zone in ('Z', '+00:00') else (zone or '')
+    return f'{day}.{month}.{year} {time} {zone}'.strip()
+
+
+def credential_rows(found):
+    """Zeilen des Abschnitts "Content Credentials", je Datei mit Manifest."""
+    rows = []
+    for credentials in found:
+        step = credentials.active
+        signer = step.signer + (f' ({step.issuer})' if step.issuer and step.issuer != step.signer else '')
+        if credentials.manifest is not None:
+            stored = _('Sidecar {name}').format(name=credentials.manifest.name)
+        elif credentials.remote_url:
+            stored = _('im Netz: {url}').format(url=credentials.remote_url)
+        else:
+            stored = _('in der Datei')
+        rows += [
+            (_('Datei'), credentials.path.name),
+            (_('Status'), credentials_module.state_text(credentials)),
+            (_('Unterzeichner'), signer),
+            (_('Signiert'), format_timestamp(step.signed_at)),
+            (_('Programm'), step.generator),
+            (_('Herkunft'), credentials_module.source_text(step.source_type)),
+            (_('Urheber'), ', '.join(step.authors)),
+            (_('Aktionen'), ', '.join(credentials_module.action_text(a) for a in step.actions)),
+            (_('Verlauf'), _('{count} Schritte').format(count=len(credentials.history))
+             if len(credentials.history) > 1 else ''),
+            (_('Manifest'), stored),
+        ]
+    return rows
+
+
+def sections(raw, meta: Metadata, labels=(), found=()):
+    """[(Titel, [(Feld, Wert), ...]), ...] - nur Felder mit Inhalt.
+
+    found: Content Credentials des Items (item.credentials).
+    """
     raw = raw or {}
 
     focal = _first(raw, 'FocalLength')
@@ -170,7 +212,7 @@ def sections(raw, meta: Metadata, labels=()):
 
     result = []
     for title, rows in ((_('Aufnahme'), camera), ('IPTC / XMP', iptc), (_('Bewertung'), rating),
-                        (_('Dateien'), files)):
+                        ('Content Credentials', credential_rows(found or ())), (_('Dateien'), files)):
         rows = [(k, v) for k, v in rows if v]
         if rows:
             result.append((title, rows))

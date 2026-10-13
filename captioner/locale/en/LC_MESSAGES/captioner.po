@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-12 00:52+0200\n"
+"POT-Creation-Date: 2026-10-13 18:07+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -77,6 +77,9 @@ msgstr "Agency, newsroom"
 
 msgid "Aktion"
 msgstr "Action"
+
+msgid "Aktionen"
+msgstr "Actions"
 
 msgid "Alle Dateien (*)"
 msgstr "All files (*)"
@@ -155,6 +158,12 @@ msgstr "Edit …"
 msgid "Beenden"
 msgstr "Quit"
 
+msgid "Bei contentcredentials.org prüfen …"
+msgstr "Verify at contentcredentials.org …"
+
+msgid "Beim Signieren"
+msgstr "When signed"
+
 msgid "Beim Start nach Updates suchen (höchstens einmal am Tag, bei GitHub)"
 msgstr "Check for updates at startup (at most once a day, on GitHub)"
 
@@ -220,6 +229,9 @@ msgstr "Rating"
 msgid "Bilder pro Seite"
 msgstr "Images per page"
 
+msgid "Bildschirmfoto"
+msgstr "screenshot"
+
 msgid "Bitte einen Namen eingeben."
 msgstr "Please enter a name."
 
@@ -262,6 +274,19 @@ msgstr "code missing"
 msgid "Code-Trennzeichen"
 msgstr "Code delimiter"
 
+#, python-brace-format
+msgid "Content Credentials ({file}): {state}"
+msgstr "Content Credentials ({file}): {state}"
+
+msgid "Content Credentials gültig"
+msgstr "Content Credentials valid"
+
+msgid "Content Credentials ungültig"
+msgstr "Content Credentials invalid"
+
+msgid "Content Credentials: alle"
+msgstr "Content Credentials: all"
+
 msgid "Copyright"
 msgstr "Copyright"
 
@@ -270,6 +295,9 @@ msgstr "Copyright URL"
 
 msgid "Credit"
 msgstr "Credit"
+
+msgid "Das Manifest enthält keine Beschriftung zum Vergleichen."
+msgstr "The manifest contains no caption to compare."
 
 msgid "Datei"
 msgstr "File"
@@ -336,6 +364,9 @@ msgstr ""
 
 msgid "Diese Übersicht"
 msgstr "This overview"
+
+msgid "Dieses Bild hat keine Content Credentials."
+msgstr "This image has no Content Credentials."
 
 msgid "EXIF wird gelesen …"
 msgstr "Reading EXIF …"
@@ -415,6 +446,9 @@ msgstr "ExifTool not found. Set its path in the settings."
 msgid "ExifTool wurde unerwartet beendet"
 msgstr "ExifTool quit unexpectedly"
 
+msgid "Farbe angepasst"
+msgstr "color adjusted"
+
 msgid "Farbklasse"
 msgstr "Color class"
 
@@ -464,8 +498,17 @@ msgstr "Error: {error}"
 msgid "Fehler: {message}"
 msgstr "Error: {message}"
 
+msgid "Feld"
+msgstr "Field"
+
+msgid "Filter angewendet"
+msgstr "filter applied"
+
 msgid "Fokus"
 msgstr "Focus"
+
+msgid "Format umgewandelt"
+msgstr "format converted"
 
 msgid ""
 "Format „<Anlass> - <Heim> gegen <Gast>“, sonst erkennt die "
@@ -548,6 +591,9 @@ msgstr "Preview: zoom at the mouse"
 msgid "Großansicht: auf Stelle zoomen"
 msgstr "Preview: zoom to a spot"
 
+msgid "Größe geändert"
+msgstr "resized"
+
 msgid "Halle, Stadion"
 msgstr "Arena, stadium"
 
@@ -556,6 +602,23 @@ msgstr "Zoom in"
 
 msgid "Herauszoomen"
 msgstr "Zoom out"
+
+msgid "Herkunft"
+msgstr "Provenance"
+
+msgid "Herkunft (Content Credentials) …"
+msgstr "Provenance (Content Credentials) …"
+
+msgid "Herkunft anzeigen …"
+msgstr "Show provenance …"
+
+#, python-brace-format
+msgid "Herkunft – {name}"
+msgstr "Provenance – {name}"
+
+#, python-brace-format
+msgid "Herkunft: {source}"
+msgstr "Source: {source}"
 
 msgid "Hessen"
 msgstr "Hesse"
@@ -581,8 +644,20 @@ msgstr "Info"
 msgid "Ins Wörterbuch aufnehmen"
 msgstr "Learn spelling"
 
+msgid "Jetzt"
+msgstr "Now"
+
+msgid "KI-generiert"
+msgstr "AI-generated"
+
 msgid "Kamera"
 msgstr "Camera"
+
+msgid "Kamera-Aufnahme"
+msgstr "camera capture"
+
+msgid "Kamera-Aufnahme (berechnet)"
+msgstr "camera capture (computational)"
 
 msgid "Karte …"
 msgstr "Map …"
@@ -651,12 +726,41 @@ msgstr "Country"
 msgid "Lightroom-Label für Farbklasse 1, 2, 3, …"
 msgstr "Lightroom label for color class 1, 2, 3, …"
 
+msgid "Manifest"
+msgstr "Manifest"
+
+#, python-brace-format
+msgid "Manifest im Sidecar {name}"
+msgstr "Manifest in sidecar {name}"
+
+msgid "Manifest in der Datei"
+msgstr "Manifest in the file"
+
 msgid "Messung"
 msgstr "Metering"
+
+msgid "Metadaten bearbeitet"
+msgstr "metadata edited"
 
 #, python-brace-format
 msgid "Metadaten werden geschrieben ({purpose}) …"
 msgstr "Writing metadata ({purpose}) …"
+
+#, python-brace-format
+msgid ""
+"Mittlere Abweichung der Vorschaubilder: {percent} %. Grober Vergleich in "
+"Vorschaugröße: hell ist, was sich geändert hat; Kompression zählt mit, "
+"ein Beweis ist das nicht."
+msgstr ""
+"Mean difference of the previews: {percent} %. Rough comparison at preview"
+" size: bright areas have changed; compression counts too, so this is no "
+"proof."
+
+msgid "Montage"
+msgstr "composite"
+
+msgid "Montage aus Aufnahmen"
+msgstr "composite of captures"
 
 msgid "Nach Updates suchen …"
 msgstr "Check for updates …"
@@ -700,6 +804,9 @@ msgstr "Not ready yet"
 
 msgid "Nur getaggte zeigen"
 msgstr "Show tagged only"
+
+msgid "Nur ins RAW-Sidecar schreiben"
+msgstr "Write to RAW sidecar only"
 
 msgid "Nur nicht getaggte zeigen"
 msgstr "Show untagged only"
@@ -770,6 +877,10 @@ msgstr "Position"
 msgid "Programm"
 msgstr "Program"
 
+#, python-brace-format
+msgid "Prüfergebnis: {codes}"
+msgstr "Validation result: {codes}"
+
 msgid "Quelle"
 msgstr "Source"
 
@@ -831,11 +942,27 @@ msgid_plural "Rückgängig: {action} ({count} Bilder)"
 msgstr[0] "Undone: {action} ({count} image)"
 msgstr[1] "Undone: {action} ({count} images)"
 
+msgid "Scan eines Abzugs"
+msgstr "scan of a print"
+
+msgid "Scan eines Dias"
+msgstr "scan of a slide"
+
+msgid "Scan eines Negativs"
+msgstr "scan of a negative"
+
 msgid "Schließen"
 msgstr "Close"
 
 msgid "Schreiben dauert an"
 msgstr "Still writing"
+
+msgid ""
+"Schreibt Captioner Titel, Beschreibung, Sterne oder Farben in die Datei, "
+"werden sie ungültig: Prüfprogramme zeigen das Bild dann als verändert."
+msgstr ""
+"If Captioner writes the title, caption, stars or colors into the file, "
+"they become invalid: validators will then show the image as modified."
 
 #, python-brace-format
 msgid "Seite {page} / {pages} · {count} Bild"
@@ -845,6 +972,13 @@ msgstr[1] "Page {page} / {pages} · {count} images"
 
 msgid "Seriennummer"
 msgstr "Serial number"
+
+#, python-brace-format
+msgid "Sidecar {name}"
+msgstr "Sidecar {name}"
+
+msgid "Signiert"
+msgstr "Signed"
 
 msgid "Slider unten"
 msgstr "Slider below"
@@ -878,6 +1012,9 @@ msgstr "Language"
 
 msgid "Stadt"
 msgstr "City"
+
+msgid "Status"
+msgstr "Status"
 
 msgid "Sterne"
 msgstr "Stars"
@@ -999,6 +1136,9 @@ msgstr ""
 "Write the template’s headline, location and tags into all selected "
 "images; captions are kept"
 
+msgid "Trotzdem in die Datei schreiben"
+msgstr "Write to the file anyway"
+
 msgid "URL (GitHub-Links wie im Browser gehen auch):"
 msgstr "URL (GitHub links as shown in the browser work too):"
 
@@ -1048,6 +1188,12 @@ msgstr "Unsaved changes"
 msgid "Unterordner mit einlesen"
 msgstr "Include subfolders"
 
+msgid "Unterschied"
+msgstr "Difference"
+
+msgid "Unterzeichner"
+msgstr "Signer"
+
 msgid "Update verfügbar"
 msgstr "Update available"
 
@@ -1058,8 +1204,18 @@ msgstr "Update {version} available"
 msgid "Updates"
 msgstr "Updates"
 
+msgid "Urheber"
+msgstr "Author"
+
 msgid "Urheber und Rechte"
 msgstr "Creator and rights"
+
+#, python-brace-format
+msgid "Urheber: {authors}"
+msgstr "Author: {authors}"
+
+msgid "Verlauf"
+msgstr "History"
 
 #, python-brace-format
 msgid "Version {version}"
@@ -1139,8 +1295,17 @@ msgstr "Battle #bi99# vs #bn23#"
 msgid "abgebrochen"
 msgstr "cancelled"
 
+msgid "algorithmisch erzeugt"
+msgstr "algorithmically generated"
+
+msgid "algorithmisch verbessert"
+msgstr "algorithmically enhanced"
+
 msgid "alles gespeichert"
 msgstr "everything saved"
+
+msgid "bearbeitet"
+msgstr "edited"
 
 msgid "cache"
 msgstr "cache"
@@ -1148,18 +1313,55 @@ msgstr "cache"
 msgid "datei"
 msgstr "file"
 
+msgid "digitale Kunst"
+msgstr "digital art"
+
+msgid "eingefügt"
+msgstr "placed"
+
 #, python-brace-format
 msgid "eingepasst ({percent} %)"
 msgstr "fitted ({percent} %)"
 
+msgid "entfernt"
+msgstr "removed"
+
+msgid "erstellt"
+msgstr "created"
+
 msgid "fehlt"
 msgstr "missing"
+
+msgid "gedreht/gespiegelt"
+msgstr "rotated/flipped"
+
+msgid "geschwärzt"
+msgstr "redacted"
 
 msgid "getaggt"
 msgstr "tagged"
 
+msgid "gezeichnet"
+msgstr "drawn"
+
+msgid "geöffnet"
+msgstr "opened"
+
+msgid "gültig, Unterzeichner unbekannt"
+msgstr "valid, unknown signer"
+
+msgid "gültig, Unterzeichner vertrauenswürdig"
+msgstr "valid, trusted signer"
+
 msgid "https://… (Nutzungsbedingungen, Lizenz)"
 msgstr "https://… (terms of use, license)"
+
+#, python-brace-format
+msgid "im Netz: {url}"
+msgstr "online: {url}"
+
+msgid "in der Datei"
+msgstr "in the file"
 
 msgid "ja"
 msgstr "yes"
@@ -1169,11 +1371,17 @@ msgid ""
 "ignoriert"
 msgstr "no tab between code and replacement (and not “- Team -”): line is ignored"
 
+msgid "kein Vorschaubild im Manifest"
+msgstr "no thumbnail in the manifest"
+
 msgid "keine Codes gefunden (Code und Ersetzung durch Tab getrennt?)"
 msgstr "no codes found (code and replacement separated by a tab?)"
 
 msgid "keine Codes gefunden (falsche URL oder HTML statt Textdatei?)"
 msgstr "no codes found (wrong URL, or HTML instead of a text file?)"
+
+msgid "keine Vorschau"
+msgstr "no preview"
 
 msgid "keine – nur Stadt und Ort werden geschrieben"
 msgstr "none – only city and location are written"
@@ -1193,11 +1401,23 @@ msgstr "loading full image …"
 msgid "lädt …"
 msgstr "loading …"
 
+msgid "mit Content Credentials"
+msgstr "with Content Credentials"
+
+msgid "mit KI-Anteilen"
+msgstr "partly AI-generated"
+
 msgid "nein"
 msgstr "no"
 
 msgid "netz"
 msgstr "network"
+
+msgid "neu kodiert"
+msgstr "transcoded"
+
+msgid "neu verpackt"
+msgstr "repackaged"
 
 #, python-brace-format
 msgid "nicht erreichbar: {error}"
@@ -1209,6 +1429,9 @@ msgstr "not tagged"
 msgid "nur unbeschriftet"
 msgstr "uncaptioned only"
 
+msgid "ohne Content Credentials"
+msgstr "without Content Credentials"
+
 msgid "ohne Farbe"
 msgstr "no color"
 
@@ -1219,17 +1442,36 @@ msgstr "no stars"
 msgid "schreibe {count} …"
 msgstr "writing {count} …"
 
+#, python-brace-format
+msgid "signiert von {signer}"
+msgstr "signed by {signer}"
+
 msgid "tippen für gemerkte Orte"
 msgstr "type for remembered places"
 
+msgid "unbekanntes Programm"
+msgstr "unknown application"
+
 msgid "ungespeichert"
 msgstr "unsaved"
+
+msgid "ungültig"
+msgstr "invalid"
+
+msgid "ungültig: Datei seit dem Signieren verändert"
+msgstr "invalid: file modified since signing"
+
+msgid "veröffentlicht"
+msgstr "published"
 
 msgid "wer beschriftet"
 msgstr "who writes captions"
 
 msgid "z. B. DEL 2 Heimspiele"
 msgstr "e.g. DEL 2 home games"
+
+msgid "zugeschnitten"
+msgstr "cropped"
 
 #, python-brace-format
 msgid "{alt} + Mausrad, Doppelklick"
@@ -1250,6 +1492,12 @@ msgid "{count} Bild nach {folder} kopiert"
 msgid_plural "{count} Bilder nach {folder} kopiert"
 msgstr[0] "{count} image copied to {folder}"
 msgstr[1] "{count} images copied to {folder}"
+
+#, python-brace-format
+msgid "{count} Bild trägt gültige Content Credentials."
+msgid_plural "{count} Bilder tragen gültige Content Credentials."
+msgstr[0] "{count} image has valid Content Credentials."
+msgstr[1] "{count} images have valid Content Credentials."
 
 #, python-brace-format
 msgid "{count} Code"
@@ -1292,6 +1540,10 @@ msgid "{count} Problem"
 msgid_plural "{count} Probleme"
 msgstr[0] "{count} problem"
 msgstr[1] "{count} problems"
+
+#, python-brace-format
+msgid "{count} Schritte"
+msgstr "{count} steps"
 
 #, python-brace-format
 msgid "{count} Team"
@@ -1458,6 +1710,11 @@ msgstr "Save changes to the roster?"
 
 msgid "Öffnen"
 msgstr "Open"
+
+msgid "Öffnet die Prüfseite im Browser; hochgeladen wird die Datei dort von Hand."
+msgstr ""
+"Opens the verification page in the browser; upload the file there "
+"yourself."
 
 msgid "Über Captioner"
 msgstr "About Captioner"

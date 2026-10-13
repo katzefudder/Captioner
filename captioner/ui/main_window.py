@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
                                QPushButton, QToolButton, QVBoxLayout, QWidget)
 
-from .. import WEBSITE_LINK, codes, config, geo, i18n, keywords, metadata, scanner, transfer, undo, updates, version
+from .. import WEBSITE_LINK, codes, config, credentials, geo, i18n, keywords, metadata, scanner, transfer, undo, updates, version
 from ..i18n import _, N_, ngettext
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
@@ -29,6 +29,7 @@ from .editor import CaptionEditor
 from .rostereditor import RosterEditorDialog
 from . import folderdialog, instance
 from .viewer import Viewer
+from .provenance import ProvenanceDialog
 from .gallery import CLASS_COLORS, ItemRole
 from .tabs import CopyWorker, FolderTab, FolderTabs, ask_conflicts, tab_title
 from .workers import MetadataWriter, RosterWorker, ScanWorker, ThumbnailLoader
@@ -36,6 +37,11 @@ from .workers import MetadataWriter, RosterWorker, ScanWorker, ThumbnailLoader
 logger = logging.getLogger(__name__)
 
 TAG_FILTERS = [(N_('Alle Tags'), None), (N_('getaggt'), True), (N_('nicht getaggt'), False)]
+
+# Content Credentials (ADR 0002); Werte wie credentials.LEVEL_*, dazu 'any'/'none'
+CREDENTIAL_FILTERS = [(N_('Content Credentials: alle'), None), (N_('mit Content Credentials'), 'any'),
+                      (N_('Content Credentials gültig'), 'valid'), (N_('Content Credentials ungültig'), 'invalid'),
+                      (N_('ohne Content Credentials'), 'none')]
 
 RATING_FILTERS = [(N_('Alle Sterne'), None), (N_('★ und mehr'), 1), (N_('★★ und mehr'), 2),
                   (N_('★★★ und mehr'), 3), (N_('★★★★ und mehr'), 4), ('★★★★★', 5), (N_('ohne Sterne'), 0)]
@@ -162,6 +168,7 @@ class MainWindow(QMainWindow):
         self._recording = None
         self.viewer = None
         self._syncing_selection = False
+        self._credentials_accepted = set()   # Keys: Nutzer hat zugestimmt, das Manifest zu brechen
 
         self._build_ui()
         self.refresh_templates(settings.last_template)
@@ -213,6 +220,8 @@ class MainWindow(QMainWindow):
         self.undo_action = action(edit_menu, _('Rückgängig'), self.undo)
         self.redo_action = action(edit_menu, _('Wiederholen'), self.redo)
         self._update_undo_actions()
+        edit_menu.addSeparator()
+        action(edit_menu, _('Herkunft (Content Credentials) …'), self.show_provenance)
 
         template_menu = bar.addMenu(_('Template'))
         action(template_menu, _('Neues Template …'), lambda: self.edit_template(None))
@@ -334,6 +343,11 @@ class MainWindow(QMainWindow):
         self.camera_filter = QComboBox()
         self.camera_filter.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.camera_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
+        self.credentials_filter = QComboBox()
+        for label, value in CREDENTIAL_FILTERS:
+            self.credentials_filter.addItem(_(label), value)
+        self.credentials_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
+        self.credentials_filter.hide()   # erst, wenn ein Bild im Tab Content Credentials hat
         self.time_filter = QCheckBox(_('Uhrzeit'))
         self.time_from = QTimeEdit(QTime(0, 0))
         self.time_to = QTimeEdit(QTime(23, 59))
@@ -344,6 +358,7 @@ class MainWindow(QMainWindow):
         self.time_filter.toggled.connect(self._time_filter_toggled)
         search_row.addWidget(self.search, 1)
         search_row.addWidget(self.camera_filter)
+        search_row.addWidget(self.credentials_filter)
         search_row.addWidget(self.time_filter)
         search_row.addWidget(self.time_from)
         search_row.addWidget(QLabel('–'))
@@ -615,6 +630,7 @@ class MainWindow(QMainWindow):
         tab.scan_worker = worker
         worker.scanned.connect(self._on_scanned)
         worker.chunk_loaded.connect(self._on_chunk_loaded)
+        worker.credentials_loaded.connect(self._on_credentials_loaded)
         worker.failed.connect(self._on_scan_failed)
         worker.finished.connect(self._on_scan_finished)
         worker.start()
@@ -653,6 +669,25 @@ class MainWindow(QMainWindow):
         if tab is self.tab and self._selected_items():
             self._show_selection_in_editor()
 
+    def _on_credentials_loaded(self, chunk):
+        tab = self._scanning_tab()
+        if tab is None:
+            return
+        tab.model.refresh([item.key for item in chunk])
+        if tab is self.tab:
+            self._update_credentials_filter()
+            if self.credentials_filter.currentData() is not None:
+                self.apply_filter(False)
+            if self.viewer is not None and self.viewer.isVisible() and self.viewer.key in {i.key for i in chunk}:
+                self.viewer.show_item(self.viewer._item, self.viewer._image)
+
+    def _update_credentials_filter(self):
+        """Den Filter nur zeigen, wenn es im Tab etwas zu filtern gibt (oder er gesetzt ist)."""
+        tab = self.tab if hasattr(self, 'tabs') else None
+        visible = (self.credentials_filter.currentData() is not None
+                   or any(item.credentials for item in (tab.all_items if tab else [])))
+        self.credentials_filter.setVisible(visible)
+
     def _on_scan_failed(self, message):
         tab = self._scanning_tab()
         if tab is not None:
@@ -670,6 +705,7 @@ class MainWindow(QMainWindow):
                                            count).format(folder=tab.folder, count=count, seconds=f'{elapsed:.1f}'))
         if tab is self.tab:
             self._fill_camera_filter()
+            self._update_credentials_filter()
             self.apply_filter(False)
 
     def _set_tab_status(self, tab, text):
@@ -683,6 +719,7 @@ class MainWindow(QMainWindow):
         # Filter gelten fuer alle Tabs; beim Wechsel fuer den neuen anwenden
         self.folder_label.setText(self.tab.status_text)
         self._fill_camera_filter()
+        self._update_credentials_filter()
         self.apply_filter(False)
         self._remember_tabs()
 
@@ -725,6 +762,15 @@ class MainWindow(QMainWindow):
             # ueber Mitternacht (22:00-01:00) mit oder statt und
             inside = start <= taken <= end if start <= end else (taken >= start or taken <= end)
             if not taken or not inside:
+                return False
+        wanted = self.credentials_filter.currentData()
+        if wanted is not None:
+            level = credentials.level(item.credentials)
+            if wanted == 'any' and level is None or wanted == 'none' and level is not None:
+                return False
+            if wanted == 'valid' and level not in (credentials.LEVEL_VALID, credentials.LEVEL_TRUSTED):
+                return False
+            if wanted == 'invalid' and level != credentials.LEVEL_INVALID:
                 return False
         if not scanner.matches_text(item, self.search.text()):
             return False
@@ -924,6 +970,49 @@ class MainWindow(QMainWindow):
         self.edited_keys.add(item.key)
         self.writer.enqueue(item, meta)
 
+    def _confirm_credentials(self, items):
+        """
+        Vor dem Schreiben: gueltige Content Credentials in JPG/DNG nicht stillschweigend
+        brechen (ADR 0002). False = abbrechen. Je Bild wird nur einmal gefragt; danach ist
+        das Manifest ohnehin ungueltig bzw. das Bild geschuetzt (nur RAW-Sidecar).
+        Rueckgaengig fragt nicht: es stellt nur einen frueheren Stand her.
+        """
+        if self.writer.sidecars_only:
+            return True
+        risky = [item for item in items if item.key not in self._credentials_accepted
+                 and not item.protect_embedded and credentials.at_risk(item)]
+        if not risky:
+            return True
+        choice = self._ask_credentials(risky)
+        if choice == 'protect':
+            for item in risky:
+                item.protect_embedded = True
+        elif choice == 'write':
+            self._credentials_accepted.update(item.key for item in risky)
+        return choice != 'cancel'
+
+    def _ask_credentials(self, risky):
+        """'write', 'protect' (nur bei RAW+JPG/DNG: nur ins Sidecar schreiben) oder 'cancel'."""
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Warning)
+        box.setWindowTitle('Content Credentials')
+        box.setText(ngettext('{count} Bild trägt gültige Content Credentials.',
+                             '{count} Bilder tragen gültige Content Credentials.', len(risky)).format(count=len(risky)))
+        names = ', '.join(item.name for item in risky[:5]) + (' …' if len(risky) > 5 else '')
+        box.setInformativeText(_('Schreibt Captioner Titel, Beschreibung, Sterne oder Farben in die Datei, werden '
+                                 'sie ungültig: Prüfprogramme zeigen das Bild dann als verändert.') + '\n\n' + names)
+        protect = None
+        if all(item.raw for item in risky):
+            protect = box.addButton(_('Nur ins RAW-Sidecar schreiben'), QMessageBox.ButtonRole.AcceptRole)
+        write = box.addButton(_('Trotzdem in die Datei schreiben'), QMessageBox.ButtonRole.DestructiveRole)
+        cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+        box.setDefaultButton(protect or cancel)
+        box.exec()
+        clicked = box.clickedButton()
+        if clicked is not None and clicked is protect:
+            return 'protect'
+        return 'write' if clicked is write else 'cancel'
+
     @contextlib.contextmanager
     def _undoable(self, label):
         """Alle Aenderungen darin sind ein Schritt fuer Rueckgaengig (verschachtelt: der aeussere)."""
@@ -979,6 +1068,8 @@ class MainWindow(QMainWindow):
 
     def set_rating(self, rating):
         items = self._selected_items()
+        if not self._confirm_credentials(items):
+            return
         with self._undoable(N_('Bewertung')):
             for item in items:
                 self._enqueue(item, dataclasses.replace(item.meta, rating=rating))
@@ -997,6 +1088,8 @@ class MainWindow(QMainWindow):
         """Farbklasse 1-8, 0 entfernt. Dazu das Lightroom-Label."""
         label = self.settings.labels[n - 1] if 0 < n <= len(self.settings.labels) else ''
         items = self._selected_items()
+        if not self._confirm_credentials(items):
+            return
         with self._undoable(N_('Farbklasse')):
             for item in items:
                 self._enqueue(item, dataclasses.replace(item.meta, color_class=n, label=label))
@@ -1010,6 +1103,8 @@ class MainWindow(QMainWindow):
             return
         if value is None:
             value = not all(item.meta.tagged for item in items)
+        if not self._confirm_credentials(items):
+            return
         with self._undoable(N_('Tag')):
             for item in items:
                 self._enqueue(item, dataclasses.replace(item.meta, tagged=value))
@@ -1096,6 +1191,8 @@ class MainWindow(QMainWindow):
                 QMessageBox.warning(self, _('Nicht gespeichert'), f'{item.name}: ' + '; '.join(problems))
                 return
             planned.append((item, meta))
+        if not self._confirm_credentials([item for item, _meta in planned]):
+            return
         for item, meta in planned:
             self._enqueue(item, meta)
             if apply_caption:
@@ -1135,6 +1232,8 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, _('Kein Template'), _('Bitte zuerst ein Spiel-Template auswählen oder anlegen.'))
             return
         items = self._selected_items()
+        if not self._confirm_credentials(items):
+            return
         for item in items:
             # Ohne Heim/Gast gibt das Template keinen Titel vor: der des Bildes bleibt
             headline = template.headline or item.meta.headline
@@ -1159,6 +1258,8 @@ class MainWindow(QMainWindow):
         if not ok:
             self.statusBar().showMessage(_('Fehler: {message}').format(message=message), 15000)
         tab.model.refresh([key])
+        if item.credentials and self._viewer_active() and self.viewer.key == key:
+            self.viewer.show_item(item, self.viewer._image)   # Status der Content Credentials
         self._update_status()
 
     def _update_status(self):
@@ -1320,6 +1421,7 @@ class MainWindow(QMainWindow):
             self.viewer.labels = self.settings.labels
             self.viewer.set_info_visible(self.settings.viewer_info_panel)
             self.viewer.info_toggled.connect(self._on_info_toggled)
+            self.viewer.provenance_requested.connect(lambda: self.show_provenance(self.by_key.get(self.viewer.key)))
             zoom = self.viewer.zoom
             handlers = {'viewer_close': self.viewer.close,
                         'viewer_tag_toggle': lambda: self._in_viewer(lambda: self.set_tag(None)),
@@ -1388,6 +1490,23 @@ class MainWindow(QMainWindow):
         self.viewer.show_item(item, self.loader.image(item.key), provisional=True)
         self.loader.request_details(item)
         self.loader.request_full(item)
+
+    def show_provenance(self, item=None):
+        """Dialog "Herkunft" fuer das Bild unter dem Cursor (bzw. in der Grossansicht)."""
+        if item is None:
+            items = self._focused_first(self._selected_items())
+            item = items[0] if items else None
+        if item is None:
+            return
+        if item.credentials is None and credentials.available():
+            item.credentials = credentials.read_item(item)
+        image = self.loader.image(item.key)
+        if image is None and self.viewer is not None and self.viewer.key == item.key and self.viewer._image is not None:
+            image = self.viewer._image.scaled(1024, 1024, Qt.AspectRatioMode.KeepAspectRatio)
+        ProvenanceDialog(item, image, self.viewer if self._viewer_active() else self).exec()
+
+    def _viewer_active(self):
+        return self.viewer is not None and self.viewer.isVisible()
 
     def _on_info_toggled(self, visible):
         if self.settings.viewer_info_panel != visible:

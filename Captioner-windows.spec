@@ -10,6 +10,7 @@ import re
 import tomllib
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_dynamic_libs
 from PyInstaller.utils.win32.versioninfo import (FixedFileInfo, StringFileInfo, StringStruct, StringTable,
                                                  VarFileInfo, VarStruct, VSVersionInfo)
 
@@ -44,7 +45,7 @@ version_info = VSVersionInfo(
 a = Analysis(
     ['run_captioner.py'],
     pathex=[],
-    binaries=[],
+    binaries=collect_dynamic_libs('c2pa'),   # libc2pa_c (Content Credentials, ADR 0002), ohne .rlib
     datas=[('vendor/exiftool-windows', 'exiftool'), ('captioner/resources', 'captioner/resources'),
            ('captioner/locale', 'captioner/locale'),   # Uebersetzungen (gettext, siehe captioner/i18n.py)
            ('LICENSE', '.'), ('licenses', 'licenses'),   # GPL und Lizenzen der gebuendelten Teile

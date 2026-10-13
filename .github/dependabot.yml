@@ -19,9 +19,10 @@ updates:
       # Kleine Updates gesammelt in einem PR, damit nicht jede Woche fuenf Builds laufen
       kleine-updates:
         update-types: [minor, patch]
-        exclude-patterns: [pyside6, shiboken6, pyinstaller]
+        exclude-patterns: [pyside6, shiboken6, pyinstaller, c2pa-python]
       # PySide6 und PyInstaller einzeln: koennen das Mindest-macOS heben bzw. das Bundle
-      # aendern (Claude.md, Paketierung: nach einem Update otool -L / UNUSED pruefen)
+      # aendern (Claude.md, Paketierung: nach einem Update otool -L / UNUSED pruefen).
+      # c2pa-python einzeln: API vor 1.0 in Bewegung, native Bibliothek im Bundle (ADR 0002)
     ignore:
       # Major-Versionen schliesst pyproject.toml ohnehin aus (pyside6 <7 usw.)
       - dependency-name: '*'

@@ -22,7 +22,9 @@ Bedienung: `readme.md`.
 | `undo.py` | Rückgängig/Wiederholen: Schritte mit Vorher/Nachher je Bild (Metadaten + Rohtext) |
 | `previews.py` | Kacheln/Großansicht aus eingebetteten JPEGs, Plattencache |
 | `exiftool.py` | `-stay_open`-Prozess, Pool pro OS-Thread, Aufräumen verwaister Prozesse |
+| `credentials.py` | Content Credentials (C2PA) lesen: Status, Kette, `at_risk` (Manifest bräche beim Schreiben); ADR 0002 |
 | `files.py` | `replace_file`: `os.replace` mit Wiederholung, wenn Windows die Datei sperrt |
+| `ui/provenance.py` | Dialog „Herkunft“: Kette der Manifeste, Vorschau beim Signieren gegen jetzt, Differenzbild, Beschriftung damals/jetzt |
 | `ui/viewer.py` | Großansicht mit Zoom (`ZoomView`): eingepasst/100 %/Stufen, Ankerpunkt, Begrenzung des Ausschnitts |
 | `ui/resources.py`, `resources/` | Logo (`logo.svg` = Quelle) und daraus erzeugte Icons; `make icons` / `scripts/make_icons.py` |
 | `ui/mapview.py` | OSM-Karte als QWidget (Kacheln, `QNetworkDiskCache`), `Geocoder` (Nominatim, 1 Anfrage/s) |
@@ -37,7 +39,7 @@ Bedienung: `readme.md`.
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
-Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`, `files`) importiert kein Qt.
+Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`, `files`, `credentials`) importiert kein Qt.
 
 ## Regeln, die nicht verletzt werden dürfen
 
@@ -75,6 +77,26 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   Gefüttert beim Speichern (nach vorn), beim Einlesen und aus Templates (nur ergänzen).
 - Codes im Titel: `editor.resolve_headline()`; unbekannte blockieren wie in der Beschreibung.
   Gespeichert wird der aufgelöste Titel (kein Rohtext); das Format wird am aufgelösten geprüft.
+
+## Content Credentials (C2PA)
+
+- `docs/adr/0002-content-credentials.md`: Phasen Lesen → Warnen → Anzeigen → Signieren
+  (Lesen, Warnen, Anzeigen umgesetzt; Signieren und Vertrauensliste offen).
+- **Metadaten schreiben macht ein eingebettetes Manifest ungültig** (`assertion.dataHash.mismatch`),
+  auch nur IPTC/XMP. Jede Aktion, die schreibt, ruft vorher `_confirm_credentials(items)` (fragt
+  über `_ask_credentials` einmal je Bild; `_credentials_accepted`); neue schreibende Aktionen
+  ebenso. „Nur ins RAW-Sidecar“ setzt `Item.protect_embedded`, `metadata.write_item` lässt die
+  eingebetteten Dateien dann aus. Rückgängig fragt nicht. Signieren, wenn es kommt, als letzter Schritt.
+- `Item.credentials`: `None` = nicht geprüft, `[]` = kein Manifest. Der `ScanWorker` prüft nach
+  den Metadaten (`credentials_loaded`, ~6 ms/Datei), der `MetadataWriter` liest nach dem
+  Schreiben neu (Abzeichen wird rot). `read_item` überspringt unlesbare Dateien einzeln.
+- Anzeige: „CR“-Abzeichen (`gallery.CREDENTIAL_COLORS`), Filter `credentials_filter` (nur sichtbar,
+  wenn ein Bild im Tab Credentials hat), Abschnitt in `details.sections(found=…)`, Dialog
+  `ui/provenance.py` (Vorschau beim Signieren / jetzt / `credentials.difference`, `metadata_changes`).
+- Lesen nur lokal (`credentials.VERIFY`: kein Remote-Manifest, kein OCSP). Ohne Vertrauensanker
+  höchstens `Valid`. Tests signieren mit der Test-CA in `tests/fixtures/c2pa` (nicht vertrauenswürdig).
+- `c2pa-python` auf `0.38.*` festgelegt; `libc2pa_c` kommt über `collect_dynamic_libs('c2pa')`
+  in beide Specs (ohne die 29-MB-`.rlib`).
 
 ## Updates
 
@@ -283,7 +305,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 197 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 219 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

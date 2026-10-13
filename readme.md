@@ -163,7 +163,8 @@ Hardened Runtime braucht.
 
 Die Menüs stehen auf dem Mac oben in der Menüleiste des Bildschirms: **Captioner** (Über
 Captioner, Einstellungen `⌘,`, Beenden `⌘Q`), **Ablage** (Ordner öffnen `⌘O`, in neuem
-Tab, Neu einlesen `F5`, Tab schließen), **Template**, **Roster** und **Hilfe**
+Tab, Neu einlesen `F5`, Tab schließen), **Bearbeiten** (Rückgängig, Wiederholen, Herkunft),
+**Template**, **Roster** und **Hilfe**
 (Tastenkürzel, [Captioner-Website](https://www.katzefudder.de/captioner?mtm_campaign=captioner&mtm_source=github)).
 
 ## Mehrere Ordner (Tabs)
@@ -207,7 +208,7 @@ Hilfe → „Tastenkürzel“) zeigt alle Kürzel für das aktuelle System.
 | Farbklasse 1–8 / entfernen | `⌘1`–`⌘8` / `⌘0` | `Strg+1`–`8` / `Strg+0` |
 | Sterne 1–5 / entfernen | `1`–`5` / `0` | `1`–`5` / `0` |
 | Tag an/aus · an · aus | `T` · `+` · `-` | `T` · `+` · `-` |
-| Großansicht | `Leertaste` | `Leertaste` |
+| Großansicht | `Leertaste` oder Doppelklick | `Leertaste` oder Doppelklick |
 | Beschriftung bearbeiten | `I` oder `Enter` | `I` oder `Enter` |
 | Alle auswählen (alle Seiten) · Auswahl aufheben · Getaggte auswählen | `⌘A` · `⌘D` · `⌘T` | `Strg+A` · `Strg+D` · `Strg+T` |
 | Nur getaggte · nur nicht getaggte (nochmal: alle) | `F3` · `F4` | `F3` · `F4` |
@@ -273,6 +274,23 @@ keine Tags; die dienen zum Auswählen vor dem Drag.
 
 Lightroom übernimmt beim Import Titel, Beschreibung, Stichwörter, Sterne und Farbe. Die
 Farbnamen müssen zum Label-Set in Lightroom passen, siehe Einstellungen.
+
+## Content Credentials
+
+Bilder mit Content Credentials (C2PA, z. B. von Kameras mit Signatur oder aus Lightroom-
+Exporten) tragen in der Galerie ein **CR** rechts unten: grün = vertrauenswürdig,
+neutral = gültig, aber Unterzeichner unbekannt, rot = ungültig (meist: Datei nach dem
+Signieren verändert). Der Filter „Content Credentials“ erscheint, sobald ein Bild im Tab
+welche hat. Das Info-Panel der Großansicht zeigt Unterzeichner, Programm, Aktionen;
+„Herkunft anzeigen …“ (oder Bearbeiten → Herkunft) öffnet den Verlauf mit dem Vorschaubild
+beim Signieren, dem Bild jetzt, einem groben Differenzbild und, falls das Manifest sie
+enthält, der Beschriftung damals gegen jetzt. Geprüft wird nur lokal, ohne Netz.
+
+**Achtung beim Beschriften:** Jede Änderung an einem JPG/DNG mit Manifest – auch nur Sterne
+oder Titel – macht die Content Credentials ungültig. Captioner fragt deshalb vorher, einmal
+je Bild. Bei RAW+JPG gibt es „Nur ins RAW-Sidecar schreiben“: Das JPG bleibt dann unberührt
+und gültig, Lightroom liest die Beschriftung aus dem `.xmp` der RAW-Datei. Signieren kann
+Captioner (noch) nicht, siehe `docs/adr/0002-content-credentials.md`.
 
 ## Ort und Karte
 

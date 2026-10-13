@@ -343,6 +343,8 @@ def write_item(tool, item: Item, meta: Metadata, sidecars_only=False):
     """
     Schreibt die Metadaten in alle Dateien des Items. Gibt die geschriebenen
     Pfade zurueck. sidecars_only: Schreibschutz-Modus fuer die Karte.
+    item.protect_embedded: bei RAW+JPG nur das Sidecar, damit Content Credentials im
+    JPG/DNG gueltig bleiben (ADR 0002); ohne RAW wirkungslos.
     """
     problems = validate(meta)
     if problems:
@@ -350,7 +352,7 @@ def write_item(tool, item: Item, meta: Metadata, sidecars_only=False):
     written = []
     if item.raw and item.raw.suffix.lower() in RAW_EXTENSIONS:
         written.append(write_sidecar(tool, item, meta))
-    if not sidecars_only:
+    if not sidecars_only and not (item.protect_embedded and written):
         for path in item.embedded:
             write_embedded(tool, path, meta)
             written.append(path)

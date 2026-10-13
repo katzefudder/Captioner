@@ -7,6 +7,7 @@ from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, Qt, Si
 from PySide6.QtGui import QBrush, QColor, QDrag, QFont, QPainter, QPen
 from PySide6.QtWidgets import QAbstractItemView, QListView, QStyle, QStyledItemDelegate
 
+from .. import credentials
 from ..i18n import _
 
 ItemRole = Qt.ItemDataRole.UserRole + 1
@@ -25,6 +26,10 @@ LABEL_COLORS = {
 
 # Farbklassen 1-8; 1-3 entsprechen den vorhandenen Sidecars
 # im Archiv (1 Winner = Red, 2 Winner alt = Yellow, 3 Superior = Green)
+# Abzeichen "CR" fuer Content Credentials (ADR 0002); gueltig, aber unbekannter
+# Unterzeichner in Textfarbe
+CREDENTIAL_COLORS = {credentials.LEVEL_TRUSTED: '#3fa34d', credentials.LEVEL_INVALID: '#d64541'}
+
 CLASS_COLORS = {1: '#d64541', 2: '#e6b800', 3: '#3fa34d', 4: '#3b7dd8', 5: '#8e5bc8',
                 6: '#e67e22', 7: '#16a085', 8: '#7f8c8d'}
 
@@ -71,6 +76,8 @@ class GalleryModel(QAbstractListModel):
             lines = [item.kind + ': ' + ', '.join(p.name for p in item.files)]
             if item.meta.caption:
                 lines.append(item.meta.caption)
+            if item.credentials:
+                lines.append(credentials.summary(item.credentials))
             if getattr(item, 'error', None):
                 lines.append(_('Fehler: {error}').format(error=item.error))
             return '\n'.join(lines)
@@ -157,6 +164,9 @@ class TileDelegate(QStyledItemDelegate):
             markers.append(('!', QColor('#d64541')))
         elif self.writer.is_pending(item.key):
             markers.append(('…', text_color))
+        level = credentials.level(item.credentials)
+        if level is not None:
+            markers.append(('CR', QColor(CREDENTIAL_COLORS.get(level, text_color))))
         if item.meta.is_captioned:
             markers.append(('✎', text_color))
         x = status_rect.right()
