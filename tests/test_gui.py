@@ -247,7 +247,9 @@ def test_new_template_never_overwrites_same_name(tmp_path):
 def test_open_template_folder(window, monkeypatch):
     from captioner.ui import main_window
     opened = []
-    monkeypatch.setattr(main_window.QDesktopServices, 'openUrl', lambda url: opened.append(url.toLocalFile()) or True)
+    # Als Path vergleichen: Qt liefert unter Windows C:/..., Python C:\\...
+    monkeypatch.setattr(main_window.QDesktopServices, 'openUrl',
+                        lambda url: opened.append(Path(url.toLocalFile())) or True)
     actions = [a for a in window.editor.template_menu.actions() if a.text().startswith('Template-Ordner')]
     actions += [a for m in window.menuBar().actions() if m.menu()
                 for a in m.menu().actions() if a.text().startswith('Template-Ordner')]
@@ -256,7 +258,7 @@ def test_open_template_folder(window, monkeypatch):
     for action in actions:   # ueber das Menue, nicht die Methode: so faellt eine falsche Verbindung auf
         action.trigger()
 
-    assert opened == [str(window.template_store.directory)] * 2
+    assert opened == [Path(window.template_store.directory)] * 2
 
 
 def test_template_menu_entries_emit(window):
