@@ -34,6 +34,7 @@ LIMITS = {
     'caption_writer': 32,
     'copyright': 128,
     'source': 32,
+    'instructions': 256,
 }
 
 # Ort und Rechte: Metadata-Feld -> (XMP, IPTC, EXIF) zum Schreiben; gelesen wird ueber
@@ -48,6 +49,7 @@ RIGHTS_TAGS = {
     'web_statement': ('XMP-xmpRights:WebStatement', None, None),
     'source': ('XMP-photoshop:Source', 'IPTC:Source', None),
     'category': ('XMP-photoshop:Category', 'IPTC:Category', None),
+    'instructions': ('XMP-photoshop:Instructions', 'IPTC:SpecialInstructions', None),
 }
 # IPTC-IIM Category erlaubt nur 3 Zeichen ("SPO"). Laengeres ("Sport") steht nur im XMP,
 # statt abgeschnitten ("Spo") im IIM
@@ -62,11 +64,12 @@ RIGHTS_READ = {
     'web_statement': ('WebStatement',),
     'source': ('Source',),
     'category': ('Category',),
+    'instructions': ('Instructions', 'SpecialInstructions'),
 }
 LABELS = {'state': N_('Bundesland'), 'country': N_('Land'), 'creator': N_('Fotograf'),
           'authors_position': N_('Position'), 'caption_writer': N_('Beschriftet von'),
           'copyright': N_('Copyright'), 'web_statement': N_('Copyright-URL'), 'source': N_('Quelle'),
-          'category': N_('Kategorie')}
+          'category': N_('Kategorie'), 'instructions': N_('Hinweise')}
 OBJECT_NAME_LIMIT = 64
 
 READ_TAGS = [
@@ -103,7 +106,7 @@ def validate(meta: Metadata):
     check(_('Ort'), meta.sublocation, LIMITS['sublocation'])
     for name, label in LABELS.items():
         if name in LIMITS:
-            check(_(label), getattr(meta, name), LIMITS[name])
+            check(_(label), _rights_value(meta, name), LIMITS[name])  # so, wie es ins Bild geht
     for keyword in meta.keywords:
         check(_('Tag "{keyword}"').format(keyword=keyword), keyword, LIMITS['keyword'])
     return problems
@@ -251,10 +254,22 @@ def _xmp_args(meta: Metadata):
         # Rueckgaengig: von Captioner gesetztes GPS wieder entfernen
         args += ['-XMP-exif:GPSLatitude=', '-XMP-exif:GPSLongitude=']
     for name, (xmp, _, _) in RIGHTS_TAGS.items():
-        args.append(f'-{xmp}={getattr(meta, name)}')
+        args.append(f'-{xmp}={_rights_value(meta, name)}')
     if meta.copyright:
         args.append('-XMP-xmpRights:Marked=True')  # Lightroom: "Copyright-Status: Geschützt"
     return args
+
+
+def _rights_value(meta, name):
+    """
+    Einzeilig: Template-Dateien und fremde Bilder koennen Umbrueche enthalten (Adresse,
+    Kontoverbindung), Argumente an ExifTool duerfen keine. Die Hinweise sind im Template
+    mehrzeilig; ihre Zeilen bleiben mit " · " erkennbar getrennt.
+    """
+    value = getattr(meta, name)
+    if name == 'instructions':
+        value = ' · '.join(line.strip() for line in (value or '').splitlines() if line.strip())
+    return single_line(value)
 
 
 def _embedded_args(meta: Metadata):
@@ -270,7 +285,7 @@ def _embedded_args(meta: Metadata):
     ]
     args += [f'-IPTC:Keywords={k}' for k in meta.keywords] or ['-IPTC:Keywords=']
     for name, (_, iptc, exif) in RIGHTS_TAGS.items():
-        value = getattr(meta, name)
+        value = _rights_value(meta, name)
         if name == 'category':
             # zu lang: IIM leeren statt abschneiden, das XMP traegt den vollen Wert
             fits = len(value.encode('utf-8')) <= IPTC_CATEGORY_LIMIT

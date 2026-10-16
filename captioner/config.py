@@ -75,6 +75,8 @@ class Settings:
     template_files: list = field(default_factory=list)
     # Gewaehlte Orte (Stadt, Ort, Koordinaten), neueste zuerst; siehe geo.PlaceBook
     places: list = field(default_factory=list)
+    thumbnail_size: int = 220    # Kachelbreite in der Galerie (Regler), siehe gallery.tile_size
+    roster_font_size: int = 0    # Schriftgroesse im Roster-Editor (Punkt), 0 = Systemvorgabe
 
     @classmethod
     def path(cls) -> Path:

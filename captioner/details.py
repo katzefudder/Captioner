@@ -155,7 +155,7 @@ def sections(raw, meta: Metadata, labels=()):
         (_('Quelle'), meta.source or _first(raw, 'Source')),
         (_('Kategorie'), meta.category),
         (_('Beschriftet von'), meta.caption_writer or _first(raw, 'Writer-Editor', 'CaptionWriter')),
-        (_('Hinweise'), _first(raw, 'SpecialInstructions', 'Instructions')),
+        (_('Hinweise'), meta.instructions or _first(raw, 'SpecialInstructions', 'Instructions')),
     ]
     label = meta.label
     if meta.color_class:

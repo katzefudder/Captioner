@@ -529,6 +529,9 @@ msgstr ""
 msgid "Großansicht: auf Stelle zoomen"
 msgstr ""
 
+msgid "Größe der Vorschaubilder"
+msgstr ""
+
 msgid "Halle, Stadion"
 msgstr ""
 
@@ -545,6 +548,12 @@ msgid "Hilfe"
 msgstr ""
 
 msgid "Hinweise"
+msgstr ""
+
+msgid ""
+"IPTC „Special Instructions“ (Lightroom: Anweisungen), z. B. Kontaktdaten "
+"oder Kontoverbindung. Höchstens 256 Bytes. Zeilen stehen im Bild durch „ "
+"· “ getrennt."
 msgstr ""
 
 msgid "Ignorieren"
@@ -609,6 +618,9 @@ msgstr ""
 msgid ""
 "Konnte nicht prüfen, ob es eine neue Version gibt (keine Verbindung zu "
 "GitHub oder Repository nicht öffentlich)."
+msgstr ""
+
+msgid "Kontakt, Kontoverbindung, Honorarhinweis"
 msgstr ""
 
 #, python-brace-format
@@ -828,6 +840,12 @@ msgid "Schließen"
 msgstr ""
 
 msgid "Schreiben dauert an"
+msgstr ""
+
+msgid "Schriftgröße"
+msgstr ""
+
+msgid "Schriftgröße des Textes"
 msgstr ""
 
 msgid "Seriennummer"
@@ -1452,6 +1470,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{name}: nicht lesbar ({error})"
+msgstr ""
+
+#, python-brace-format
+msgid "{size} pt"
 msgstr ""
 
 msgid "© 2026 Vor- und Nachname"

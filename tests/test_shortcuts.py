@@ -39,8 +39,8 @@ def test_platform_tables():
     mac = {b.command: b.keys for b in keymap._bindings(True)}
     win = {b.command: b.keys for b in keymap._bindings(False)}
     # Farbklasse: Cmd bzw. Strg + Ziffer; Sterne: Ziffer ohne Modifier
-    assert mac['color_3'] == ('Ctrl+3',) and win['color_3'] == ('Ctrl+3',)
-    assert mac['rating_4'] == ('4',) and win['rating_4'] == ('4',)
+    assert mac['color_3'] == ('3',) and win['color_3'] == ('3',)
+    assert mac['rating_4'] == ('Ctrl+4',) and win['rating_4'] == ('Ctrl+4',)
     assert mac['save_next'] == ('Ctrl+]', 'Ctrl+N') and win['save_next'] == ('Alt+]', 'Ctrl+M')
     assert mac['snapshot_take'] == win['snapshot_take'] == ('Ctrl+Shift+C',)
     assert mac['snapshot_paste'] == win['snapshot_paste'] == ('Ctrl+Shift+V',)
@@ -98,27 +98,27 @@ def test_tag_keys(window):
 @requires_exiftool
 def test_color_class_and_rating(window):
     item = window.filtered[0]
-    press(window.view, Qt.Key.Key_3, CMD)
+    press(window.view, Qt.Key.Key_3)
     assert item.meta.color_class == 3 and item.meta.label == 'Green'
-    press(window.view, Qt.Key.Key_7, CMD)
+    press(window.view, Qt.Key.Key_7)
     assert item.meta.color_class == 7 and item.meta.label == ''  # kein Lightroom-Label fuer Klasse 7
-    press(window.view, Qt.Key.Key_0, CMD)
-    assert item.meta.color_class == 0
-    press(window.view, Qt.Key.Key_4)
-    assert item.meta.rating == 4
     press(window.view, Qt.Key.Key_0)
+    assert item.meta.color_class == 0
+    press(window.view, Qt.Key.Key_4, CMD)
+    assert item.meta.rating == 4
+    press(window.view, Qt.Key.Key_0, CMD)
     assert item.meta.rating == 0
 
 
 @requires_exiftool
-def test_digits_set_rating_only(window):
+def test_digits_set_color_class_only(window):
     item = window.filtered[0]
     press(window.view, Qt.Key.Key_3)
-    assert item.meta.rating == 3 and item.meta.color_class == 0
-    press(window.view, Qt.Key.Key_7)  # 6-9 ohne Modifier sind nicht belegt
-    assert item.meta.rating == 3 and item.meta.color_class == 0
-    press(window.view, Qt.Key.Key_5, Qt.KeyboardModifier.MetaModifier)  # Control-Ziffer setzt keine Sterne mehr
-    assert item.meta.rating == 3
+    assert item.meta.color_class == 3 and item.meta.rating == 0
+    press(window.view, Qt.Key.Key_7, CMD)  # Cmd/Strg + 6-9 sind nicht belegt
+    assert item.meta.color_class == 3 and item.meta.rating == 0
+    press(window.view, Qt.Key.Key_5, Qt.KeyboardModifier.MetaModifier)  # Control-Ziffer setzt keine Farbe
+    assert item.meta.color_class == 3
 
 
 @requires_exiftool
@@ -292,7 +292,7 @@ def test_caption_in_viewer_with_copy_paste(window):
     QTest.keyClicks(caption, 'Tor 3 T+Z-')
     QtWidgets.QApplication.processEvents()
     assert caption.toPlainText() == 'Tor 3 T+Z-'
-    assert viewer.isVisible() and first.meta.rating == 0 and not first.meta.tagged
+    assert viewer.isVisible() and first.meta.color_class == 0 and not first.meta.tagged
     assert viewer.zoom.zoom is None
 
     window.editor.headline.setText('DEL 2 - A gegen B')
@@ -305,7 +305,7 @@ def test_caption_in_viewer_with_copy_paste(window):
 
     # Auf dem Bild wirken die Kuerzel wieder
     viewer.zoom.setFocus()
-    press(viewer.zoom, Qt.Key.Key_4)
+    press(viewer.zoom, Qt.Key.Key_4, CMD)
     assert second.meta.rating == 4
     assert window.settings.viewer_caption_panel
 
@@ -322,6 +322,21 @@ def test_caption_in_viewer_with_copy_paste(window):
     assert not window._editor_in_viewer() and not window.settings.viewer_caption_panel
     viewer.close()
 
+
+
+@requires_exiftool
+def test_viewer_frame_shows_color_class(window):
+    from captioner.ui.gallery import CLASS_COLORS
+    window.select_only(window.filtered[0])
+    window.open_viewer()
+    QtWidgets.QApplication.processEvents()
+    viewer = window.viewer
+    assert viewer.zoom.frame_color is None
+    press(viewer.zoom, Qt.Key.Key_3)            # Farbklasse 3: gruener Rahmen
+    assert viewer.zoom.frame_color.name() == CLASS_COLORS[3]
+    press(viewer.zoom, Qt.Key.Key_0)            # entfernt: kein Rahmen
+    assert viewer.zoom.frame_color is None
+    viewer.close()
 
 @requires_exiftool
 def test_template_without_teams_keeps_typed_headline(window, roster):
@@ -420,10 +435,10 @@ def test_undo_and_redo(window):
     from captioner.exiftool import ExifTool, find_exiftool
     first, second = window.filtered[0], window.filtered[1]
     window.view.setFocus()
-    press(window.view, Qt.Key.Key_4)
+    press(window.view, Qt.Key.Key_4, CMD)
     window.select_only(second)
     window.view.setFocus()
-    press(window.view, Qt.Key.Key_3, CMD)
+    press(window.view, Qt.Key.Key_3)
     assert (first.meta.rating, second.meta.color_class) == (4, 3)
     assert window.undo_action.text() == 'Rückgängig: Farbklasse'
 
@@ -462,7 +477,7 @@ def test_undo_and_redo(window):
 def test_cmd_z_in_text_field_undoes_typing_not_metadata(window):
     item = window.filtered[0]
     window.view.setFocus()
-    press(window.view, Qt.Key.Key_2)
+    press(window.view, Qt.Key.Key_2, CMD)
     caption = window.editor.caption
     caption.setFocus()
     QTest.keyClicks(caption, 'abc')

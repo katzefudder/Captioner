@@ -106,6 +106,11 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Viewer-Kürzel sind `WindowShortcut`. Beim Tippen lösen sie nicht aus, weil Textfelder
   druckbare Tasten ohne Cmd/Strg per `ShortcutOverride` beanspruchen; deshalb dürfen
   Viewer- und Panel-Kürzel sich nicht überschneiden (`ACTIVE_TOGETHER` im Test).
+- Laden in zwei Stufen, eigene Threads (`ThumbnailLoader.view_threads`, nie hinter Kacheln):
+  `previews.render_view` dekodiert erst per JPEG-Draft auf `display_edge` (Bildschirmkante in
+  Pixeln), dann voll. Das `QImage` trägt `stage` und `full_size` als Text; `ZoomView` rechnet immer
+  in Pixeln des Originals (`image_size()`), damit 100 % stimmt und der Wechsel nicht springt.
+  Nachbarn (`_viewer_neighbours`) werden vorgeladen; Cache `view_images` nach Bytes, aktuelles nie verdrängt.
 - `ZoomView` hat `StrongFocus` und bekommt beim Öffnen den Fokus, sonst landeten Ziffern im Panel.
 - `select_only` zeigt das Bild auch in der offenen Großansicht (Cmd+N/B aus dem Panel).
 
@@ -129,6 +134,10 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   auf, wenn sich die Liste ändert (Reset springt nach oben); Kacheln lädt `_request_thumbnails` für
   den sichtbaren Bereich (`GalleryView.visible_rows`, aus dem Raster gerechnet) plus je einen
   Bildschirm davor/danach, angestoßen von `visible_changed` (Scrollen, Größe, Reset).
+- Kachelgröße: Regler in der Statusleiste → `Settings.thumbnail_size` (Breite), `gallery.tile_size`
+  rechnet Höhe und Bildhöhe. `GalleryView.set_tile_width` muss `setUniformItemSizes` aus/an
+  schalten, sonst behält Qt die alte Größe. Vorschauen haben `previews.TILE_SIZE` = 512 px;
+  `ThumbnailLoader` begrenzt nach Bytes (`MEMORY_BYTES`) und verwirft nie `wanted`.
 - Galerie-Kürzel hängen am `FolderTabs.stack` (gelten in jedem Tab), nicht an einer Galerie.
 - Ordner-Dialog: Qts nativer macOS-Dialog kann für Ordner nur Einzelauswahl.
   `folderdialog.choose_folders` ruft deshalb `NSOpenPanel` direkt über die Objective-C-Laufzeit
@@ -152,9 +161,10 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   `parse_headline` daraus. Ohne Titel kommt er aus dem Panel und `apply_template` lässt den
   Titel des Bildes stehen.
 - Ort/Rechte (`templates.FIXED_FIELDS`: state, country, creator, authors_position,
-  caption_writer, copyright, web_statement, source, category) schreibt das Template beim Speichern,
+  caption_writer, copyright, web_statement, source, category, instructions) schreibt das Template beim Speichern,
   Einfügen und Anwenden in jedes Bild, aber nur gefüllte (`fixed_values()`). Zuordnung zu
-  XMP/IPTC/EXIF in `metadata.RIGHTS_TAGS`. Gelesen werden sie aus **allen** Dateien eines
+  XMP/IPTC/EXIF in `metadata.RIGHTS_TAGS`; beim Schreiben einzeilig (`_rights_value`;
+  Hinweise sind im Dialog mehrzeilig (`MultiLineField`), ihre Zeilen werden mit „ · “ verbunden, geprüft wird diese Länge). Gelesen werden sie aus **allen** Dateien eines
   Bildes (wie GPS), damit Kamera-Artist/Copyright beim Speichern nicht verloren gehen.
 - `category` (photoshop:Category): IPTC-IIM `Category` hat nur 3 Zeichen; Längeres steht nur
   im XMP, das IIM-Feld wird dann geleert statt abgeschnitten. Ohne Titel im Template übernimmt ein unbeschriftetes Bild den
@@ -177,7 +187,8 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Roster-Editor: `roster.read_file` merkt sich Kodierung (inkl. BOM) und Zeilenenden,
   `write_file` schreibt genau so zurück (Zwischendatei + replace). Speichern einer Datei ohne
   Code wird abgelehnt; außerhalb geänderte Dateien nur nach Rückfrage überschreiben.
-  `roster.check` spiegelt `parse`: was dort ignoriert würde, ist ein Problem.
+  `roster.check` spiegelt `parse`: was dort ignoriert würde, ist ein Problem. Schriftgröße per
+  Regler (`Settings.roster_font_size`, 0 = System), Tab-Abstand und Nummernbreite wachsen mit.
 
 ## Übersetzungen (i18n)
 
@@ -209,8 +220,8 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   nicht auslösen), `editor`, `window`, `viewer`. Zwei gleichzeitig aktive gleiche Kürzel
   löst Qt gar nicht aus; `tests/test_shortcuts.py::test_no_ambiguous_shortcuts` prüft das
   für beide Plattform-Tabellen.
-- Sterne auf `1`–`5` ohne Modifier (`0` entfernt), in Galerie und Großansicht; keine
-  Einstellung dafür. Farbklassen auf `⌘1`–`⌘8` bzw. `Strg+1`–`8`.
+- Farbklassen auf `1`–`8` ohne Modifier (`0` entfernt), in Galerie und Großansicht; keine
+  Einstellung dafür. Sterne auf `⌘1`–`⌘5` bzw. `Strg+1`–`5` (`⌘0`/`Strg+0` entfernt).
 - Farbklasse 1–8 → `XMP-photomech:ColorClass` + `xmp:Label` aus `Settings.labels`; Tag →
   `XMP-photomech:Tagged` (`Yes`/`No`). Lightroom liest nur das Label.
 
@@ -298,7 +309,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 212 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 221 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

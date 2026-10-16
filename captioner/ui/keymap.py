@@ -1,8 +1,8 @@
 """
 Tastenkuerzel wie in einem Workflow-Tool fuer die Auswahl von Fotos.
 
-Sterne liegen auf den Ziffern 1-5 ohne Modifier (0 entfernt sie), Farbklassen auf
-Cmd/Strg + 1-8. Die Windows-Belegung ist keine reine Uebersetzung von Cmd nach Strg
+Farbklassen liegen auf den Ziffern 1-8 ohne Modifier (0 entfernt sie), Sterne auf
+Cmd/Strg + 1-5 (Cmd/Strg + 0 entfernt sie). Die Windows-Belegung ist keine reine Uebersetzung von Cmd nach Strg
 ("Speichern und weiter" auf Alt+] bzw. Strg+M), deshalb zwei Tabellen.
 
 Qt-Schreibweise: Auf macOS ist "Ctrl" die Command-Taste, "Meta" die Control-Taste
@@ -44,11 +44,11 @@ def _bindings(mac):
 
     # Kontaktbogen / Galerie
     for n in range(1, 9):
-        add(f'color_{n}', 'gallery', [f'Ctrl+{n}'], COLOR_LABELS[n - 1])
-    add('color_0', 'gallery', ['Ctrl+0'], N_('Farbklasse entfernen'))
+        add(f'color_{n}', 'gallery', [f'{n}'], COLOR_LABELS[n - 1])
+    add('color_0', 'gallery', ['0'], N_('Farbklasse entfernen'))
     for n in range(1, 6):
-        add(f'rating_{n}', 'gallery', [f'{n}'], RATING_LABELS[n - 1])
-    add('rating_0', 'gallery', ['0'], N_('Sterne entfernen'))
+        add(f'rating_{n}', 'gallery', [f'Ctrl+{n}'], RATING_LABELS[n - 1])
+    add('rating_0', 'gallery', ['Ctrl+0'], N_('Sterne entfernen'))
     add('tag_toggle', 'gallery', ['T'], N_('Tag an/aus'))
     add('tag_on', 'gallery', ['+'], N_('Tag an'))
     add('tag_off', 'gallery', ['-'], N_('Tag aus'))
@@ -100,11 +100,11 @@ def _bindings(mac):
     # Grossansicht (Preview Window)
     add('viewer_close', 'viewer', ['Esc', 'Ctrl+W' if mac else 'Alt+W', 'Space'], N_('Großansicht schließen'))
     for n in range(1, 9):
-        add(f'viewer_color_{n}', 'viewer', [f'Ctrl+{n}'], COLOR_LABELS[n - 1])
-    add('viewer_color_0', 'viewer', ['Ctrl+0'], N_('Farbklasse entfernen'))
+        add(f'viewer_color_{n}', 'viewer', [f'{n}'], COLOR_LABELS[n - 1])
+    add('viewer_color_0', 'viewer', ['0'], N_('Farbklasse entfernen'))
     for n in range(1, 6):
-        add(f'viewer_rating_{n}', 'viewer', [f'{n}'], RATING_LABELS[n - 1])
-    add('viewer_rating_0', 'viewer', ['0'], N_('Sterne entfernen'))
+        add(f'viewer_rating_{n}', 'viewer', [f'Ctrl+{n}'], RATING_LABELS[n - 1])
+    add('viewer_rating_0', 'viewer', ['Ctrl+0'], N_('Sterne entfernen'))
     add('viewer_tag_toggle', 'viewer', ['T'], N_('Tag an/aus'))
     add('viewer_zoom_toggle', 'viewer', ['Z', '*'], N_('Zoom an/aus (100 %)'))
     add('viewer_zoom_in', 'viewer', ['+'], N_('Heranzoomen'))

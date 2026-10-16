@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 13:59+0200\n"
+"POT-Creation-Date: 2026-10-16 16:44+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -584,6 +584,9 @@ msgstr "Preview: zoom at the mouse"
 msgid "Großansicht: auf Stelle zoomen"
 msgstr "Preview: zoom to a spot"
 
+msgid "Größe der Vorschaubilder"
+msgstr "Thumbnail size"
+
 msgid "Halle, Stadion"
 msgstr "Arena, stadium"
 
@@ -601,6 +604,15 @@ msgstr "Help"
 
 msgid "Hinweise"
 msgstr "Instructions"
+
+msgid ""
+"IPTC „Special Instructions“ (Lightroom: Anweisungen), z. B. Kontaktdaten "
+"oder Kontoverbindung. Höchstens 256 Bytes. Zeilen stehen im Bild durch „ "
+"· “ getrennt."
+msgstr ""
+"IPTC “Special Instructions” (Lightroom: Instructions), e.g. contact "
+"details or bank details. At most 256 bytes. In the image, lines are "
+"separated by “ · ”."
 
 msgid "Ignorieren"
 msgstr "Ignore"
@@ -667,6 +679,9 @@ msgid ""
 msgstr ""
 "Could not check for a new version (no connection to GitHub, or the "
 "repository is not public)."
+
+msgid "Kontakt, Kontoverbindung, Honorarhinweis"
+msgstr "Contact, bank details, fee notice"
 
 #, python-brace-format
 msgid "Kopiere nach {name}: {done}/{total} …"
@@ -886,6 +901,12 @@ msgstr "Close"
 
 msgid "Schreiben dauert an"
 msgstr "Still writing"
+
+msgid "Schriftgröße"
+msgstr "Font size"
+
+msgid "Schriftgröße des Textes"
+msgstr "Font size of the text"
 
 msgid "Seriennummer"
 msgstr "Serial number"
@@ -1520,6 +1541,10 @@ msgstr "{name}: latitude/longitude incomplete or out of range"
 #, python-brace-format
 msgid "{name}: nicht lesbar ({error})"
 msgstr "{name}: not readable ({error})"
+
+#, python-brace-format
+msgid "{size} pt"
+msgstr "{size} pt"
 
 msgid "© 2026 Vor- und Nachname"
 msgstr "© 2026 first and last name"

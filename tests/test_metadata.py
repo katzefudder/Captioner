@@ -198,7 +198,8 @@ def test_gps_is_not_rewritten_unless_changed(tool, tmp_path):
 
 RIGHTS = dict(state='Hessen', country='Deutschland', creator='Florian Dehn', authors_position='Fotograf',
               caption_writer='Florian Dehn', copyright='© 2026 Florian Dehn',
-              web_statement='https://example.org/lizenz', source='chuc.de', category='Sport')
+              web_statement='https://example.org/lizenz', source='chuc.de', category='Sport',
+              instructions='Honorarpflichtig. Kontakt: foto@example.org · IBAN DE00 1234')
 
 
 def test_rights_go_into_xmp_iptc_and_exif(tool, tmp_path):
@@ -218,9 +219,22 @@ def test_rights_go_into_xmp_iptc_and_exif(tool, tmp_path):
     assert record['XMP:State'] == record['IPTC:Province-State'] == 'Hessen'
     assert record['XMP:Country'] == record['IPTC:Country-PrimaryLocationName'] == 'Deutschland'
     assert record['XMP:Category'] == 'Sport' and 'IPTC:Category' not in record  # IIM nur 3 Zeichen
+    assert record['XMP:Instructions'] == record['IPTC:SpecialInstructions'] == RIGHTS['instructions']
     item = scanner.scan(tmp_path)[0]
     list(metadata.read_items(tool, [item]))
     assert {name: getattr(item.meta, name) for name in RIGHTS} == RIGHTS
+
+
+def test_multiline_rights_are_written_on_one_line(tool, tmp_path):
+    """Adresse/Kontoverbindung aus einer Template-Datei mit Umbruechen: ExifTool-Argumente sind zeilenweise."""
+    import dataclasses
+    path = make_jpeg(tmp_path / 'a.jpg')
+    item = scanner.scan(tmp_path)[0]
+    instructions = 'Kontakt: foto@example.org\nIBAN DE00 1234\n'
+    metadata.write_item(tool, item, dataclasses.replace(META, instructions=instructions, source='a\nb'))
+    record = tool.json('-G', '-XMP:Instructions', '-XMP:Source', str(path))[0]
+    assert record['XMP:Instructions'] == 'Kontakt: foto@example.org · IBAN DE00 1234'  # Zeilen mit ·
+    assert record['XMP:Source'] == 'a b'
 
 
 def test_camera_artist_and_copyright_survive_saving(tool, tmp_path):

@@ -13,7 +13,7 @@ from PySide6.QtCore import QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (QColor, QFont, QFontDatabase, QKeySequence, QPainter, QShortcut, QSyntaxHighlighter,
                            QTextCharFormat, QTextCursor, QTextFormat)
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget,
-                               QListWidgetItem, QMessageBox, QPlainTextEdit, QPushButton, QSplitter,
+                               QListWidgetItem, QMessageBox, QPlainTextEdit, QPushButton, QSlider, QSplitter,
                                QTextEdit, QVBoxLayout, QWidget)
 
 from .. import roster as roster_module
@@ -54,6 +54,20 @@ class NumberedTextEdit(QPlainTextEdit):
         self._update_width()
         self._highlight_current_line()
 
+    def number_color(self):
+        """Zeilennummern: Textfarbe, leicht zum Hintergrund gemischt (Platzhalterfarbe war zu blass)."""
+        text, base = self.palette().text().color(), self.palette().alternateBase().color()
+        return QColor(*(round(t * 0.75 + b * 0.25) for t, b in zip(text.getRgb()[:3], base.getRgb()[:3])))
+
+    def set_point_size(self, size):
+        """Schriftgroesse; Tab-Abstand und Breite der Zeilennummern wachsen mit."""
+        font = self.font()
+        font.setPointSize(size)
+        self.setFont(font)
+        self.setTabStopDistance(self.fontMetrics().horizontalAdvance(' ') * 10)
+        self._update_width()
+        self._place_numbers()
+
     def current_line_color(self):
         """Systemfarbe, sehr blass: passt zu hell/dunkel, rote Problemzeilen bleiben erkennbar."""
         color = QColor(self.palette().highlight().color())
@@ -87,6 +101,9 @@ class NumberedTextEdit(QPlainTextEdit):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
+        self._place_numbers()
+
+    def _place_numbers(self):
         area = self.contentsRect()
         self.numbers.setGeometry(QRect(area.left(), area.top(), self.line_number_width(), area.height()))
 
@@ -118,7 +135,7 @@ class NumberedTextEdit(QPlainTextEdit):
                 elif is_current:
                     painter.setPen(palette.text().color())
                 else:
-                    painter.setPen(palette.placeholderText().color())
+                    painter.setPen(self.number_color())
                 painter.drawText(0, top, self.numbers.width() - 6, height,
                                  Qt.AlignmentFlag.AlignRight, str(number))
             block = block.next()
@@ -158,8 +175,13 @@ class RosterHighlighter(QSyntaxHighlighter):
 class RosterEditorDialog(QDialog):
     saved = Signal(str)   # Pfad der gespeicherten Datei
 
-    def __init__(self, sources, cached_text=None, parent=None):
-        """sources: Settings.roster_sources; cached_text(url) liefert die geladene Fassung einer URL."""
+    MIN_FONT, MAX_FONT = 9, 28
+
+    def __init__(self, sources, cached_text=None, parent=None, font_size=0):
+        """
+        sources: Settings.roster_sources; cached_text(url) liefert die geladene Fassung einer URL.
+        font_size: Schriftgroesse in Punkt (Settings.roster_font_size), 0 = Systemvorgabe.
+        """
         super().__init__(parent)
         self.setWindowTitle(_('Roster bearbeiten'))
         self.resize(900, 760)
@@ -190,6 +212,8 @@ class RosterEditorDialog(QDialog):
         self.text.setFont(font)
         self.text.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.text.setTabStopDistance(self.text.fontMetrics().horizontalAdvance(' ') * 10)
+        if font_size:
+            self.text.set_point_size(font_size)
         self.highlighter = RosterHighlighter(self.text.document())
         self.text.textChanged.connect(self._schedule_check)
 
@@ -214,6 +238,17 @@ class RosterEditorDialog(QDialog):
         layout.addWidget(hint)
 
         buttons = QHBoxLayout()
+        self.font_size = QSlider(Qt.Orientation.Horizontal)
+        self.font_size.setRange(self.MIN_FONT, self.MAX_FONT)
+        self.font_size.setValue(max(self.MIN_FONT, min(self.MAX_FONT, self.text.font().pointSize())))
+        self.font_size.setMaximumWidth(180)
+        self.font_size.setToolTip(_('Schriftgröße des Textes'))
+        self.font_size_label = QLabel()
+        self.font_size.valueChanged.connect(self._font_size_changed)
+        self._font_size_changed(self.font_size.value(), apply=False)
+        buttons.addWidget(QLabel(_('Schriftgröße')))
+        buttons.addWidget(self.font_size)
+        buttons.addWidget(self.font_size_label)
         buttons.addStretch(1)
         self.close_button = QPushButton(_('Schließen'))
         self.close_button.clicked.connect(self.close)
@@ -239,6 +274,11 @@ class RosterEditorDialog(QDialog):
             self.status.setText(_('Keine Roster-Quelle eingerichtet. Mit „Roster-Datei hinzufügen …“ eine '
                                   'Datei auswählen.'))
             self.save_button.setEnabled(False)
+
+    def _font_size_changed(self, size, apply=True):
+        self.font_size_label.setText(_('{size} pt').format(size=size))
+        if apply:
+            self.text.set_point_size(size)
 
     # --- Laden ----------------------------------------------------------------
 

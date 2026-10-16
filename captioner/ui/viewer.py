@@ -12,7 +12,7 @@ Zoomstufe und Ausschnitt bleiben beim Blaettern erhalten, damit man bei
 Serienbildern die Schaerfe an derselben Stelle vergleichen kann.
 """
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPixmap
+from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 import html
 
 from PySide6.QtWidgets import (QDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QSlider,
@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (QDialog, QFrame, QHBoxLayout, QLabel, QPushButton
 
 from .. import details as details_module
 from ..i18n import _
+from .gallery import item_color
+from .workers import full_size
 
 # Wertebereich des Zooms; "eingepasst" liegt meist darunter (Z9-Bild ~13 %) und ist
 # ein eigener Zustand, keine Zoomstufe
@@ -48,28 +50,38 @@ def clamp_zoom(factor):
 class ZoomView(QWidget):
     zoom_changed = Signal(str)
     zoom_state = Signal(bool, float)   # gezoomt?, Faktor (bei eingepasst: Einpass-Faktor)
+    FRAME_W = 8
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMouseTracking(True)
         self.setMinimumSize(200, 150)
         self._pixmap = None
+        self._full_size = (0, 0)
         self.provisional = False   # Kachel statt Vollbild: nur eingepasst zeigen
         self.zoom = None           # None = eingepasst, sonst Faktor (1.0 = 100 %)
         self.center = QPointF(0.5, 0.5)  # Bildmitte des Ausschnitts, relativ (0..1)
         self._drag_from = None
+        self.frame_color = None    # Farbklasse/Label des Bildes: Rahmen ums Foto
 
     # --- Zustand -----------------------------------------------------------
 
     def set_image(self, image, provisional=False):
+        """
+        image darf kleiner als das Original sein (Bildschirmstufe, Text 'full_size'): gerechnet
+        wird immer in Pixeln des Originals, damit 100 % stimmt und der Wechsel zur vollen
+        Aufloesung den Ausschnitt nicht verschiebt.
+        """
         self._pixmap = QPixmap.fromImage(image) if image is not None and not image.isNull() else None
+        self._full_size = full_size(image) if self._pixmap else (0, 0)
         self.provisional = provisional
         self._clamp()
         self.update()
         self._announce()
 
     def image_size(self):
-        return (self._pixmap.width(), self._pixmap.height()) if self._pixmap else (0, 0)
+        """Groesse des Originals in Pixeln (nicht unbedingt die des geladenen Bildes)."""
+        return self._full_size if self._pixmap else (0, 0)
 
     def _dpr(self):
         return self.devicePixelRatioF() or 1.0
@@ -217,12 +229,28 @@ class ZoomView(QWidget):
         visible = rect.intersected(QRectF(self.rect()))
         if visible.isEmpty():
             return
-        s = self._scale()
+        # Ausschnitt in Pixeln des geladenen Bildes (kann kleiner als das Original sein)
+        s = self._scale() * self._full_size[0] / self._pixmap.width()
         source = QRectF((visible.left() - rect.left()) / s, (visible.top() - rect.top()) / s,
                         visible.width() / s, visible.height() / s)
         # Ab 100 % harte Pixel, damit Schaerfe beurteilbar bleibt; darunter glatt
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, self.factor() < 1.0)
         painter.drawPixmap(visible, self._pixmap, source)
+        if self.frame_color is not None:
+            # aussen ums Bild, wo Platz ist; am Fensterrand innen auf der Bildkante
+            half = self.FRAME_W / 2
+            frame = visible.adjusted(-half, -half, half, half).intersected(
+                QRectF(self.rect()).adjusted(half, half, -half, -half))
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setPen(QPen(self.frame_color, self.FRAME_W, Qt.PenStyle.SolidLine, Qt.PenCapStyle.SquareCap,
+                                Qt.PenJoinStyle.MiterJoin))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRect(frame)
+
+    def set_frame_color(self, color):
+        if color != self.frame_color:
+            self.frame_color = color
+            self.update()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -457,6 +485,7 @@ class Viewer(QDialog):
             line += f'<br>{html.escape(item.meta.caption)}'
         self.info.setText(line)
         self._item = item
+        self.zoom.set_frame_color(item_color(item.meta))
         if changed:
             self._image = image
             self._raw_details = None

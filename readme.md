@@ -121,7 +121,7 @@ Hardened Runtime braucht.
    Im Anhang gibt es für jedes Feld einen Platzhalter: `{headline}` = Titel, `{city}` = Stadt,
    `{sublocation}` = Ort / Halle, `{state}`, `{country}`, `{creator}` (Fotograf),
    `{authors_position}`, `{caption_writer}`, `{copyright}`, `{web_statement}`, `{source}`,
-   `{category}` und `{date}` = Datum. Ist ein Ort-/Rechte-Feld im Template leer, wird
+   `{category}`, `{instructions}` (Hinweise) und `{date}` = Datum. Ist ein Ort-/Rechte-Feld im Template leer, wird
    der Wert des Bildes eingesetzt (wie beim Speichern); leere Platzhalter fallen samt Komma weg.
    **Datum** im Template ist normalerweise leer: dann steht bei `{date}` das Aufnahmedatum des
    Bildes. Zum Vorbereiten eines Spiels (z. B. heute schon für Sonntag) kann man dort einen
@@ -153,7 +153,7 @@ Hardened Runtime braucht.
    aus dem Panel (auch noch nicht Gespeichertes), `⌘N` weiter, `⌘⇧V` fügt ein und speichert.
    Die Beschreibung wird mit den Codes kopiert und je Foto neu aufgelöst; das Datum im Anhang
    ist das des Zielfotos. Mit mehreren ausgewählten Fotos fügt `⌘⇧V` in alle ein.
-5. **Bewerten und taggen:** `⌘1`–`⌘8` Farbklasse, `1`–`5`
+5. **Bewerten und taggen:** `1`–`8` Farbklasse, `⌘1`–`⌘5`
    Sterne, `T` Tag. Filter oben (oder `F3`/`F4`) zeigen nur die Auswahl.
    **Tags:** Beim Tippen im Tag-Feld schlägt die App Stichwörter vor, die schon einmal
    benutzt wurden (gespeichert, in geöffneten Bildern oder Templates), ohne die schon
@@ -205,6 +205,7 @@ schon, kommen die Ordner als neue Tabs dazu. macOS kennt diese Fähigkeit erst, 
 App einmal aus `/Programme` gestartet wurde. Unter Windows: Rechtsklick auf Ordner oder
 Laufwerk → „Mit Captioner öffnen“ (Option im Installer). Jeder Tab hat eigene Galerie und Auswahl; Filter und Beschriftungs-Panel
 gelten für den aktiven Tab.
+Die Größe der Vorschaubilder stellt der Regler „Vorschau“ unten in der Statusleiste ein.
 
 **Kopieren zwischen Tabs:** Bilder aus der Galerie auf den Reiter eines anderen Tabs ziehen
 (kurz darüber halten wechselt hinein, dann auch in dessen Galerie fallen lassen). Kopiert
@@ -220,8 +221,8 @@ Hilfe → „Tastenkürzel“) zeigt alle Kürzel für das aktuelle System.
 
 | Aktion | macOS | Windows |
 |---|---|---|
-| Farbklasse 1–8 / entfernen | `⌘1`–`⌘8` / `⌘0` | `Strg+1`–`8` / `Strg+0` |
-| Sterne 1–5 / entfernen | `1`–`5` / `0` | `1`–`5` / `0` |
+| Farbklasse 1–8 / entfernen | `1`–`8` / `0` | `1`–`8` / `0` |
+| Sterne 1–5 / entfernen | `⌘1`–`⌘5` / `⌘0` | `Strg+1`–`5` / `Strg+0` |
 | Tag an/aus · an · aus | `T` · `+` · `-` | `T` · `+` · `-` |
 | Großansicht | `Leertaste` | `Leertaste` |
 | Beschriftung bearbeiten | `I` oder `Enter` | `I` oder `Enter` |
@@ -341,12 +342,15 @@ copyright = "© 2026 Florian Dehn"
 web_statement = "https://example.org/lizenz"
 source = "chuc.de"
 category = "Sport"
+instructions = "Honorarpflichtig. Kontakt: foto@example.org · IBAN DE…"
 ```
 
 Gefüllte Felder schreibt die App beim Speichern in jedes Bild; leere lassen den Wert des
 Bildes stehen (z. B. Fotograf/Copyright, die die Kamera schon eingetragen hat). Heim und
 Gast gibt es im Template nicht: sie stehen im Titel und ergeben sich aus den Codes in der
-Beschreibung. Bundesland und Land füllt „Karte …“ beim Wählen des Ortes mit.
+Beschreibung. Bundesland und Land füllt „Karte …“ beim Wählen des Ortes mit. Ins Bild gehen
+alle diese Felder einzeilig: Die mehrzeiligen Hinweise stehen dort mit „ · “ zwischen den Zeilen,
+sonstige Zeilenumbrüche werden zu Leerzeichen.
 
 | Template-Feld | XMP | IPTC | EXIF |
 |---|---|---|---|
@@ -360,6 +364,7 @@ Beschreibung. Bundesland und Land füllt „Karte …“ beim Wählen des Ortes 
 | `web_statement` | `xmpRights:WebStatement` | | |
 | `source` | `photoshop:Source` | `Source` | |
 | `category` | `photoshop:Category` | `Category` (nur bis 3 Zeichen, z. B. `SPO`) | |
+| `instructions` (Hinweise: Kontakt, Kontoverbindung) | `photoshop:Instructions` | `SpecialInstructions` (bis 256 Bytes) | |
 
 Bei RAW-Dateien geht alles nur ins XMP-Sidecar. Dateien der Version 1 (mit `occasion`,
 `home`, `away`) werden weiter gelesen; daraus wird der Titel, beim nächsten Speichern

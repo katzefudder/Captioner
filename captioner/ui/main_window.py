@@ -11,7 +11,7 @@ from pathlib import Path
 from PySide6.QtCore import QEvent, QItemSelection, QItemSelectionModel, QMimeData, QObject, Qt, QTime, QTimer, QUrl
 from PySide6.QtGui import QAction, QColor, QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QHBoxLayout, QLineEdit, QTimeEdit,
-                               QLabel, QMainWindow, QMessageBox, QProgressDialog, QSplitter,
+                               QLabel, QMainWindow, QMessageBox, QProgressDialog, QSlider, QSplitter,
                                QPushButton, QToolButton, QVBoxLayout, QWidget)
 
 from .. import WEBSITE_LINK, codes, config, geo, i18n, keywords, metadata, scanner, transfer, undo, updates, version
@@ -29,7 +29,7 @@ from .editor import CaptionEditor, template_folder_label
 from .rostereditor import RosterEditorDialog
 from . import folderdialog, instance
 from .viewer import Viewer
-from .gallery import CLASS_COLORS, ItemRole
+from .gallery import CLASS_COLORS, MAX_TILE_W, MIN_TILE_W, ItemRole
 from .tabs import CopyWorker, FolderTab, FolderTabs, ask_conflicts, tab_title
 from .workers import MetadataWriter, RosterWorker, ScanWorker, ThumbnailLoader
 
@@ -403,6 +403,16 @@ class MainWindow(QMainWindow):
         outer.addWidget(self.main_splitter, 1)
         self.setCentralWidget(central)
 
+        # Groesse der Vorschaubilder, fuer alle Tabs; gemerkt wird beim Loslassen
+        self.thumbnail_slider = QSlider(Qt.Orientation.Horizontal)
+        self.thumbnail_slider.setRange(MIN_TILE_W, MAX_TILE_W)
+        self.thumbnail_slider.setValue(max(MIN_TILE_W, min(MAX_TILE_W, self.settings.thumbnail_size)))
+        self.thumbnail_slider.setFixedWidth(160)
+        self.thumbnail_slider.setToolTip(_('Größe der Vorschaubilder'))
+        self.thumbnail_slider.valueChanged.connect(self.set_thumbnail_size)
+        self.thumbnail_slider.sliderReleased.connect(self._remember_thumbnail_size)
+        self.statusBar().addPermanentWidget(QLabel(_('Vorschau')))
+        self.statusBar().addPermanentWidget(self.thumbnail_slider)
         self.status_label = QLabel()
         self.statusBar().addPermanentWidget(self.status_label)
         self.setAcceptDrops(True)
@@ -505,6 +515,7 @@ class MainWindow(QMainWindow):
         # Doppelklick auf eine Kachel: Grossansicht wie mit der Leertaste (erster Klick macht sie aktuell)
         tab.view.doubleClicked.connect(lambda index: self.open_viewer())
         tab.view.visible_changed.connect(lambda t=tab: self._request_thumbnails(t))
+        tab.view.set_tile_width(self.settings.thumbnail_size)
         index = self.tabs.addTab(tab, tab_title(folder))
         self.tabs.setCurrentIndex(index)
         self._update_empty_text()
@@ -811,6 +822,17 @@ class MainWindow(QMainWindow):
         visible = tab.model.items[first:last + 1]
         around = tab.model.items[last + 1:last + 1 + margin] + tab.model.items[max(0, first - margin):first]
         self.loader.request(visible + around)  # sichtbare zuerst
+
+    def set_thumbnail_size(self, width):
+        """Kachelbreite in allen Tabs (Regler); gespeichert erst beim Loslassen."""
+        self.settings.thumbnail_size = width
+        for tab in self.all_tabs():
+            tab.view.set_tile_width(width)
+        if not self.thumbnail_slider.isSliderDown():
+            self._remember_thumbnail_size()  # Tastatur/Klick neben den Griff
+
+    def _remember_thumbnail_size(self):
+        self.settings.save()
 
     def _update_count(self):
         total = len(self.filtered)
@@ -1381,8 +1403,19 @@ class MainWindow(QMainWindow):
     def _show_in_viewer(self, item):
         self.last_previewed_key = item.key
         self.viewer.show_item(item, self.loader.image(item.key), provisional=True)
+        # Eingepasst reicht die Aufloesung des Bildschirms; die volle kommt fuer 100 % nach
+        screen = self.viewer.screen() or QApplication.primaryScreen()
+        size = screen.size() * screen.devicePixelRatio()
+        self.loader.display_edge = max(size.width(), size.height())
+        self.loader.request_full(item, self._viewer_neighbours(item))
         self.loader.request_details(item)
-        self.loader.request_full(item)
+
+    def _viewer_neighbours(self, item):
+        """Vorladen beim Blaettern: die naechsten zwei, das vorige."""
+        if item not in self.filtered:
+            return []
+        position = self.filtered.index(item)
+        return [self.filtered[p] for p in (position + 1, position + 2, position - 1) if 0 <= p < len(self.filtered)]
 
     def _on_info_toggled(self, visible):
         if self.settings.viewer_info_panel != visible:
@@ -1567,9 +1600,13 @@ class MainWindow(QMainWindow):
         self.load_roster(force=True)
 
     def edit_roster(self):
-        dialog = RosterEditorDialog(self.settings.roster_sources, self.roster_loader.cached_text, self)
+        dialog = RosterEditorDialog(self.settings.roster_sources, self.roster_loader.cached_text, self,
+                                    font_size=self.settings.roster_font_size)
         dialog.saved.connect(lambda path: self.load_roster(force=True))
         dialog.exec()
+        if dialog.font_size.value() != self.settings.roster_font_size:
+            self.settings.roster_font_size = dialog.font_size.value()
+            self.settings.save()
 
     def load_roster(self, force=False):
         self.editor.set_roster_status(_('Roster wird geladen …'))

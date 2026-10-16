@@ -101,3 +101,20 @@ def test_current_line_is_highlighted(app, roster_file):
     selections = editor.extraSelections()
     assert len(selections) == 1 and selections[0].cursor.blockNumber() == 2
     assert selections[0].format.property(QtGui.QTextFormat.Property.FullWidthSelection)
+
+
+def test_font_size_slider_and_line_number_contrast(app, roster_file):
+    dialog = RosterEditorDialog([str(roster_file)], font_size=12)
+    assert dialog.text.font().pointSize() == 12 and dialog.font_size.value() == 12
+    narrow = dialog.text.line_number_width()
+    dialog.font_size.setValue(20)
+    assert dialog.text.font().pointSize() == 20 and dialog.font_size_label.text() == '20 pt'
+    assert dialog.text.line_number_width() > narrow       # Nummern wachsen mit
+    assert dialog.text.tabStopDistance() == dialog.text.fontMetrics().horizontalAdvance(' ') * 10
+
+    # Zeilennummern naeher an der Textfarbe als an der Hintergrundfarbe
+    def distance(a, b):
+        return sum(abs(x - y) for x, y in zip(a.getRgb()[:3], b.getRgb()[:3]))
+    palette = dialog.text.palette()
+    number = dialog.text.number_color()
+    assert distance(number, palette.text().color()) < distance(number, palette.alternateBase().color())

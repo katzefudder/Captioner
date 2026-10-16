@@ -6,7 +6,7 @@ from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QColor, QKeySequence
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
                                QFormLayout, QFrame, QGridLayout, QHBoxLayout, QInputDialog, QLabel, QLineEdit,
-                               QListWidget, QPushButton, QSizePolicy, QSpinBox, QTableWidget, QTableWidgetItem,
+                               QListWidget, QPlainTextEdit, QPushButton, QSizePolicy, QSpinBox, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
 
 from .. import geo, i18n, metadata
@@ -29,9 +29,24 @@ SUFFIX_PLACEHOLDERS = [
     ('authors_position', N_('Position'), '#20a8d8'), ('caption_writer', N_('Beschriftet von'), '#8d6e63'),
     ('copyright', N_('Copyright'), '#5c6bc0'), ('web_statement', N_('Copyright-URL'), '#9e9d24'),
     ('source', N_('Quelle'), '#00897b'), ('category', N_('Kategorie'), '#78909c'),
+    ('instructions', N_('Hinweise'), '#c0392b'),
     ('date', N_('Datum'), '#a66bd6')]
 PLACEHOLDER_COLORS = {key: color for key, _label, color in SUFFIX_PLACEHOLDERS}
 PLACEHOLDER_PATTERN = re.compile(r'\{(\w+)\}')
+
+
+class MultiLineField(QPlainTextEdit):
+    """Mehrzeiliges Feld mit der Schnittstelle von QLineEdit, die der Dialog nutzt (text())."""
+
+    def __init__(self, value='', placeholder='', lines=4, parent=None):
+        super().__init__(value, parent)
+        self.setPlaceholderText(placeholder)
+        self.setTabChangesFocus(True)   # Tab springt weiter, wie in den einzeiligen Feldern
+        metrics = self.fontMetrics()
+        self.setFixedHeight(metrics.lineSpacing() * lines + 2 * round(self.document().documentMargin()) + 8)
+
+    def text(self):
+        return self.toPlainText()
 
 
 def _split(text):
@@ -84,6 +99,10 @@ class TemplateDialog(QDialog):
         self.copyright = field(template.copyright, _('© 2026 Vor- und Nachname'))
         self.web_statement = field(template.web_statement, _('https://… (Nutzungsbedingungen, Lizenz)'))
         self.source = field(template.source, _('Agentur, Redaktion'))
+        self.instructions = MultiLineField(template.instructions, _('Kontakt, Kontoverbindung, Honorarhinweis'))
+        self.instructions.setToolTip(_('IPTC „Special Instructions“ (Lightroom: Anweisungen), z. B. '
+                                       'Kontaktdaten oder Kontoverbindung. Höchstens 256 Bytes. Zeilen '
+                                       'stehen im Bild durch „ · “ getrennt.'))
         self.extra_tags = field(', '.join(template.extra_tags), _('Eishockey, DEL2, Saison 2026/27'))
         self.category = field(template.category, _('Sport'))
         self.suffix = field(template.caption_suffix, DEFAULT_CAPTION_SUFFIX)
@@ -109,6 +128,7 @@ class TemplateDialog(QDialog):
         form.addRow(_('Copyright'), self.copyright)
         form.addRow(_('Copyright-URL'), self.web_statement)
         form.addRow(_('Quelle'), self.source)
+        form.addRow(_('Hinweise'), self.instructions)
         section(_('Beschreibung und Tags'))
         form.addRow(_('Kategorie'), self.category)
         form.addRow(_('Zusatz-Tags'), self.extra_tags)
@@ -136,7 +156,7 @@ class TemplateDialog(QDialog):
         self.buttons.rejected.connect(self.reject)
         form.addRow(self.buttons)
 
-        for edit in self.findChildren(QLineEdit):
+        for edit in self.findChildren(QLineEdit) + self.findChildren(MultiLineField):
             edit.textChanged.connect(self._update)
         self._update()
 
@@ -255,7 +275,8 @@ class TemplateDialog(QDialog):
         """Steht der Cursor im Anhang auf {city}, wird das Feld Stadt farbig umrandet."""
         key = self.placeholder_at_cursor() if self.suffix.hasFocus() else None
         for name, edit in self._suffix_sources.items():
-            edit.setStyleSheet(f'QLineEdit {{ border: 2px solid {self._color(name)}; border-radius: 4px; }}'
+            kind = 'QPlainTextEdit' if isinstance(edit, QPlainTextEdit) else 'QLineEdit'
+            edit.setStyleSheet(f'{kind} {{ border: 2px solid {self._color(name)}; border-radius: 4px; }}'
                                if name == key else '')
 
     def suffix_preview_html(self):
@@ -360,6 +381,7 @@ class TemplateDialog(QDialog):
             web_statement=self.web_statement.text().strip(),
             source=self.source.text().strip(),
             category=self.category.text().strip(),
+            instructions=self.instructions.text().strip(),
             latitude=place.latitude,
             longitude=place.longitude,
         )

@@ -26,6 +26,19 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 - **Galerie ohne Seiten:** alle Bilder eines Ordners in einer scrollbaren Galerie; Vorschauen
   werden beim Scrollen nachgeladen. Die Einstellung „Bilder pro Seite“ und die Seiten-Kürzel
   entfallen, `Bild↑`/`Bild↓` blättern jetzt wie gewohnt in der Galerie.
+- **Hinweise im Template** (IPTC „Special Instructions“, Lightroom: Anweisungen): z. B.
+  Kontaktdaten oder Kontoverbindung, geht wie Copyright & Co. in jedes Bild; auch als
+  Platzhalter `{instructions}` im Anhang.
+- **Großansicht deutlich schneller:** zuerst in Bildschirmauflösung (eingepasst sofort scharf),
+  die volle Auflösung für 100 % kommt im Hintergrund nach. Nächstes und voriges Bild werden
+  vorgeladen; die Großansicht wartet nicht mehr, während die Galerie Vorschauen erzeugt.
+- **Größe der Vorschaubilder** per Regler in der Statusleiste (wird gemerkt). Die Vorschauen
+  sind dafür schärfer (512 statt 320 px); beim ersten Öffnen eines Ordners werden sie neu erzeugt.
+- **Roster-Editor:** Schriftgröße per Regler (wird gemerkt), Zeilennummern mit mehr Kontrast.
+- **Tasten getauscht:** Ziffern `1`–`8` setzen die Farbklasse (`0` entfernt sie), `⌘1`–`⌘5`
+  (Windows: `Strg+1`–`5`) die Sterne (`⌘0` entfernt sie).
+- **Farbklasse als Rahmen ums Foto** in Galerie und Großansicht (statt des schmalen Streifens
+  oben an der Kachel).
 - **Knöpfe „Kopieren“ und „Einfügen“** im Beschriftungs-Panel, wie `⌘⇧C`/`⌘⇧V`.
 - **„Inhalte überschreiben“** neben „Template auf Auswahl anwenden“ (voreingestellt an):
   setzt Titel, Stadt, Ort und Tags genau auf das Template und leert die Beschreibung. Ohne Haken
@@ -34,6 +47,8 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 
 ### Behoben
 
+- Zeilenumbrüche in Ort-/Rechte-Feldern (aus einer Template-Datei oder einem Bild) zerlegten den
+  Aufruf von ExifTool; sie werden jetzt zu Leerzeichen.
 - Ein unbeschriftetes Bild zeigte im Panel die Beschreibung des zuletzt gespeicherten Bildes;
   das Feld ist jetzt leer.
 - „Template-Datei laden …“ und „Speichern unter …“ im Menü `⋯` taten nichts.

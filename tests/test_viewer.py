@@ -203,3 +203,72 @@ def test_slider_controls_zoom_and_follows_keys(window):
     assert viewer.zoom.zoom is None and not viewer.fit_button.isEnabled()
     viewer.hundred_button.click()
     assert viewer.zoom.zoom == 1.0 and slider.value() == 100
+
+
+def test_screen_stage_keeps_the_original_scale(app):
+    """Bildschirmstufe (halbe Aufloesung): 100 % und Ausschnitt beziehen sich aufs Original."""
+    v = ZoomView()
+    v.resize(800, 600)
+    half = QImage(2000, 1500, QImage.Format.Format_RGB32)
+    half.fill(QColor('gray'))
+    half.setText('full_size', '4000x3000')
+    v.set_image(half)
+    assert v.image_size() == (4000, 3000)
+    assert v.fit_factor() == pytest.approx(0.2 * dpr(v))
+    v.zoom_to(1.0, QPointF(200, 150))
+    center = QPointF(v.center)
+    full = QImage(4000, 3000, QImage.Format.Format_RGB32)
+    full.fill(QColor('gray'))
+    v.set_image(full)                      # volle Aufloesung kommt nach: nichts springt
+    assert v.zoom == 1.0 and v.center == center
+    v.grab()                               # zeichnet aus beiden Groessen ohne Fehler
+
+
+@requires_exiftool
+def test_render_view_decodes_at_screen_size(tmp_path):
+    from captioner import previews
+    from captioner.exiftool import ExifTool, find_exiftool
+    from captioner.scanner import Item
+    path = make_jpeg(tmp_path / 'gross.jpg', size=(4000, 3000))
+    item = Item(key=str(path), embedded=[path])
+    tool = ExifTool(find_exiftool()).start()
+    try:
+        image, size = previews.render_view(tool, item, 1500)
+        assert size == (4000, 3000)
+        assert 1500 <= max(image.size) < 4000      # Draft: verkleinert, aber nie unter die Bildschirmkante
+        image, size = previews.render_view(tool, item, None)
+        assert image.size == size == (4000, 3000)
+    finally:
+        tool.close()
+
+
+def test_view_cache_prefetch_and_stages(app):
+    from types import SimpleNamespace
+    from captioner.ui.workers import ThumbnailLoader
+    loader = ThumbnailLoader(None, None)
+    started = []
+    loader._start_view = lambda item, edge, priority: started.append((item.key, 'display' if edge else 'full'))
+    shown = []
+    loader.full_ready.connect(lambda key, image: shown.append((key, image.text('stage'))))
+
+    def image(stage, pixels=10):
+        result = QImage(pixels, pixels, QImage.Format.Format_RGB888)
+        result.setText('stage', stage)
+        return result
+
+    a, b = SimpleNamespace(key='a'), SimpleNamespace(key='b')
+    loader.request_full(a, [b])
+    assert started == [('a', 'display'), ('a', 'full'), ('b', 'display')]
+    loader._on_view('b', image('display'))             # vorgeladen: noch nicht gezeigt
+    loader._on_view('a', image('full'))
+    loader._on_view('a', image('display'))             # zu spaet: ersetzt das volle Bild nicht
+    assert shown == [('a', 'full')] and loader.view_images['a'].text('stage') == 'full'
+
+    started.clear()
+    loader.request_full(b, [a])                         # weitergeblaettert: sofort aus dem Speicher
+    assert shown[-1] == ('b', 'display') and started == [('b', 'full')]
+
+    loader.VIEW_BYTES = image('display', 20).sizeInBytes()
+    loader._on_view('c', image('display', 20))          # ueber dem Budget: aeltere gehen, das aktuelle bleibt
+    assert 'b' in loader.view_images and 'a' not in loader.view_images
+    loader.shutdown()

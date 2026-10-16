@@ -36,7 +36,7 @@ def parse_headline(text):
 # Felder, die das Template beim Speichern in jedes Bild schreibt, sofern sie gefuellt
 # sind (Namen wie in scanner.Metadata); leere lassen den Wert des Bildes stehen
 FIXED_FIELDS = ('state', 'country', 'creator', 'authors_position', 'caption_writer',
-                'copyright', 'web_statement', 'source', 'category')
+                'copyright', 'web_statement', 'source', 'category', 'instructions')
 
 # Platzhalter im Anhang ({city} usw.): Feldnamen wie in scanner.Metadata, dazu {date}
 SUFFIX_FIELDS = ('headline', 'city', 'sublocation') + FIXED_FIELDS
@@ -60,6 +60,7 @@ class MatchTemplate:
     web_statement: str = ''     # URL zu Nutzungsbedingungen/Lizenz
     source: str = ''            # Quelle/Agentur
     category: str = ''          # photoshop:Category, z. B. "Sport"
+    instructions: str = ''      # Hinweise (IPTC Special Instructions): Kontakt, Kontoverbindung
     # Wird an jede Bildunterschrift gehaengt, wie bisher im Workflow-Tool fuer die Auswahl von Fotos:
     # "..., DEL 2 - EC Bad Nauheim gegen Eisbaeren Regensburg, Bad Nauheim, Colonel-Knight-Stadion, 01.03.26"
     caption_suffix: str = DEFAULT_CAPTION_SUFFIX
@@ -171,6 +172,7 @@ def slug(name):
 #     web_statement = "https://example.org/lizenz"
 #     source = "chuc.de"
 #     category = "Sport"
+#     instructions = "Honorarpflichtig. Kontakt: … · IBAN DE…"
 #     latitude = 50.37255        # optional, vom Karten-Picker
 #     longitude = 8.73845
 #

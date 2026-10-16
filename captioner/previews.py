@@ -13,13 +13,14 @@ Ergebnisse landen in einem Plattencache (Pfad + Groesse + mtime).
 """
 import hashlib
 import io
+import math
 from pathlib import Path
 
 from PIL import Image
 
 from .scanner import Item, JPEG_EXTENSIONS
 
-TILE_SIZE = 320
+TILE_SIZE = 512  # gross genug fuer die groessten Kacheln (Regler) auf Retina
 # Erhoehen, wenn sich die Darstellung aendert; alte Kacheln im Plattencache verfallen dann
 CACHE_VERSION = 2
 
@@ -80,11 +81,40 @@ def _embedded_jpeg(tool, path, tags, min_edge):
 
 
 def orientation_of(tool, path):
-    records = tool.json('-n', '-Orientation', str(path))
+    records = tool.json('-n', '-fast2', '-Orientation', str(path))  # IFD0 genuegt, Makernotes nicht noetig
     try:
         return int(records[0].get('Orientation') or 1) if records else 1
     except (TypeError, ValueError):
         return 1
+
+
+def render_view(tool, item: Item, min_edge=None):
+    """
+    Grossansicht: (PIL-Image, (Breite, Hoehe) des Originals, ausgerichtet).
+
+    Mit min_edge wird das JPEG im Draft-Modus verkleinert dekodiert (1/2, 1/4, 1/8 direkt
+    beim Entpacken), aber nie unter min_edge: eingepasst so scharf wie in voller Groesse,
+    bei 45 MP zwei- bis dreimal schneller. Ohne min_edge: volle Aufloesung fuer 100 %.
+    """
+    path = item.primary
+    if path.suffix.lower() in JPEG_EXTENSIONS:
+        source = path
+    else:
+        source = _embedded_jpeg(tool, path, FULL_TAGS, 10 ** 6)
+    if source is None:
+        image = Image.open(path).convert('RGB')  # TIFF/manche DNGs: kein eingebettetes JPEG
+        size = image.size
+    else:
+        image = Image.open(io.BytesIO(source) if isinstance(source, bytes) else source)
+        size = image.size
+        if min_edge and max(size) > min_edge:
+            scale = min_edge / max(size)
+            image.draft('RGB', (math.ceil(size[0] * scale), math.ceil(size[1] * scale)))
+        image = image.convert('RGB')
+    orientation = orientation_of(tool, path)
+    if orientation in (5, 6, 7, 8):
+        size = (size[1], size[0])
+    return orient(image, orientation), size
 
 
 def render(tool, item: Item, max_edge):

@@ -373,3 +373,51 @@ def test_gallery_visible_rows_match_the_layout(app):
     app.processEvents()
     assert check()[1] == 999
     view.close()
+
+
+def test_thumbnail_slider_resizes_tiles_in_all_tabs(window):
+    from captioner.ui.gallery import tile_size
+    second = window.new_tab()
+    window.thumbnail_slider.setValue(400)
+    assert window.settings.thumbnail_size == 400
+    for tab in window.all_tabs():
+        delegate = tab.view.itemDelegate()
+        assert (delegate.tile_w, delegate.tile_h, delegate.image_h) == tile_size(400)
+    assert tile_size(220) == (220, 210, 150)      # Voreinstellung wie bisher
+    third = window.new_tab()                       # neue Tabs bekommen die eingestellte Groesse
+    assert third.view.itemDelegate().tile_w == 400 and second is not third
+
+
+def test_thumbnail_memory_keeps_wanted_tiles(app):
+    from types import SimpleNamespace
+    from PySide6.QtGui import QImage
+    from captioner.ui.workers import ThumbnailLoader
+    loader = ThumbnailLoader(None, None)
+    image = QImage(100, 100, QImage.Format.Format_RGB32)
+    loader.MEMORY_BYTES = 3 * image.sizeInBytes()
+    loader.wanted = {'a', 'b', 'c', 'd'}           # alle sichtbar: nichts verwerfen, auch ueber dem Budget
+    for key in 'abcd':
+        loader._on_ready(key, QImage(image))
+    assert set(loader.images) == {'a', 'b', 'c', 'd'}
+    loader.wanted = {'d', 'e'}                     # weitergescrollt: aelteste nicht mehr sichtbare gehen
+    loader._on_ready('e', QImage(image))
+    assert set(loader.images) == {'c', 'd', 'e'}
+    assert loader.memory == 3 * image.sizeInBytes()
+    loader.invalidate('c')
+    assert loader.memory == 2 * image.sizeInBytes()
+    loader.shutdown()
+
+
+def test_template_dialog_instructions_are_multiline(app):
+    from captioner.templates import MatchTemplate
+    from captioner.ui.dialogs import MultiLineField, TemplateDialog
+    text = 'Honorarpflichtig\nKontakt: foto@example.org\nIBAN DE00 1234'
+    dialog = TemplateDialog(MatchTemplate(name='Hinweise', instructions=text, caption_suffix=', {instructions}'))
+    assert isinstance(dialog.instructions, MultiLineField) and dialog.instructions.text() == text
+    assert dialog.template().instructions == text            # Zeilen bleiben in der Template-Datei
+    dialog.instructions.setPlainText('x' * 300)                  # zu lang: Speichern gesperrt
+    assert not dialog.buttons.button(dialog.buttons.StandardButton.Save).isEnabled()
+    dialog.instructions.setPlainText('a\n' * 70)                 # 140 Bytes, im Bild mit " · " 342
+    assert not dialog.buttons.button(dialog.buttons.StandardButton.Save).isEnabled()
+    dialog.instructions.setPlainText(text)
+    assert dialog.buttons.button(dialog.buttons.StandardButton.Save).isEnabled()
