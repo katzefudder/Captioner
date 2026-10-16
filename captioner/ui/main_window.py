@@ -124,14 +124,11 @@ class MainWindow(QMainWindow):
     all_items = _tab_attribute('all_items')
     by_key = _tab_attribute('by_key')
     filtered = _tab_attribute('filtered')
-    page = _tab_attribute('page')
     selected_keys = _tab_attribute('selected_keys')
     scan_worker = _tab_attribute('scan_worker')
     model = _tab_attribute('model')
     view = _tab_attribute('view')
-    prev_button = _tab_attribute('prev_button')
-    next_page_button = _tab_attribute('next_page_button')
-    page_label = _tab_attribute('page_label')
+    count_label = _tab_attribute('count_label')
 
     def __init__(self, settings: config.Settings, folder=None):
         super().__init__()
@@ -153,7 +150,6 @@ class MainWindow(QMainWindow):
         self.keyword_history = keywords.KeywordHistory(config.cache_dir() / 'keywords.json')
 
         self.edited_keys = set()   # ueber alle Tabs; Keys sind Pfade
-        self.last_raw_caption = ''
         self.last_headline = ''    # fuer Bilder ohne Titel, wenn das Template keinen vorgibt
         self.roster_worker = None
         self.copy_worker = None
@@ -320,10 +316,10 @@ class MainWindow(QMainWindow):
         filters.addWidget(self.color_filter)
         filters.addWidget(self.uncaptioned_filter)
         self._fill_color_filter()
-        self.rating_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
-        self.color_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
-        self.tag_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
-        self.uncaptioned_filter.toggled.connect(lambda: self.apply_filter(True))
+        self.rating_filter.currentIndexChanged.connect(lambda: self.apply_filter())
+        self.color_filter.currentIndexChanged.connect(lambda: self.apply_filter())
+        self.tag_filter.currentIndexChanged.connect(lambda: self.apply_filter())
+        self.uncaptioned_filter.toggled.connect(lambda: self.apply_filter())
 
         # Zweite Zeile: Suche, Kamera, Uhrzeit
         search_row = QHBoxLayout()
@@ -333,18 +329,18 @@ class MainWindow(QMainWindow):
         self._search_timer = QTimer(self)
         self._search_timer.setSingleShot(True)
         self._search_timer.setInterval(200)
-        self._search_timer.timeout.connect(lambda: self.apply_filter(True))
+        self._search_timer.timeout.connect(lambda: self.apply_filter())
         self.search.textChanged.connect(self._search_timer.start)
         self.camera_filter = QComboBox()
         self.camera_filter.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-        self.camera_filter.currentIndexChanged.connect(lambda: self.apply_filter(True))
+        self.camera_filter.currentIndexChanged.connect(lambda: self.apply_filter())
         self.time_filter = QCheckBox(_('Uhrzeit'))
         self.time_from = QTimeEdit(QTime(0, 0))
         self.time_to = QTimeEdit(QTime(23, 59))
         for edit in (self.time_from, self.time_to):
             edit.setDisplayFormat('HH:mm')
             edit.setEnabled(False)
-            edit.timeChanged.connect(lambda: self.time_filter.isChecked() and self.apply_filter(True))
+            edit.timeChanged.connect(lambda: self.time_filter.isChecked() and self.apply_filter())
         self.time_filter.toggled.connect(self._time_filter_toggled)
         search_row.addWidget(self.search, 1)
         search_row.addWidget(self.camera_filter)
@@ -392,6 +388,8 @@ class MainWindow(QMainWindow):
         self.editor.add_roster_file_requested.connect(self.add_roster_file)
         self.editor.edit_roster_requested.connect(self.edit_roster)
         self.editor.navigate_requested.connect(self.step_selection)
+        self.editor.snapshot_take_requested.connect(self.take_snapshot)
+        self.editor.snapshot_paste_requested.connect(self.paste_snapshot)
         self.editor.place_chosen.connect(self.remember_place)
         self.editor.set_place_book(self.places)
         self.editor.set_keyword_history(self.keyword_history)
@@ -409,7 +407,7 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.status_label)
         self.setAcceptDrops(True)
         self._install_shortcuts()
-        self._update_pager()
+        self._update_count()
 
     def _fill_color_filter(self):
         self.color_filter.blockSignals(True)
@@ -440,8 +438,6 @@ class MainWindow(QMainWindow):
             'select_tagged': self.select_tagged,
             'home': lambda: self.jump_to(0),
             'end': lambda: self.jump_to(-1),
-            'page_prev': lambda: self.go_to_page(self.page - 1),
-            'page_next': lambda: self.go_to_page(self.page + 1),
             'next_image': lambda: self.step_selection(1),
             'prev_image': lambda: self.step_selection(-1),
             'roster_settings': self.edit_settings,
@@ -508,12 +504,11 @@ class MainWindow(QMainWindow):
         tab.view.files_dropped.connect(lambda t=tab: self.copy_dragged_to(t))
         # Doppelklick auf eine Kachel: Grossansicht wie mit der Leertaste (erster Klick macht sie aktuell)
         tab.view.doubleClicked.connect(lambda index: self.open_viewer())
-        tab.prev_button.clicked.connect(lambda: self.go_to_page(self.page - 1))
-        tab.next_page_button.clicked.connect(lambda: self.go_to_page(self.page + 1))
+        tab.view.visible_changed.connect(lambda t=tab: self._request_thumbnails(t))
         index = self.tabs.addTab(tab, tab_title(folder))
         self.tabs.setCurrentIndex(index)
         self._update_empty_text()
-        self._update_pager()
+        self._update_count()
         return tab
 
     def tab_for_folder(self, folder):
@@ -612,7 +607,6 @@ class MainWindow(QMainWindow):
         tab.stop_scan()
         tab.all_items, tab.by_key, tab.filtered = [], {}, []
         tab.selected_keys.clear()
-        tab.page = 0
         tab.model.set_items([])
         self._set_tab_status(tab, _('{folder} – wird eingelesen …').format(folder=tab.folder))
         tab.scan_started = time.time()
@@ -626,7 +620,7 @@ class MainWindow(QMainWindow):
         worker.start()
         if tab is self.tab:
             self._update_empty_text()
-            self._update_pager()
+            self._update_count()
             self._show_selection_in_editor()
 
     def _scanning_tab(self):
@@ -644,7 +638,7 @@ class MainWindow(QMainWindow):
         tab.all_items = items
         tab.by_key = {item.key: item for item in items}
         if tab is self.tab:
-            self.apply_filter(True)
+            self.apply_filter()
 
     def _on_chunk_loaded(self, chunk):
         tab = self._scanning_tab()
@@ -676,7 +670,7 @@ class MainWindow(QMainWindow):
                                            count).format(folder=tab.folder, count=count, seconds=f'{elapsed:.1f}'))
         if tab is self.tab:
             self._fill_camera_filter()
-            self.apply_filter(False)
+            self.apply_filter()
 
     def _set_tab_status(self, tab, text):
         tab.status_text = text
@@ -689,7 +683,7 @@ class MainWindow(QMainWindow):
         # Filter gelten fuer alle Tabs; beim Wechsel fuer den neuen anwenden
         self.folder_label.setText(self.tab.status_text)
         self._fill_camera_filter()
-        self.apply_filter(False)
+        self.apply_filter()
         self._remember_tabs()
 
     def close_tab(self, index):
@@ -706,7 +700,7 @@ class MainWindow(QMainWindow):
             self.new_tab()
         self._remember_tabs()
 
-    # --- Filter, Seiten, Auswahl -------------------------------------------------
+    # --- Filter, Auswahl -------------------------------------------------------
 
     def _passes(self, item):
         rating = self.rating_filter.currentData()
@@ -745,7 +739,7 @@ class MainWindow(QMainWindow):
             if times:
                 self.time_from.setTime(QTime.fromString(times[0], 'HH:mm'))
                 self.time_to.setTime(QTime.fromString(times[-1], 'HH:mm'))
-        self.apply_filter(True)
+        self.apply_filter()
 
     def _fill_camera_filter(self):
         """Kameras des aktiven Tabs; die Auswahl bleibt, solange es die Kamera noch gibt."""
@@ -761,27 +755,9 @@ class MainWindow(QMainWindow):
         self.camera_filter.setVisible(self.camera_filter.count() > 2)  # bei einer Kamera nichts zu waehlen
         self.camera_filter.blockSignals(False)
 
-    def apply_filter(self, reset_page):
+    def apply_filter(self):
         self.filtered = [item for item in self.all_items if self._passes(item)]
-        if reset_page:
-            self.page = 0
-        self.page = max(0, min(self.page, self.page_count() - 1))
-        self.show_page()
-
-    def page_count(self):
-        size = self.settings.page_size
-        return max(1, (len(self.filtered) + size - 1) // size)
-
-    def page_items(self, page=None):
-        page = self.page if page is None else page
-        size = self.settings.page_size
-        return self.filtered[page * size:(page + 1) * size]
-
-    def go_to_page(self, page, focus_key=None):
-        if not 0 <= page < self.page_count():
-            return
-        self.page = page
-        self.show_page(focus_key)
+        self.show_gallery()
 
     def _update_empty_text(self):
         """Hinweis unter dem Logo, solange die Galerie leer ist."""
@@ -797,46 +773,60 @@ class MainWindow(QMainWindow):
         self.view.empty_text = text
         self.view.viewport().update()
 
-    def show_page(self, focus_key=None):
+    def show_gallery(self, focus_key=None):
+        """Alle gefilterten Bilder zeigen und die Auswahl (selected_keys) in die Galerie uebernehmen."""
         self._update_empty_text()
-        items = self.page_items()
+        current = self.view.currentIndex().data(ItemRole) if self.view.currentIndex().isValid() else None
         self._syncing_selection = True
-        self.model.set_items(items)
-        selection = QItemSelection()
-        for row, item in enumerate(items):
-            if item.key in self.selected_keys:
-                index = self.model.index(row)
-                selection.select(index, index)
+        if self.model.set_items(self.filtered) and not focus_key and current is not None:
+            focus_key = current.key  # nach dem Neuaufbau beim Bild unter dem Cursor bleiben
+        # zusammenhaengende Zeilen als ein Bereich: Alles auswaehlen bei tausenden Bildern
+        selection, start = QItemSelection(), None
+        for row, item in enumerate([*self.model.items, None]):
+            chosen = item is not None and item.key in self.selected_keys
+            if chosen and start is None:
+                start = row
+            elif not chosen and start is not None:
+                selection.select(self.model.index(start), self.model.index(row - 1))
+                start = None
         self.view.selectionModel().select(selection, QItemSelectionModel.SelectionFlag.ClearAndSelect)
         if focus_key and focus_key in self.model.rows:
             index = self.model.index(self.model.rows[focus_key])
             self.view.selectionModel().setCurrentIndex(index, QItemSelectionModel.SelectionFlag.NoUpdate)
             self.view.scrollTo(index)
         self._syncing_selection = False
-        self.loader.request(items + self.page_items(self.page + 1))
-        self._update_pager()
+        self._request_thumbnails(self.tab)
+        self._update_count()
         self._show_selection_in_editor()
 
-    def _update_pager(self):
+    def _request_thumbnails(self, tab):
+        """Kacheln fuer den sichtbaren Bereich, dazu je einen Bildschirm davor und danach."""
+        if tab is not self.tab:
+            return
+        rows = tab.view.visible_rows()
+        if rows is None:
+            return
+        first, last = rows
+        margin = last - first + 1
+        visible = tab.model.items[first:last + 1]
+        around = tab.model.items[last + 1:last + 1 + margin] + tab.model.items[max(0, first - margin):first]
+        self.loader.request(visible + around)  # sichtbare zuerst
+
+    def _update_count(self):
         total = len(self.filtered)
-        text = ngettext('Seite {page} / {pages} · {count} Bild', 'Seite {page} / {pages} · {count} Bilder',
-                        total).format(page=self.page + 1, pages=self.page_count(), count=total)
+        text = ngettext('{count} Bild', '{count} Bilder', total).format(count=total)
         if self.selected_keys:
             text += ' · ' + _('{count} ausgewählt').format(count=len(self._selected_items()))
-        self.page_label.setText(text)
-        self.prev_button.setEnabled(self.page > 0)
-        self.next_page_button.setEnabled(self.page < self.page_count() - 1)
+        self.count_label.setText(text)
 
     def _on_selection_changed(self, selected, deselected):
         if self._syncing_selection:
             return
-        model_selection = self.view.selectionModel()
-        for row, item in enumerate(self.model.items):
-            if model_selection.isSelected(self.model.index(row)):
-                self.selected_keys.add(item.key)
-            else:
-                self.selected_keys.discard(item.key)
-        self._update_pager()
+        for index in selected.indexes():
+            self.selected_keys.add(index.data(ItemRole).key)
+        for index in deselected.indexes():
+            self.selected_keys.discard(index.data(ItemRole).key)
+        self._update_count()
         self._show_selection_in_editor()
 
     def _selected_items(self):
@@ -852,22 +842,20 @@ class MainWindow(QMainWindow):
 
     def _show_selection_in_editor(self):
         items = self._focused_first(self._selected_items())
-        carry = self.last_raw_caption if len(items) == 1 and not items[0].meta.is_captioned else None
-        self.editor.show_items(items, carry_over_raw=carry, raw_lookup=self.raw_captions.get,
+        self.editor.show_items(items, raw_lookup=self.raw_captions.get,
                                carry_over_headline=self.last_headline)
 
     def select_all_filtered(self):
-        """Alle, nicht nur die sichtbare Seite."""
         self.selected_keys = {item.key for item in self.filtered}
-        self.show_page()
+        self.show_gallery()
 
     def deselect_all(self):
         self.selected_keys = set()
-        self.show_page()
+        self.show_gallery()
 
     def select_tagged(self):
         self.selected_keys = {item.key for item in self.filtered if item.meta.tagged}
-        self.show_page()
+        self.show_gallery()
 
     def toggle_tag_view(self, tagged):
         """F3/F4: nur getaggte bzw. nicht getaggte; nochmal druecken zeigt wieder alle."""
@@ -880,10 +868,6 @@ class MainWindow(QMainWindow):
         if not self.filtered:
             return
         item = self.filtered[position]
-        page = self.filtered.index(item) // self.settings.page_size
-        if page != self.page:
-            self.page = page
-            self.show_page()
         index = self.model.index(self.model.rows[item.key])
         self.view.selectionModel().setCurrentIndex(index, QItemSelectionModel.SelectionFlag.NoUpdate)
         self.view.scrollTo(index)
@@ -908,11 +892,7 @@ class MainWindow(QMainWindow):
 
     def select_only(self, item):
         self.selected_keys = {item.key}
-        position = self.filtered.index(item)
-        page = position // self.settings.page_size
-        if page != self.page:
-            self.page = page
-        self.show_page(focus_key=item.key)
+        self.show_gallery(focus_key=item.key)
         # Beim Beschriften in der Grossansicht (Cmd+N/B) zeigt sie das neue Bild
         if self.viewer is not None and self.viewer.isVisible() and self.viewer.key != item.key:
             self._show_in_viewer(item)
@@ -1022,7 +1002,7 @@ class MainWindow(QMainWindow):
         self.model.refresh([i.key for i in items])
         self._update_status()
         if self.tag_filter.currentData() is not None:
-            self.apply_filter(False)
+            self.apply_filter()
 
     def take_snapshot(self):
         """
@@ -1033,6 +1013,7 @@ class MainWindow(QMainWindow):
         if not items:
             return
         self.snapshot = self.editor.current_fields()
+        self.editor.set_has_snapshot(True)
         self.statusBar().showMessage(_('Beschriftung von {name} kopiert').format(name=items[0].name), 5000)
 
     def paste_snapshot(self):
@@ -1109,8 +1090,6 @@ class MainWindow(QMainWindow):
         if planned:
             self.keyword_history.add(fields['keywords'])
             self.keyword_history.save()
-        if apply_caption and fields['raw_caption'].strip():
-            self.last_raw_caption = fields['raw_caption']
         if fields['headline']:
             self.last_headline = fields['headline']
         self.model.refresh([item.key for item, _meta in planned])
@@ -1141,12 +1120,21 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, _('Kein Template'), _('Bitte zuerst ein Spiel-Template auswählen oder anlegen.'))
             return
         items = self._selected_items()
+        # "Inhalte überschreiben": nur noch, was im Template steht; Beschreibung leer
+        overwrite = self.editor.overwrite_box.isChecked()
+        if overwrite:
+            # sonst schluege das Panel den zuletzt gespeicherten Titel wieder vor
+            self.last_headline = template.headline
         for item in items:
-            # Ohne Heim/Gast gibt das Template keinen Titel vor: der des Bildes bleibt
-            headline = template.headline or item.meta.headline
-            caption = template.compose_caption(item.meta.caption, item.taken_at, headline=headline,
-                                               **template.field_values(item.meta)) \
-                if item.meta.caption else ''
+            if overwrite:
+                headline, caption = template.headline, ''
+                self.raw_captions.set(item, None)
+            else:
+                # Ohne Heim/Gast gibt das Template keinen Titel vor: der des Bildes bleibt
+                headline = template.headline or item.meta.headline
+                caption = template.compose_caption(item.meta.caption, item.taken_at, headline=headline,
+                                                   **template.field_values(item.meta)) \
+                    if item.meta.caption else ''
             persons = codes.persons_in(caption, self.roster)
             self._enqueue(item, geo.apply_gps(dataclasses.replace(
                 item.meta, headline=headline, caption=caption, city=template.city,
@@ -1629,7 +1617,7 @@ class MainWindow(QMainWindow):
             for tab in self.all_tabs():
                 if tab.folder:
                     self.rescan(tab)
-        self.apply_filter(False)
+        self.apply_filter()
 
     # --- Beenden ----------------------------------------------------------------
 

@@ -2,7 +2,7 @@
 Einstellungen der App, als TOML im Konfigurationsverzeichnis des Betriebssystems.
 
 Es gibt keine eigene Bilddatenbank (ADR 0001, Punkt 4). Hier liegt nur, was die
-App selbst braucht: Roster-Quellen, Seitengroesse, Label-Namen, Templates.
+App selbst braucht: Roster-Quellen, Label-Namen, Templates.
 """
 import os
 import tomllib
@@ -53,7 +53,6 @@ class Settings:
     ])
     roster_cache_ttl_minutes: int = 60
     code_delimiter: str = '#'
-    page_size: int = 100
     recursive: bool = False
     labels: list = field(default_factory=lambda: list(DEFAULT_LABELS))
     # .xmp-URLs zusaetzlich in den Drag legen (ADR 0001, Punkt 7). Abschaltbar,

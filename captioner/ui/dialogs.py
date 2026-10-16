@@ -378,7 +378,6 @@ class SettingsDialog(QDialog):
         self.ttl = QSpinBox(minimum=0, maximum=24 * 60, value=settings.roster_cache_ttl_minutes, suffix=_(' min'))
         self.delimiter = QLineEdit(settings.code_delimiter)
         self.delimiter.setMaxLength(3)
-        self.page_size = QSpinBox(minimum=20, maximum=2000, singleStep=20, value=settings.page_size)
         self.recursive = QCheckBox(_('Unterordner mit einlesen'))
         self.recursive.setChecked(settings.recursive)
         self.labels = QLineEdit(', '.join(settings.labels))
@@ -400,7 +399,6 @@ class SettingsDialog(QDialog):
         form.addRow(_('Roster-Quellen'), self.sources)
         form.addRow(_('Cache für URLs'), self.ttl)
         form.addRow(_('Code-Trennzeichen'), self.delimiter)
-        form.addRow(_('Bilder pro Seite'), self.page_size)
         form.addRow('', self.recursive)
         form.addRow(_('Lightroom-Label für Farbklasse 1, 2, 3, …'), self.labels)
         label_hint = QLabel('<small>' + _('Die Farbklasse wird zusätzlich als Label geschrieben, das Lightroom liest. '
@@ -435,7 +433,6 @@ class SettingsDialog(QDialog):
         s.roster_sources = self.sources.sources()
         s.roster_cache_ttl_minutes = self.ttl.value()
         s.code_delimiter = self.delimiter.text().strip() or '#'
-        s.page_size = self.page_size.value()
         s.recursive = self.recursive.isChecked()
         s.labels = _split(self.labels.text()) or s.labels
         s.drag_include_sidecars = self.drag_sidecars.isChecked()

@@ -23,10 +23,19 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
   der Cursor im Anhang auf einem Platzhalter, wird das zugehörige Feld markiert. Auch im Dark Mode
   gut lesbar.
 - **Großansicht per Doppelklick** auf eine Kachel (wie mit der Leertaste).
+- **Galerie ohne Seiten:** alle Bilder eines Ordners in einer scrollbaren Galerie; Vorschauen
+  werden beim Scrollen nachgeladen. Die Einstellung „Bilder pro Seite“ und die Seiten-Kürzel
+  entfallen, `Bild↑`/`Bild↓` blättern jetzt wie gewohnt in der Galerie.
+- **Knöpfe „Kopieren“ und „Einfügen“** im Beschriftungs-Panel, wie `⌘⇧C`/`⌘⇧V`.
+- **„Inhalte überschreiben“** neben „Template auf Auswahl anwenden“ (voreingestellt an):
+  setzt Titel, Stadt, Ort und Tags genau auf das Template und leert die Beschreibung. Ohne Haken
+  bleibt die Beschreibung wie bisher erhalten.
 - Lizenz: GPL-3.0 oder neuer; die Lizenztexte der mitgelieferten Software liegen bei.
 
 ### Behoben
 
+- Ein unbeschriftetes Bild zeigte im Panel die Beschreibung des zuletzt gespeicherten Bildes;
+  das Feld ist jetzt leer.
 - „Template-Datei laden …“ und „Speichern unter …“ im Menü `⋯` taten nichts.
 - Ein neues Template mit dem Namen eines vorhandenen überschrieb dessen Datei; es wird jetzt
   daneben gespeichert (`name-2.toml`).

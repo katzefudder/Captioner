@@ -64,7 +64,7 @@ def window(app, tmp_path):
     folder.mkdir()
     for n in range(5):
         make_jpeg(folder / f'{n}.jpg')
-    w = MainWindow(config.Settings(roster_sources=[], page_size=2), str(folder))
+    w = MainWindow(config.Settings(roster_sources=[]), str(folder))
     w.scan_worker.wait(30000)
     QtWidgets.QApplication.processEvents()
     w.show()
@@ -122,9 +122,9 @@ def test_digits_set_rating_only(window):
 
 
 @requires_exiftool
-def test_selection_keys_work_across_pages(window):
+def test_selection_keys(window):
     press(window.view, Qt.Key.Key_A, CMD)
-    assert len(window._selected_items()) == 5  # alle, obwohl nur 2 pro Seite
+    assert len(window._selected_items()) == 5
     press(window.view, Qt.Key.Key_D, CMD)
     assert window._selected_items() == []
     window.select_only(window.filtered[3])
@@ -201,6 +201,22 @@ def test_snapshot_copy_paste(window):
     assert other.meta.caption == 'Jubel' and other.meta.headline == 'DEL 2 - A gegen B'
 
 
+@requires_exiftool
+def test_snapshot_buttons(window):
+    """Kopieren/Einfügen im Panel wie die Kuerzel; Einfügen erst nach dem Kopieren."""
+    other = window.filtered[2]
+    editor = window.editor
+    assert not editor.snapshot_paste_button.isEnabled()
+    editor.headline.setText('DEL 2 - A gegen B')
+    editor.caption.setPlainText('Jubel')
+    editor.submit(0)
+    QTest.mouseClick(editor.snapshot_take_button, Qt.MouseButton.LeftButton)
+    window.select_only(other)
+    assert editor.snapshot_paste_button.isEnabled()
+    QTest.mouseClick(editor.snapshot_paste_button, Qt.MouseButton.LeftButton)
+    assert other.meta.caption == 'Jubel' and other.meta.headline == 'DEL 2 - A gegen B'
+
+
 SHIFT = Qt.KeyboardModifier.ShiftModifier
 
 
@@ -234,7 +250,7 @@ def test_copy_next_paste_while_typing(window):
 @requires_exiftool
 def test_double_click_opens_viewer(window):
     view, target = window.view, window.filtered[1]
-    rect = view.visualRect(window.model.index(window.filtered.index(target) % 2, 0))
+    rect = view.visualRect(window.model.index(window.filtered.index(target), 0))
     # wie echt: erst ein Klick (macht die Kachel aktuell), dann der Doppelklick
     QTest.mouseClick(view.viewport(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, rect.center())
     QTest.mouseDClick(view.viewport(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, rect.center())
@@ -251,10 +267,11 @@ def test_next_and_previous_image_in_gallery(window):
     nxt, prev = (QKeySequence(keymap.keys(command)[1])[0] for command in ('next_image', 'prev_image'))
     press(window.view, nxt.key(), nxt.keyboardModifiers())
     assert window._selected_items() == [window.filtered[1]]
-    press(window.view, nxt.key(), nxt.keyboardModifiers())   # auf die naechste Seite (2 pro Seite)
-    assert window._selected_items() == [window.filtered[2]] and window.page == 1
+    press(window.view, nxt.key(), nxt.keyboardModifiers())
+    assert window._selected_items() == [window.filtered[2]]
+    assert window.view.currentIndex().row() == 2
     press(window.view, prev.key(), prev.keyboardModifiers())
-    assert window._selected_items() == [window.filtered[1]] and window.page == 0
+    assert window._selected_items() == [window.filtered[1]]
 
 
 @requires_exiftool
@@ -327,16 +344,40 @@ def test_template_without_teams_keeps_typed_headline(window, roster):
     # naechstes, noch unbeschriftetes Bild bekommt den Titel vorgeschlagen
     assert window._selected_items() == [second]
     assert editor.headline.text() == first.meta.headline
+    # ... aber nie die Beschreibung des vorigen: das Feld ist leer
+    assert second.meta.caption == '' and editor.caption.toPlainText() == ''
     # Beschreibung des naechsten Bildes ist markiert: Tippen ueberschreibt sie
     cursor = editor.caption.textCursor()
     assert cursor.selectedText() == editor.caption.toPlainText()
     assert cursor.selectionStart() == 0
 
-    # Template anwenden ueberschreibt den Titel nicht mit einem leeren
+    # Template anwenden (ohne "Inhalte überschreiben") ueberschreibt den Titel nicht mit einem leeren
+    editor.overwrite_box.setChecked(False)
     window.select_only(first)
     window.apply_template()
     assert first.meta.headline == 'DEL 2 - Bietigheim Steelers gegen EC Bad Nauheim'
     assert first.meta.city == 'Bad Nauheim'
+
+
+@requires_exiftool
+def test_apply_template_overwrites_everything(window):
+    from captioner.templates import MatchTemplate
+    editor = window.editor
+    item = window.filtered[0]
+    editor.headline.setText('DEL 2 - A gegen B')
+    editor.caption.setPlainText('Jubel')
+    editor.keywords.setPlainText('Alt')
+    editor.city.setText('Frankfurt')
+    editor.submit(0)
+    editor.template = MatchTemplate(name='Neu', headline='DEL 2 - C gegen D', city='Bad Nauheim',
+                                    extra_tags=['Eishockey'], caption_suffix='')
+    assert editor.overwrite_box.isChecked()  # Voreinstellung
+    window.apply_template()
+    assert (item.meta.headline, item.meta.caption, item.meta.keywords, item.meta.city, item.meta.sublocation) == (
+        'DEL 2 - C gegen D', '', ['C', 'D', 'Bad Nauheim', 'Eishockey'], 'Bad Nauheim', '')
+    assert editor.caption.toPlainText() == ''
+    window.undo()
+    assert (item.meta.caption, item.meta.city) == ('Jubel', 'Frankfurt')
 
 
 @requires_exiftool

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QStringListModel, Qt, Signal
 from PySide6.QtGui import QAction, QKeySequence, QShortcut, QTextCursor
-from PySide6.QtWidgets import (QComboBox, QCompleter, QFormLayout, QHBoxLayout, QLabel,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QFormLayout, QHBoxLayout, QLabel,
                                QLineEdit, QMenu, QPlainTextEdit, QPushButton, QSizePolicy,
                                QToolButton, QVBoxLayout, QWidget)
 
@@ -212,6 +212,8 @@ class CodeTextEdit(WrappingLineEdit):
 class CaptionEditor(QWidget):
     save_requested = Signal(dict, int)    # Felder, danach: +1 naechstes, -1 vorheriges, 0 bleiben
     navigate_requested = Signal(int)      # ohne Speichern zum naechsten/vorherigen Bild
+    snapshot_take_requested = Signal()    # Knopf "Kopieren", wie snapshot_take
+    snapshot_paste_requested = Signal()   # Knopf "Einfügen", wie snapshot_paste
     apply_template_requested = Signal()
     template_changed = Signal(object)
     edit_template_requested = Signal(object)   # None = neues Template
@@ -273,9 +275,17 @@ class CaptionEditor(QWidget):
 
         self.apply_button = QPushButton(_('Template auf Auswahl anwenden'))
         self.apply_button.setToolTip(_('Titel, Ort und Tags des Templates in alle ausgewählten Bilder schreiben; '
-                                       'Beschreibungen bleiben erhalten'))
+                                       'Beschreibungen bleiben erhalten, außer bei „Inhalte überschreiben“'))
         self.apply_button.clicked.connect(self.apply_template_requested)
-        layout.addWidget(self.apply_button)
+        # Mit Haken setzt Anwenden alles auf das Template zurueck (auch die Beschreibung)
+        self.overwrite_box = QCheckBox(_('Inhalte überschreiben'))
+        self.overwrite_box.setChecked(True)
+        self.overwrite_box.setToolTip(_('Beim Anwenden Titel, Ort und Tags genau auf die Werte des Templates setzen '
+                                        'und die Beschreibung leeren; bisherige Änderungen gehen verloren'))
+        apply_row = QHBoxLayout()
+        apply_row.addWidget(self.apply_button, 1)
+        apply_row.addWidget(self.overwrite_box)
+        layout.addLayout(apply_row)
 
         form = QFormLayout()
         # macOS laesst Felder sonst auf Mindestbreite (Titel, Stadt, Ort waren abgeschnitten)
@@ -347,6 +357,21 @@ class CaptionEditor(QWidget):
         self.limits.setWordWrap(True)
         layout.addWidget(self.limits)
 
+        # Beschriftung von Bild zu Bild, wie die Kuerzel snapshot_take/snapshot_paste
+        snapshot_buttons = QHBoxLayout()
+        self.snapshot_take_button = QPushButton(_('Kopieren'))
+        self.snapshot_take_button.setToolTip(_('Beschriftung dieses Bildes kopieren ({keys})').format(
+            keys=shortcut_text('snapshot_take')))
+        self.snapshot_take_button.clicked.connect(self.snapshot_take_requested)
+        self.snapshot_paste_button = QPushButton(_('Einfügen'))
+        self.snapshot_paste_button.setToolTip(_('Kopierte Beschriftung in die Auswahl einfügen und speichern ({keys})').format(
+            keys=shortcut_text('snapshot_paste')))
+        self.snapshot_paste_button.clicked.connect(self.snapshot_paste_requested)
+        snapshot_buttons.addWidget(self.snapshot_take_button)
+        snapshot_buttons.addWidget(self.snapshot_paste_button)
+        layout.addLayout(snapshot_buttons)
+        self.has_snapshot = False
+
         buttons = QHBoxLayout()
         self.save_button = QPushButton(_('Speichern'))
         self.save_button.clicked.connect(lambda: self.submit(0))
@@ -392,8 +417,15 @@ class CaptionEditor(QWidget):
 
     def set_enabled(self, enabled):
         for widget in (self.headline, self.caption, self.keywords, self.city, self.sublocation,
-                       self.map_button, self.save_button, self.next_button, self.apply_button):
+                       self.map_button, self.save_button, self.next_button, self.apply_button,
+                       self.overwrite_box, self.snapshot_take_button):
             widget.setEnabled(enabled)
+        self.snapshot_paste_button.setEnabled(enabled and self.has_snapshot)
+
+    def set_has_snapshot(self, present):
+        """Einfuegen erst, wenn etwas kopiert wurde."""
+        self.has_snapshot = present
+        self.snapshot_paste_button.setEnabled(present and self.snapshot_take_button.isEnabled())
 
     def set_place_book(self, book):
         """Gemerkte Orte: Vorschlaege fuer Stadt und Koordinaten fuer den GPS-Hinweis."""
@@ -490,7 +522,7 @@ class CaptionEditor(QWidget):
         rest = [e for e in self.roster.entries.values() if e not in first]
         self.caption.set_completions(first + rest)
 
-    def show_items(self, items, carry_over_raw=None, raw_lookup=None, carry_over_headline=None):
+    def show_items(self, items, raw_lookup=None, carry_over_headline=None):
         """Felder aus dem ersten ausgewaehlten Item fuellen."""
         self.set_enabled(bool(items))
         if not items:
@@ -512,7 +544,8 @@ class CaptionEditor(QWidget):
         keywords = meta.keywords or (self.template.keywords if self.template else [])
         raw = raw_lookup(item) if raw_lookup else None
         if raw is None:
-            raw = self._strip_suffix(meta.caption, item) if meta.caption else (carry_over_raw or '')
+            # unbeschriftet: leer, nie die Beschreibung des vorigen Bildes
+            raw = self._strip_suffix(meta.caption, item) if meta.caption else ''
         self.headline.setText(headline)
         self.city.setText(city)
         self.sublocation.setText(sublocation)

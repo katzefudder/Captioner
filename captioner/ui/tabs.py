@@ -1,5 +1,5 @@
 """
-Ordner-Tabs: je Tab ein Ordner mit eigener Galerie, Seite, Auswahl und Scan.
+Ordner-Tabs: je Tab ein Ordner mit eigener Galerie, Auswahl und Scan.
 Ziehen von Bildern auf einen anderen Tab (Reiter oder Galerie) kopiert sie dorthin.
 """
 import os
@@ -8,7 +8,7 @@ from pathlib import Path, PureWindowsPath
 
 from PySide6.QtCore import QObject, QStorageInfo, QThread, Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton,
-                               QStackedWidget, QTabBar, QToolButton, QVBoxLayout, QWidget)
+                               QStackedWidget, QTabBar, QVBoxLayout, QWidget)
 
 from .. import transfer
 from ..i18n import _
@@ -49,7 +49,6 @@ class FolderTab(QWidget):
         self.all_items = []
         self.by_key = {}
         self.filtered = []
-        self.page = 0
         self.selected_keys = set()
         self.scan_worker = None
         self.scan_started = 0.0
@@ -61,12 +60,8 @@ class FolderTab(QWidget):
         self.view.setItemDelegate(TileDelegate(loader, writer, self.view))
 
         pager = QHBoxLayout()
-        self.prev_button = QToolButton(text='◀')
-        self.next_page_button = QToolButton(text='▶')
-        self.page_label = QLabel()
-        pager.addWidget(self.prev_button)
-        pager.addWidget(self.page_label)
-        pager.addWidget(self.next_page_button)
+        self.count_label = QLabel()
+        pager.addWidget(self.count_label)
         pager.addStretch(1)
         drag_hint = QLabel(_('Auswahl in Lightroom ziehen, um sie zu importieren, '
                              'oder auf einen anderen Tab, um sie dorthin zu kopieren'))

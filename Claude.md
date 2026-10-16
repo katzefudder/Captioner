@@ -111,7 +111,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 
 ## Tabs und Kopieren
 
-- Ordner-Zustand (`folder`, `all_items`, `filtered`, `page`, `selected_keys`, `model`, `view`, …)
+- Ordner-Zustand (`folder`, `all_items`, `filtered`, `selected_keys`, `model`, `view`, …)
   liegt in `FolderTab`; `MainWindow` reicht diese Namen per Property an den aktiven Tab
   durch (`_tab_attribute`). Scan-Signale gehen an den Tab des sendenden Workers
   (`_scanning_tab`), nie an den aktiven.
@@ -125,6 +125,10 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Filter: Suche (`scanner.matches_text`), Kamera (Modell + Seriennummer aus der RAW bzw. dem
   Hauptbild, `scanner.camera_labels`), Uhrzeit (`scanner.time_of_day`); Combo-Daten als Text
   (`camera_key`), Tupel vergleicht Qt in `findData` nicht zuverlässig.
+- Keine Seiten: die Galerie zeigt alle gefilterten Bilder. `GalleryModel.set_items` baut nur neu
+  auf, wenn sich die Liste ändert (Reset springt nach oben); Kacheln lädt `_request_thumbnails` für
+  den sichtbaren Bereich (`GalleryView.visible_rows`, aus dem Raster gerechnet) plus je einen
+  Bildschirm davor/danach, angestoßen von `visible_changed` (Scrollen, Größe, Reset).
 - Galerie-Kürzel hängen am `FolderTabs.stack` (gelten in jedem Tab), nicht an einer Galerie.
 - Ordner-Dialog: Qts nativer macOS-Dialog kann für Ordner nur Einzelauswahl.
   `folderdialog.choose_folders` ruft deshalb `NSOpenPanel` direkt über die Objective-C-Laufzeit
@@ -294,7 +298,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 209 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 212 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

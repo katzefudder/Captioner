@@ -59,6 +59,9 @@ msgstr ""
 msgid "Alle Farben"
 msgstr ""
 
+msgid "Inhalte überschreiben"
+msgstr ""
+
 msgid "Alle Kameras"
 msgstr ""
 
@@ -68,7 +71,7 @@ msgstr ""
 msgid "Alle Tags"
 msgstr ""
 
-msgid "Alle auswählen (alle Seiten)"
+msgid "Alle auswählen"
 msgstr ""
 
 msgid "Anhang"
@@ -128,6 +131,11 @@ msgstr ""
 msgid "Beenden"
 msgstr ""
 
+msgid ""
+"Beim Anwenden Titel, Ort und Tags genau auf die Werte des Templates "
+"setzen und die Beschreibung leeren; bisherige Änderungen gehen verloren"
+msgstr ""
+
 msgid "Beim Start nach Updates suchen (höchstens einmal am Tag, bei GitHub)"
 msgstr ""
 
@@ -168,6 +176,10 @@ msgstr ""
 msgid "Beschriftung bearbeiten (IPTC Info)"
 msgstr ""
 
+#, python-brace-format
+msgid "Beschriftung dieses Bildes kopieren ({keys})"
+msgstr ""
+
 msgid "Beschriftung einfügen"
 msgstr ""
 
@@ -191,9 +203,6 @@ msgid "Beschriftungs-Panel ein-/ausblenden (I)"
 msgstr ""
 
 msgid "Bewertung"
-msgstr ""
-
-msgid "Bilder pro Seite"
 msgstr ""
 
 msgid "Bitte einen Namen eingeben."
@@ -320,6 +329,9 @@ msgid ""
 "Eine Zeile pro Code: <b>Code</b>, <b>Tab</b>, Ersetzung (z. B. "
 "<code>bn23⇥-23- Marius Erk (EC Bad Nauheim)</code>). Abschnitte mit "
 "<code>- Team -</code>. Tabs sind blau hinterlegt."
+msgstr ""
+
+msgid "Einfügen"
 msgstr ""
 
 msgid "Einlesen fehlgeschlagen"
@@ -615,6 +627,10 @@ msgstr ""
 msgid "Kopieren läuft"
 msgstr ""
 
+#, python-brace-format
+msgid "Kopierte Beschriftung in die Auswahl einfügen und speichern ({keys})"
+msgstr ""
+
 msgid "Land"
 msgstr ""
 
@@ -683,9 +699,6 @@ msgid "Nur nicht getaggte zeigen"
 msgstr ""
 
 msgid "Nur unter macOS verfügbar"
-msgstr ""
-
-msgid "Nächste Seite"
 msgstr ""
 
 msgid "Nächster Tab"
@@ -816,12 +829,6 @@ msgstr ""
 
 msgid "Schreiben dauert an"
 msgstr ""
-
-#, python-brace-format
-msgid "Seite {page} / {pages} · {count} Bild"
-msgid_plural "Seite {page} / {pages} · {count} Bilder"
-msgstr[0] ""
-msgstr[1] ""
 
 msgid "Seriennummer"
 msgstr ""
@@ -990,7 +997,7 @@ msgstr ""
 
 msgid ""
 "Titel, Ort und Tags des Templates in alle ausgewählten Bilder schreiben; "
-"Beschreibungen bleiben erhalten"
+"Beschreibungen bleiben erhalten, außer bei „Inhalte überschreiben“"
 msgstr ""
 
 msgid "URL (GitHub-Links wie im Browser gehen auch):"
@@ -1061,9 +1068,6 @@ msgid "Viele Ordner"
 msgstr ""
 
 msgid "Vor- und Nachname"
-msgstr ""
-
-msgid "Vorherige Seite"
 msgstr ""
 
 msgid "Vorheriger Tab"

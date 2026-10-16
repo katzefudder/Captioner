@@ -1,9 +1,9 @@
 """
-Galerie: eine Seite Kacheln, Tastaturbedienung wie in einem
+Galerie: alle Kacheln eines Ordners, Tastaturbedienung wie in einem
 Workflow-Tool fuer die Auswahl von Fotos,
 Drag & Drop nach Lightroom (ADR 0001, Punkte 3 und 7).
 """
-from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, Qt, Signal
+from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QBrush, QColor, QDrag, QFont, QPainter, QPen
 from PySide6.QtWidgets import QAbstractItemView, QListView, QStyle, QStyledItemDelegate
 
@@ -51,10 +51,15 @@ class GalleryModel(QAbstractListModel):
         loader.ready.connect(self._thumbnail_ready)
 
     def set_items(self, items):
+        """Neu aufbauen nur, wenn sich die Liste aendert (ein Reset springt nach oben)."""
+        items = list(items)
+        if items == self.items:
+            return False
         self.beginResetModel()
-        self.items = list(items)
+        self.items = items
         self.rows = {item.key: row for row, item in enumerate(self.items)}
         self.endResetModel()
+        return True
 
     def rowCount(self, parent=QModelIndex()):
         return 0 if parent.isValid() else len(self.items)
@@ -172,6 +177,9 @@ class TileDelegate(QStyledItemDelegate):
 class GalleryView(QListView):
     # Alle Kuerzel haengen als QShortcut am View, siehe keymap.py.
     files_dropped = Signal()  # Bilder aus der Galerie eines anderen Tabs hierher gezogen
+    visible_changed = Signal()  # gescrollt, Groesse oder Inhalt geaendert: Kacheln nachladen
+
+    FALLBACK_ROWS = 100  # solange das Layout noch nicht steht
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -190,6 +198,48 @@ class GalleryView(QListView):
         self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.mime_factory = None  # liefert QMimeData fuer die gesamte Auswahl, oder None
         self.empty_text = ''      # Hinweis mit Logo, solange die Galerie leer ist
+        # Beim Scrollen nicht fuer jedes Pixel Kacheln anfordern
+        self._visible_timer = QTimer(self, singleShot=True, interval=40)
+        self._visible_timer.timeout.connect(self.visible_changed)
+        self.verticalScrollBar().valueChanged.connect(self.schedule_visible)
+
+    def setModel(self, model):
+        super().setModel(model)
+        model.modelReset.connect(self.schedule_visible)
+
+    def schedule_visible(self, *args):
+        self._visible_timer.start()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.schedule_visible()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.schedule_visible()
+
+    def visible_rows(self):
+        """
+        (erste, letzte) Zeile im sichtbaren Bereich, aus dem Raster gerechnet (gleich grosse
+        Kacheln, zeilenweise): kein Durchlaufen tausender Kacheln beim Scrollen.
+        """
+        model = self.model()
+        count = model.rowCount() if model is not None else 0
+        if not count:
+            return None
+        first_rect = self.visualRect(model.index(0))
+        if first_rect.isEmpty():
+            return 0, min(count, self.FALLBACK_ROWS) - 1
+        columns = 1
+        while columns < count and self.visualRect(model.index(columns)).top() == first_rect.top():
+            columns += 1
+        line_height = (self.visualRect(model.index(columns)).top() - first_rect.top()) if columns < count else 0
+        if line_height <= 0:
+            return 0, count - 1  # nur eine Zeile
+        area = self.viewport().rect()
+        first_line = max(0, (area.top() - first_rect.top()) // line_height)
+        last_line = max(first_line, (area.bottom() - first_rect.top()) // line_height)
+        return min(count - 1, first_line * columns), min(count - 1, (last_line + 1) * columns - 1)
 
     def paintEvent(self, event):
         super().paintEvent(event)

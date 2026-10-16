@@ -135,6 +135,8 @@ Hardened Runtime braucht.
    folgenden Bilder übernehmen ihn, und die Code-Vorschläge zeigen die Spieler dieser
    beiden Teams zuerst. Weicht der Titel vom Format ab, warnt das Panel.
 3. Bilder auswählen und **„Template auf Auswahl anwenden"**: Titel, Ort und Tags für alle.
+   Mit **„Inhalte überschreiben"** (voreingestellt) wird dabei alles auf das Template
+   zurückgesetzt und vorhandene Beschreibungen geleert; ohne Haken bleiben sie stehen.
 4. Bild für Bild beschreiben. `#bi` öffnet die Liste der Bietigheim-Codes:
 
    ```
@@ -170,7 +172,7 @@ Hardened Runtime braucht.
    Kamera-Filter; zwei gleiche Modelle werden an der Seriennummer unterschieden
    („NIKON Z 9 · …1234“). **Uhrzeit** zeigt nur Bilder aus einem Zeitraum, z. B. einem
    Drittel; beim Einschalten ist der Zeitraum aller Bilder voreingestellt.
-6. **In Lightroom ziehen.** Die Auswahl (auch über mehrere Seiten) per Drag & Drop
+6. **In Lightroom ziehen.** Die Auswahl per Drag & Drop
    ins Lightroom-Raster; Lightroom öffnet den Import-Dialog.
 
 ## Menüs
@@ -201,7 +203,7 @@ werden übersprungen.
 Captioner-Symbol im Dock ziehen, oder Rechtsklick → „Öffnen mit“ → Captioner. Läuft die App
 schon, kommen die Ordner als neue Tabs dazu. macOS kennt diese Fähigkeit erst, nachdem die
 App einmal aus `/Programme` gestartet wurde. Unter Windows: Rechtsklick auf Ordner oder
-Laufwerk → „Mit Captioner öffnen“ (Option im Installer). Jeder Tab hat eigene Seite und Auswahl; Filter und Beschriftungs-Panel
+Laufwerk → „Mit Captioner öffnen“ (Option im Installer). Jeder Tab hat eigene Galerie und Auswahl; Filter und Beschriftungs-Panel
 gelten für den aktiven Tab.
 
 **Kopieren zwischen Tabs:** Bilder aus der Galerie auf den Reiter eines anderen Tabs ziehen
@@ -223,12 +225,11 @@ Hilfe → „Tastenkürzel“) zeigt alle Kürzel für das aktuelle System.
 | Tag an/aus · an · aus | `T` · `+` · `-` | `T` · `+` · `-` |
 | Großansicht | `Leertaste` | `Leertaste` |
 | Beschriftung bearbeiten | `I` oder `Enter` | `I` oder `Enter` |
-| Alle auswählen (alle Seiten) · Auswahl aufheben · Getaggte auswählen | `⌘A` · `⌘D` · `⌘T` | `Strg+A` · `Strg+D` · `Strg+T` |
+| Alle auswählen · Auswahl aufheben · Getaggte auswählen | `⌘A` · `⌘D` · `⌘T` | `Strg+A` · `Strg+D` · `Strg+T` |
 | Nur getaggte · nur nicht getaggte (nochmal: alle) | `F3` · `F4` | `F3` · `F4` |
-| Beschriftung kopieren · in Auswahl einfügen (auch im Panel) | `⌘⇧C` · `⌘⇧V` | `Strg+⇧C` · `Strg+⇧V` |
+| Beschriftung kopieren · in Auswahl einfügen (auch im Panel, dort auch als Knöpfe) | `⌘⇧C` · `⌘⇧V` | `Strg+⇧C` · `Strg+⇧V` |
 | Nächstes · vorheriges Bild | `⌘N`/`⌘]` · `⌘B`/`⌘[` | `Strg+M`/`Alt+]` · `Alt+B`/`Alt+[` |
 | Template-Datei laden · speichern unter · anwenden | `⌘⌥L` · `⌘⌥S` · `⌘⌥A` | `Strg+Alt+L` · `S` · `A` |
-| Seite zurück/vor | `Bild↑`/`Bild↓`, `⌘⇧[`/`⌘⇧]` | `Bild↑`/`Bild↓`, `Strg+←`/`→` |
 | Erstes/letztes Bild · zuletzt angesehenes | `Pos1`/`Ende` · `L` | `Pos1`/`Ende` · `L` |
 | Roster einstellen · neu laden | `⌘Control-C` · `⇧⌘Control-C` | `Strg+Alt+C` · `⇧Strg+Alt+C` |
 | Rückgängig · Wiederholen | `⌘Z` · `⌘⇧Z` | `Strg+Z` · `Strg+⇧Z` |

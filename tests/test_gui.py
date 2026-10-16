@@ -41,7 +41,7 @@ def test_drag_contains_raw_jpeg_and_sidecar(window, tmp_path):
     open_and_wait(window, folder)
     item = window.all_items[0]
     window.selected_keys = {item.key}
-    window.apply_filter(False)
+    window.apply_filter()
 
     window.set_rating(3)
     mime = window.build_drag_mime()
@@ -57,7 +57,7 @@ def test_drag_without_sidecars_when_disabled(window, tmp_path):
     window.settings.drag_include_sidecars = False
     item = window.all_items[0]
     window.selected_keys = {item.key}
-    window.apply_filter(False)
+    window.apply_filter()
     window.set_rating(2)
     names = [u.toLocalFile().rsplit('/', 1)[-1] for u in window.build_drag_mime().urls()]
     assert names == ['DSC_0001.NEF']
@@ -70,7 +70,7 @@ def test_edited_raw_without_sidecar_is_refused(window, tmp_path, monkeypatch):
     open_and_wait(window, folder)
     raw_item = next(i for i in window.all_items if i.raw)
     window.selected_keys = {i.key for i in window.all_items}
-    window.apply_filter(False)
+    window.apply_filter()
     window.set_rating(1)
     window.writer.flush(30)
     raw_item.sidecar.unlink()  # Sidecar verschwindet nach dem Schreiben
@@ -341,3 +341,35 @@ def test_panel_warns_when_fixed_date_differs(app):
     item.taken_at = '2026:10:18 19:30:00'
     editor._update_date_hint(item)
     assert editor.date_hint.isHidden()
+
+
+def test_gallery_visible_rows_match_the_layout(app):
+    """Ohne Seiten: Kacheln werden nur fuer den sichtbaren Bereich angefordert."""
+    from types import SimpleNamespace
+    from PySide6.QtCore import QObject, QSize, Signal
+    from captioner.ui.gallery import GalleryModel, GalleryView, TILE_H, TILE_W
+
+    class Loader(QObject):
+        ready = Signal(str)
+
+    view = GalleryView()
+    view.setModel(GalleryModel(Loader()))
+    view.setGridSize(QSize(TILE_W, TILE_H))  # Kachelgroesse ohne TileDelegate
+    view.model().set_items([SimpleNamespace(key=str(n), name=str(n)) for n in range(1000)])
+    view.resize(3 * TILE_W + 40, 2 * TILE_H + 20)
+    view.show()
+    app.processEvents()
+
+    def check():
+        first, last = view.visible_rows()
+        area = view.viewport().rect()
+        shown = [r for r in range(1000) if view.visualRect(view.model().index(r)).intersects(area)]
+        assert first <= shown[0] and shown[-1] <= last  # nichts Sichtbares fehlt
+        assert last - first < 30                         # und nicht alle 1000
+        return first, last
+
+    assert check()[0] == 0
+    view.verticalScrollBar().setValue(view.verticalScrollBar().maximum())
+    app.processEvents()
+    assert check()[1] == 999
+    view.close()

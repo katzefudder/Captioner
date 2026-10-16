@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-13 19:07+0200\n"
+"POT-Creation-Date: 2026-10-16 13:46+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -84,6 +84,9 @@ msgstr "All files (*)"
 msgid "Alle Farben"
 msgstr "All colors"
 
+msgid "Inhalte überschreiben"
+msgstr "Overwrite all content"
+
 msgid "Alle Kameras"
 msgstr "All cameras"
 
@@ -93,8 +96,8 @@ msgstr "All stars"
 msgid "Alle Tags"
 msgstr "All tags"
 
-msgid "Alle auswählen (alle Seiten)"
-msgstr "Select all (all pages)"
+msgid "Alle auswählen"
+msgstr "Select all"
 
 msgid "Anhang"
 msgstr "Suffix"
@@ -155,6 +158,13 @@ msgstr "Edit …"
 msgid "Beenden"
 msgstr "Quit"
 
+msgid ""
+"Beim Anwenden Titel, Ort und Tags genau auf die Werte des Templates "
+"setzen und die Beschreibung leeren; bisherige Änderungen gehen verloren"
+msgstr ""
+"When applying, set title, location and tags exactly to the template's "
+"values and clear the description; previous changes are lost"
+
 msgid "Beim Start nach Updates suchen (höchstens einmal am Tag, bei GitHub)"
 msgstr "Check for updates at startup (at most once a day, on GitHub)"
 
@@ -195,6 +205,10 @@ msgstr "Caption panel (IPTC info)"
 msgid "Beschriftung bearbeiten (IPTC Info)"
 msgstr "Edit caption (IPTC info)"
 
+#, python-brace-format
+msgid "Beschriftung dieses Bildes kopieren ({keys})"
+msgstr "Copy the caption of this image ({keys})"
+
 msgid "Beschriftung einfügen"
 msgstr "Paste caption"
 
@@ -219,9 +233,6 @@ msgstr "Show/hide the caption panel (I)"
 
 msgid "Bewertung"
 msgstr "Rating"
-
-msgid "Bilder pro Seite"
-msgstr "Images per page"
 
 msgid "Bitte einen Namen eingeben."
 msgstr "Please enter a name."
@@ -361,6 +372,9 @@ msgstr ""
 "One line per code: <b>code</b>, <b>tab</b>, replacement (e.g. "
 "<code>bn23⇥-23- Marius Erk (EC Bad Nauheim)</code>). Sections with "
 "<code>- Team -</code>. Tabs are highlighted in blue."
+
+msgid "Einfügen"
+msgstr "Paste"
 
 msgid "Einlesen fehlgeschlagen"
 msgstr "Reading failed"
@@ -670,6 +684,10 @@ msgstr "Copy"
 msgid "Kopieren läuft"
 msgstr "Copying in progress"
 
+#, python-brace-format
+msgid "Kopierte Beschriftung in die Auswahl einfügen und speichern ({keys})"
+msgstr "Paste the copied caption into the selection and save ({keys})"
+
 msgid "Land"
 msgstr "Country"
 
@@ -739,9 +757,6 @@ msgstr "Show untagged only"
 
 msgid "Nur unter macOS verfügbar"
 msgstr "Only available on macOS"
-
-msgid "Nächste Seite"
-msgstr "Next page"
 
 msgid "Nächster Tab"
 msgstr "Next tab"
@@ -871,12 +886,6 @@ msgstr "Close"
 
 msgid "Schreiben dauert an"
 msgstr "Still writing"
-
-#, python-brace-format
-msgid "Seite {page} / {pages} · {count} Bild"
-msgid_plural "Seite {page} / {pages} · {count} Bilder"
-msgstr[0] "Page {page} / {pages} · {count} image"
-msgstr[1] "Page {page} / {pages} · {count} images"
 
 msgid "Seriennummer"
 msgstr "Serial number"
@@ -1047,10 +1056,10 @@ msgstr ""
 
 msgid ""
 "Titel, Ort und Tags des Templates in alle ausgewählten Bilder schreiben; "
-"Beschreibungen bleiben erhalten"
+"Beschreibungen bleiben erhalten, außer bei „Inhalte überschreiben“"
 msgstr ""
-"Write the template’s headline, location and tags into all selected "
-"images; captions are kept"
+"Write the template's title, location and tags into all selected images; "
+"descriptions are kept unless “Overwrite all content” is checked"
 
 msgid "URL (GitHub-Links wie im Browser gehen auch):"
 msgstr "URL (GitHub links as shown in the browser work too):"
@@ -1123,9 +1132,6 @@ msgstr "Many folders"
 
 msgid "Vor- und Nachname"
 msgstr "First and last name"
-
-msgid "Vorherige Seite"
-msgstr "Previous page"
 
 msgid "Vorheriger Tab"
 msgstr "Previous tab"
