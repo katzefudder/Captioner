@@ -14,7 +14,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
                                QLabel, QMainWindow, QMessageBox, QProgressDialog, QSlider, QSplitter,
                                QPushButton, QToolButton, QVBoxLayout, QWidget)
 
-from .. import WEBSITE_LINK, codes, config, geo, i18n, keywords, metadata, scanner, transfer, undo, updates, version
+from .. import (WEBSITE_LINK, codes, config, geo, i18n, keywords, metadata, replace, scanner, transfer, undo,
+               updates, version)
 from ..i18n import _, N_, ngettext
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
@@ -26,6 +27,7 @@ from .dialogs import ROSTER_FILE_FILTER, SettingsDialog, ShortcutsDialog, Templa
 from .about import AboutDialog
 from .updatecheck import UpdateChecker
 from .editor import CaptionEditor, template_folder_label
+from .replacedialog import ReplaceDialog
 from .rostereditor import RosterEditorDialog
 from . import folderdialog, instance
 from .viewer import Viewer
@@ -208,6 +210,8 @@ class MainWindow(QMainWindow):
         # Kuerzel Cmd+Z/Cmd+Shift+Z kommen aus der Keymap (im Textfeld gilt dessen Rueckgaengig)
         self.undo_action = action(edit_menu, _('Rückgängig'), self.undo)
         self.redo_action = action(edit_menu, _('Wiederholen'), self.redo)
+        edit_menu.addSeparator()
+        action(edit_menu, _('Suchen und Ersetzen …'), self.find_replace)   # Kuerzel aus der Keymap
         self._update_undo_actions()
 
         template_menu = bar.addMenu(_('Template'))
@@ -466,6 +470,7 @@ class MainWindow(QMainWindow):
             'shortcuts': self.show_shortcuts,
             'snapshot_take': self.take_snapshot,
             'snapshot_paste': self.paste_snapshot,
+            'find_replace': self.find_replace,
             'undo': self.undo,
             'redo': self.redo,
             'close_tab': lambda: self.close_tab(self.tabs.currentIndex()),
@@ -1063,6 +1068,41 @@ class MainWindow(QMainWindow):
         self._show_selection_in_editor()
         self.statusBar().showMessage(ngettext('Beschriftung in {count} Bild eingefügt', 'Beschriftung in {count} Bilder eingefügt',
                                               len(items)).format(count=len(items)), 5000)
+
+    def find_replace(self):
+        """Suchen und Ersetzen in der Auswahl, ohne Auswahl in allen angezeigten Bildern."""
+        # Gerechnet wird mit dem Stand der Bilder: erst fertig schreiben
+        if self.writer.pending_count() and not self._wait_for_writer(_('Suchen und Ersetzen')):
+            return
+        selected = self._selected_items()
+        items = selected or list(self.filtered)
+        if not items:
+            return
+        scope = (ngettext('{count} ausgewähltes Bild', '{count} ausgewählte Bilder', len(items)) if selected
+                 else ngettext('{count} angezeigtes Bild', 'alle {count} angezeigten Bilder', len(items)))
+        template = self.editor.template
+
+        def planner(find, replacement, fields, options):
+            return replace.plan(items, find, replacement, fields, self.roster, self.settings.code_delimiter,
+                                options, raw_lookup=self.raw_captions.get, template=template, places=self.places)
+
+        dialog = ReplaceDialog(scope.format(count=len(items)), planner, self)
+        if not dialog.exec():
+            return
+        changes = dialog.chosen()
+        with self._undoable(N_('Ersetzen')):
+            for change in changes:
+                self._enqueue(change.item, change.meta)
+                if change.raw is not None:
+                    self.raw_captions.set(change.item, change.raw)
+        for tab in self.all_tabs():
+            tab.model.refresh([c.item.key for c in changes if c.item.key in tab.by_key])
+        self._update_status()
+        self._show_selection_in_editor()
+        if self.viewer is not None and self.viewer.isVisible() and self.viewer._item is not None:
+            self.viewer.show_item(self.viewer._item, self.viewer._image)
+        self.statusBar().showMessage(ngettext('In {count} Bild ersetzt', 'In {count} Bildern ersetzt',
+                                              len(changes)).format(count=len(changes)), 5000)
 
     def save_and_close(self):
         """Wie "Save Changes and Close Dialog": speichern, zurueck in die Galerie bzw. aufs Bild."""

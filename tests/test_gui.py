@@ -421,3 +421,22 @@ def test_template_dialog_instructions_are_multiline(app):
     assert not dialog.buttons.button(dialog.buttons.StandardButton.Save).isEnabled()
     dialog.instructions.setPlainText(text)
     assert dialog.buttons.button(dialog.buttons.StandardButton.Save).isEnabled()
+
+
+def test_codes_are_highlighted_green_or_red(app, roster):
+    from captioner.ui.editor import CaptionEditor
+    editor = CaptionEditor()
+    editor.set_roster(roster, '#')
+    highlighter = editor.caption.spelling
+    text = '😀 Jubel #bn23# und #xx1# nach #bn3'           # Emoji: zwei UTF-16-Einheiten
+    assert highlighter.code_spans(text) == [(9, 6, True), (20, 5, False)]  # #bn3 noch unvollstaendig
+    editor.caption.setPlainText(text)
+    formats = editor.caption.document().firstBlock().layout().formats()
+    backgrounds = {(f.start, f.length): f.format.background().color().name() for f in formats}
+    assert backgrounds[(9, 6)] == '#3fa34d' and backgrounds[(20, 5)] == '#d64541'
+
+    editor.caption.setPlainText('Jubel #bn23#')
+    preview = editor.preview.text()
+    assert f'<span style="background-color:{editor._replacement_color()}">-23- Marius Erk (EC Bad Nauheim)</span>' in preview
+    assert '' not in preview and '' not in preview
+    assert editor.resolve().text == 'Jubel -23- Marius Erk (EC Bad Nauheim)'   # gespeichert ohne Markierung

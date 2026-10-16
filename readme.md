@@ -179,8 +179,20 @@ Hardened Runtime braucht.
 
 Die Menüs stehen auf dem Mac oben in der Menüleiste des Bildschirms: **Captioner** (Über
 Captioner, Einstellungen `⌘,`, Beenden `⌘Q`), **Ablage** (Ordner öffnen `⌘O`, in neuem
-Tab, Neu einlesen `F5`, Tab schließen), **Template**, **Roster** und **Hilfe**
+Tab, Neu einlesen `F5`, Tab schließen), **Bearbeiten** (Rückgängig, Wiederholen, Suchen und
+Ersetzen), **Template**, **Roster** und **Hilfe**
 (Tastenkürzel, [Captioner-Website](https://www.katzefudder.de/captioner?mtm_campaign=captioner&mtm_source=github)).
+
+## Suchen und Ersetzen
+
+*Bearbeiten → Suchen und Ersetzen …* (`⌘⌥F`) ersetzt Text in den ausgewählten Bildern, ohne
+Auswahl in allen angezeigten. Wählbar sind Beschreibung, Titel, Tags, Stadt und Ort, dazu
+„Groß/klein beachten“ und „Nur ganze Wörter“. Die Vorschau zeigt je Bild vorher und nachher;
+einzelne Bilder lassen sich abwählen, Bilder mit unbekanntem Code oder zu langem Feld sind
+gesperrt. In der Beschreibung wird im Text mit Codes gesucht: `#bn9#` → `#bn10#` tauscht den
+Spieler samt Personen-Tag. Ein ausgeschriebener Name wird auch gefunden, wenn dort ein Code
+steht. Der Anhang des Templates wird nicht durchsucht, sondern neu gebildet. `⌘Z` nimmt alles
+in einem Schritt zurück.
 
 ## Mehrere Ordner (Tabs)
 
@@ -229,6 +241,7 @@ Hilfe → „Tastenkürzel“) zeigt alle Kürzel für das aktuelle System.
 | Alle auswählen · Auswahl aufheben · Getaggte auswählen | `⌘A` · `⌘D` · `⌘T` | `Strg+A` · `Strg+D` · `Strg+T` |
 | Nur getaggte · nur nicht getaggte (nochmal: alle) | `F3` · `F4` | `F3` · `F4` |
 | Beschriftung kopieren · in Auswahl einfügen (auch im Panel, dort auch als Knöpfe) | `⌘⇧C` · `⌘⇧V` | `Strg+⇧C` · `Strg+⇧V` |
+| Suchen und Ersetzen in der Auswahl (ohne Auswahl: alle angezeigten) | `⌘⌥F` | `Strg+Alt+F` |
 | Nächstes · vorheriges Bild | `⌘N`/`⌘]` · `⌘B`/`⌘[` | `Strg+M`/`Alt+]` · `Alt+B`/`Alt+[` |
 | Template-Datei laden · speichern unter · anwenden | `⌘⌥L` · `⌘⌥S` · `⌘⌥A` | `Strg+Alt+L` · `S` · `A` |
 | Erstes/letztes Bild · zuletzt angesehenes | `Pos1`/`Ende` · `L` | `Pos1`/`Ende` · `L` |

@@ -515,3 +515,39 @@ def test_codes_in_headline(window):
     assert item.meta.headline == 'DEL 2 - EC Bad Nauheim gegen EC Kassel Huskies'
     editor.headline.setText('DEL 2 - #bn# gegen #xx#')
     assert 'xx' in editor.headline_preview.text() and not editor.save_button.isEnabled()
+
+
+@requires_exiftool
+def test_find_replace_over_the_selection(window, roster, monkeypatch):
+    from captioner.ui.replacedialog import ReplaceDialog
+    window.roster = roster
+    window.editor.set_roster(roster, '#')
+    first, second, third = window.filtered[:3]
+    for photo, text in ((first, 'Tor #bn23#'), (second, 'Jubel mit #bn23#'), (third, 'Bank')):
+        window.select_only(photo)
+        window.editor.headline.setText('DEL 2 - A gegen B')
+        window.editor.caption.setPlainText(text)
+        window.editor.submit(0)
+    assert 'Marius Erk' in first.meta.keywords
+    window.selected_keys = {first.key, second.key, third.key}
+    window.show_gallery()
+
+    def run_dialog(dialog):
+        dialog.find.setText('#bn23#')
+        dialog.replacement.setText('#bn31#')
+        dialog.refresh()
+        assert [c.item for c in dialog.changes] == [first, second]   # das dritte hat keinen Treffer
+        assert dialog.apply_button.text() == '2 Bilder ändern'
+        dialog.rows[1].setChecked(False)          # zweites abgewaehlt
+        assert dialog.apply_button.text() == '1 Bild ändern'
+        return 1
+    monkeypatch.setattr(ReplaceDialog, 'exec', run_dialog)
+    window.find_replace()
+    window.writer.flush(30)
+    assert first.meta.caption == 'Tor -31- Dean Döge (EC Bad Nauheim)'
+    assert 'Dean Döge' in first.meta.keywords and 'Marius Erk' not in first.meta.keywords
+    assert window.raw_captions.get(first) == 'Tor #bn31#'
+    assert second.meta.caption == 'Jubel mit -23- Marius Erk (EC Bad Nauheim)'   # abgewaehlt: unveraendert
+    assert window.undo_action.text() == 'Rückgängig: Ersetzen'
+    window.undo()
+    assert first.meta.caption == 'Tor -23- Marius Erk (EC Bad Nauheim)' and window.raw_captions.get(first) == 'Tor #bn23#'

@@ -78,6 +78,7 @@ def _bindings(mac):
     # Beschriftung von Bild zu Bild: in der Galerie und beim Tippen im Panel
     add('snapshot_take', 'window', ['Ctrl+Shift+C'], N_('Beschriftung kopieren (IPTC-Snapshot)'))
     add('snapshot_paste', 'window', ['Ctrl+Shift+V'], N_('Beschriftung in Auswahl einfügen'))
+    add('find_replace', 'window', ['Ctrl+Alt+F'], N_('Suchen und Ersetzen in der Auswahl'))
     # Bewertung/Beschriftung zuruecknehmen; im Textfeld gilt dessen eigenes Rueckgaengig
     add('undo', 'window', ['Ctrl+Z'], N_('Rückgängig'))
     add('redo', 'window', ['Ctrl+Shift+Z'], N_('Wiederholen'))

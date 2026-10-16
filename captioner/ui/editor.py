@@ -12,8 +12,8 @@ from pathlib import Path
 
 from PySide6.QtCore import QStringListModel, Qt, Signal
 from PySide6.QtGui import QAction, QKeySequence, QShortcut, QTextCursor
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QFormLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QMenu, QPlainTextEdit, QPushButton, QSizePolicy,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QFormLayout, QFrame, QHBoxLayout, QLabel,
+                               QLineEdit, QMenu, QPlainTextEdit, QPushButton, QScrollArea, QSizePolicy,
                                QToolButton, QVBoxLayout, QWidget)
 
 from .. import codes, geo, keywords, metadata
@@ -31,6 +31,10 @@ def template_folder_label():
     if sys.platform == 'win32':
         return _('Template-Ordner im Explorer öffnen')
     return _('Template-Ordner öffnen')
+
+
+# Markiert Ersetzungen auf dem Weg in die Vorschau (Zeichen aus dem privaten Bereich, nie im Text)
+MARK_START, MARK_END = '\ue000', '\ue001'
 
 
 def shortcut_text(command):
@@ -236,7 +240,23 @@ class CaptionEditor(QWidget):
         self._build()
 
     def _build(self):
-        layout = QVBoxLayout(self)
+        # Scrollbar statt gequetscht: reicht die Hoehe nicht (kleines Fenster, Grossansicht),
+        # behalten die Felder ihre Mindesthoehe, sonst rutschte die Vorschau ins Beschreibungsfeld.
+        # Bytezaehler und Knoepfe stehen fest darunter (footer), immer erreichbar
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        content = QWidget()
+        self.scroll.setWidget(content)
+        outer.addWidget(self.scroll, 1)
+        layout = QVBoxLayout(content)
+        footer = QVBoxLayout()
+        footer.setContentsMargins(layout.contentsMargins().left(), 4, layout.contentsMargins().right(),
+                                  layout.contentsMargins().bottom())
+        outer.addLayout(footer)
 
         # Template: Auswahl, ein sichtbarer Knopf (Bearbeiten), der Rest im Menue "⋯"
         template_row = QHBoxLayout()
@@ -355,7 +375,7 @@ class CaptionEditor(QWidget):
 
         self.limits = QLabel()
         self.limits.setWordWrap(True)
-        layout.addWidget(self.limits)
+        footer.addWidget(self.limits)
 
         # Beschriftung von Bild zu Bild, wie die Kuerzel snapshot_take/snapshot_paste
         snapshot_buttons = QHBoxLayout()
@@ -369,7 +389,7 @@ class CaptionEditor(QWidget):
         self.snapshot_paste_button.clicked.connect(self.snapshot_paste_requested)
         snapshot_buttons.addWidget(self.snapshot_take_button)
         snapshot_buttons.addWidget(self.snapshot_paste_button)
-        layout.addLayout(snapshot_buttons)
+        footer.addLayout(snapshot_buttons)
         self.has_snapshot = False
 
         buttons = QHBoxLayout()
@@ -380,7 +400,7 @@ class CaptionEditor(QWidget):
         self.next_button.clicked.connect(lambda: self.submit(1))
         buttons.addWidget(self.save_button)
         buttons.addWidget(self.next_button)
-        layout.addLayout(buttons)
+        footer.addLayout(buttons)
 
         hint = QLabel(_('Enter speichert · {save_next} speichert und weiter · '
                       '{save_close} speichert und zurück zur Galerie · {shortcuts} alle Tastenkürzel').format(
@@ -463,6 +483,8 @@ class CaptionEditor(QWidget):
         self.caption.spelling.set_delimiter(delimiter)
         self.caption.spelling.set_known_words(
             [e.replacement for e in roster.entries.values()] + list(roster.teams) if roster else [])
+        # Codes im Feld: bekannte gruen, unbekannte rot hinterlegt
+        self.caption.spelling.set_lookup(roster.lookup if roster else None)
         self._update_completions()
         self._update_preview()
 
@@ -558,6 +580,11 @@ class CaptionEditor(QWidget):
         self._shown_caption = raw
         self._update_preview()
 
+    def _replacement_color(self):
+        """Gruener Hintergrund fuer Ersetzungen, auf hellem und dunklem Grund lesbar."""
+        dark = self.palette().window().color().lightness() < 128
+        return '#24502e' if dark else '#cdeccf'
+
     def _strip_suffix(self, caption, item):
         if self.template:
             meta = item.meta
@@ -609,14 +636,24 @@ class CaptionEditor(QWidget):
         self.headline_preview.setVisible(bool(headline_resolution.unknown) or headline != self.headline.text().strip())
         raw = self.caption.toPlainText()
         resolution = self.resolve()
-        text = metadata.single_line(resolution.text)
         item = getattr(self, '_current_item', None)
-        if self.template and text:
-            text = self.template.compose_caption(
-                text, item.taken_at if item else '', headline=headline,
-                city=self.city.text().strip(), sublocation=self.sublocation.text().strip(),
-                **(self.template.field_values(item.meta) if item else {}))
-        shown = html.escape(text)
+
+        def compose(text):
+            text = metadata.single_line(text)
+            if self.template and text:
+                text = self.template.compose_caption(
+                    text, item.taken_at if item else '', headline=headline,
+                    city=self.city.text().strip(), sublocation=self.sublocation.text().strip(),
+                    **(self.template.field_values(item.meta) if item else {}))
+            return text
+
+        text = compose(resolution.text)
+        # Ersetzungen in der Vorschau gruen hinterlegt: sieht man, was aus dem Roster kam
+        marked = codes.resolve(raw, self.roster, self.delimiter,
+                               wrap=lambda replacement: f'{MARK_START}{replacement}{MARK_END}')
+        shown = html.escape(compose(marked.text))
+        shown = shown.replace(MARK_START, f'<span style="background-color:{self._replacement_color()}">')
+        shown = shown.replace(MARK_END, '</span>')
         for code in resolution.unknown:
             token = html.escape(f'{self.delimiter}{code}{self.delimiter}')
             shown = shown.replace(token, f'<span style="color:#d64541;font-weight:bold">{token}</span>')

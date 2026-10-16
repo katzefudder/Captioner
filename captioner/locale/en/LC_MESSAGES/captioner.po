@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 16:44+0200\n"
+"POT-Creation-Date: 2026-10-16 18:10+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -563,6 +563,9 @@ msgstr "Show and edit the selected template"
 msgid "Gilt nach einem Neustart."
 msgstr "Takes effect after a restart."
 
+msgid "Groß/klein beachten"
+msgstr "Match case"
+
 msgid "Großansicht"
 msgstr "Preview"
 
@@ -617,11 +620,30 @@ msgstr ""
 msgid "Ignorieren"
 msgstr "Ignore"
 
+msgid "In"
+msgstr "In"
+
+#, python-brace-format
+msgid ""
+"In der Beschreibung wird im Text mit Codes gesucht; der Anhang des "
+"Templates (Titel, Ort, Datum) wird danach neu gebildet. Personen-Tags "
+"passen sich an. Rückgängig mit {undo}."
+msgstr ""
+"The description is searched in the text with codes; the template's suffix"
+" (headline, location, date) is rebuilt afterwards. Person tags follow. "
+"Undo with {undo}."
+
 msgid "In diesem Tab ist kein Ordner geöffnet."
 msgstr "No folder is open in this tab."
 
 msgid "In diesen Ordner wird gerade kopiert."
 msgstr "Files are being copied into this folder."
+
+#, python-brace-format
+msgid "In {count} Bild ersetzt"
+msgid_plural "In {count} Bildern ersetzt"
+msgstr[0] "Replaced in {count} image"
+msgstr[1] "Replaced in {count} images"
 
 msgid "Infos"
 msgstr "Info"
@@ -763,6 +785,9 @@ msgstr "Nothing found. Rephrase or click directly on the map."
 
 msgid "Noch nicht bereit"
 msgstr "Not ready yet"
+
+msgid "Nur ganze Wörter"
+msgstr "Whole words only"
 
 msgid "Nur getaggte zeigen"
 msgstr "Show tagged only"
@@ -965,6 +990,15 @@ msgstr "Search"
 msgid "Suchen (Code, Name, Team) – Enter: weiter"
 msgstr "Search (code, name, team) – Enter: next"
 
+msgid "Suchen und Ersetzen"
+msgstr "Find and Replace"
+
+msgid "Suchen und Ersetzen in der Auswahl"
+msgstr "Find and replace in the selection"
+
+msgid "Suchen und Ersetzen …"
+msgstr "Find and Replace …"
+
 msgid "Suchen: Dateiname, Titel, Beschreibung, Tags"
 msgstr "Search: file name, headline, caption, tags"
 
@@ -1061,6 +1095,9 @@ msgstr "Template:"
 #, python-brace-format
 msgid "Templates nicht geladen: {errors}"
 msgstr "Templates not loaded: {errors}"
+
+msgid "Text oder Code, z. B. #bn9# oder Mcpherson"
+msgstr "Text or code, e.g. #bn9# or Mcpherson"
 
 msgid "Titel"
 msgstr "Headline"
@@ -1265,6 +1302,9 @@ msgstr "none – only city and location are written"
 msgid "leer = Aufnahmedatum des Bildes, z. B. 18.10.26"
 msgstr "empty = capture date of the image, e.g. 18.10.26"
 
+msgid "leer = Fundstelle löschen"
+msgstr "empty = delete the match"
+
 msgid "leer = automatisch suchen"
 msgstr "empty = find automatically"
 
@@ -1339,6 +1379,12 @@ msgstr[0] "{count} image copied to {folder}"
 msgstr[1] "{count} images copied to {folder}"
 
 #, python-brace-format
+msgid "{count} Bild ändern"
+msgid_plural "{count} Bilder ändern"
+msgstr[0] "Change {count} image"
+msgstr[1] "Change {count} images"
+
+#, python-brace-format
 msgid "{count} Code"
 msgid_plural "{count} Codes"
 msgstr[0] "{count} code"
@@ -1397,8 +1443,20 @@ msgid "{count} Treffer – den passenden in der Liste wählen."
 msgstr "{count} results – choose the right one in the list."
 
 #, python-brace-format
+msgid "{count} angezeigtes Bild"
+msgid_plural "alle {count} angezeigten Bilder"
+msgstr[0] "{count} shown image"
+msgstr[1] "all {count} shown images"
+
+#, python-brace-format
 msgid "{count} ausgewählt"
 msgstr "{count} selected"
+
+#, python-brace-format
+msgid "{count} ausgewähltes Bild"
+msgid_plural "{count} ausgewählte Bilder"
+msgstr[0] "{count} selected image"
+msgstr[1] "{count} selected images"
 
 #, python-brace-format
 msgid "{count} weiteres"
@@ -1449,6 +1507,12 @@ msgid "{folder} – {count} Bild ({seconds} s)"
 msgid_plural "{folder} – {count} Bilder ({seconds} s)"
 msgstr[0] "{folder} – {count} image ({seconds} s)"
 msgstr[1] "{folder} – {count} images ({seconds} s)"
+
+#, python-brace-format
+msgid "{hits} Treffer in {photos} Bild"
+msgid_plural "{hits} Treffer in {photos} Bildern"
+msgstr[0] "{hits} matches in {photos} image"
+msgstr[1] "{hits} matches in {photos} images"
 
 #, python-brace-format
 msgid "{images} ({files}) gezogen"

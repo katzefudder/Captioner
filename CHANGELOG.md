@@ -26,6 +26,11 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 - **Galerie ohne Seiten:** alle Bilder eines Ordners in einer scrollbaren Galerie; Vorschauen
   werden beim Scrollen nachgeladen. Die Einstellung „Bilder pro Seite“ und die Seiten-Kürzel
   entfallen, `Bild↑`/`Bild↓` blättern jetzt wie gewohnt in der Galerie.
+- **Suchen und Ersetzen** (Bearbeiten, `⌘⌥F`) in Beschreibung, Titel, Tags, Stadt und Ort der
+  Auswahl, mit Vorschau je Bild. Codes lassen sich tauschen (`#bn9#` → `#bn10#`), Personen-Tags
+  und der Anhang des Templates passen sich an; ein Schritt für `⌘Z`.
+- **Codes farbig:** In der Beschreibung sind bekannte Codes grün und unbekannte rot hinterlegt; die
+  Vorschau darunter hinterlegt die eingesetzten Namen grün.
 - **Hinweise im Template** (IPTC „Special Instructions“, Lightroom: Anweisungen): z. B.
   Kontaktdaten oder Kontoverbindung, geht wie Copyright & Co. in jedes Bild; auch als
   Platzhalter `{instructions}` im Anhang.
@@ -47,6 +52,8 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 
 ### Behoben
 
+- Bei wenig Höhe rutschte im Beschriftungs-Panel die Vorschau ins Beschreibungsfeld. Das Panel
+  scrollt jetzt; Speichern, Kopieren und Einfügen stehen fest darunter.
 - Zeilenumbrüche in Ort-/Rechte-Feldern (aus einer Template-Datei oder einem Bild) zerlegten den
   Aufruf von ExifTool; sie werden jetzt zu Leerzeichen.
 - Ein unbeschriftetes Bild zeigte im Panel die Beschreibung des zuletzt gespeicherten Bildes;

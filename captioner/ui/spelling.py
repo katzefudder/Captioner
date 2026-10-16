@@ -13,6 +13,8 @@ import sys
 
 from PySide6.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat
 
+from .. import codes
+
 from .folderdialog import _ObjC
 
 logger = logging.getLogger(__name__)
@@ -108,7 +110,10 @@ def checker():
 
 
 class SpellHighlighter(QSyntaxHighlighter):
-    """Rot gewellt unterstreichen; Codes und bekannte Namen auslassen."""
+    """
+    Rot gewellt unterstreichen; Codes und bekannte Namen auslassen. Dazu die Codes selbst:
+    bekannte gruen hinterlegt (wird ersetzt), unbekannte rot (blockiert das Speichern).
+    """
 
     def __init__(self, document, spell_checker, delimiter='#'):
         super().__init__(document)
@@ -121,10 +126,20 @@ class SpellHighlighter(QSyntaxHighlighter):
         self.format = QTextCharFormat()
         self.format.setUnderlineStyle(QTextCharFormat.UnderlineStyle.SpellCheckUnderline)
         self.format.setUnderlineColor(QColor('#d64541'))
+        self.lookup = None          # Code -> Roster-Eintrag oder None; ohne Roster keine Farben
+        self.known_code = QTextCharFormat()
+        self.known_code.setBackground(QColor(63, 163, 77, 90))
+        self.unknown_code = QTextCharFormat()
+        self.unknown_code.setBackground(QColor(214, 69, 65, 100))
+
+    def set_lookup(self, lookup):
+        self.lookup = lookup
+        self.rehighlight()
 
     def set_delimiter(self, delimiter):
         d = re.escape(delimiter or '#')
         self.code_pattern = re.compile(f'{d}[^{d}\\s]*{d}?')
+        self.complete_code = codes.code_pattern(delimiter or '#')   # nur abgeschlossene: #bn9#
 
     def set_known_words(self, texts):
         self.known = {w.casefold() for text in texts for w in WORD.findall(text)}
@@ -145,6 +160,17 @@ class SpellHighlighter(QSyntaxHighlighter):
             result.append((start, length, word))
         return result
 
+    def code_spans(self, text):
+        """[(Anfang, Laenge, bekannt)] der abgeschlossenen Codes, in UTF-16-Einheiten."""
+        if self.lookup is None:
+            return []
+        matches = list(self.complete_code.finditer(text))
+        spans = utf16_spans(text, self.complete_code)
+        return [(start, end - start, self.lookup(match.group('code')) is not None)
+                for match, (start, end) in zip(matches, spans)]
+
     def highlightBlock(self, text):
+        for start, length, known in self.code_spans(text):
+            self.setFormat(start, length, self.known_code if known else self.unknown_code)
         for start, length, _word in self.misspelled(text):
             self.setFormat(start, length, self.format)

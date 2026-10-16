@@ -508,6 +508,9 @@ msgstr ""
 msgid "Gilt nach einem Neustart."
 msgstr ""
 
+msgid "Groß/klein beachten"
+msgstr ""
+
 msgid "Großansicht"
 msgstr ""
 
@@ -559,11 +562,27 @@ msgstr ""
 msgid "Ignorieren"
 msgstr ""
 
+msgid "In"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"In der Beschreibung wird im Text mit Codes gesucht; der Anhang des "
+"Templates (Titel, Ort, Datum) wird danach neu gebildet. Personen-Tags "
+"passen sich an. Rückgängig mit {undo}."
+msgstr ""
+
 msgid "In diesem Tab ist kein Ordner geöffnet."
 msgstr ""
 
 msgid "In diesen Ordner wird gerade kopiert."
 msgstr ""
+
+#, python-brace-format
+msgid "In {count} Bild ersetzt"
+msgid_plural "In {count} Bildern ersetzt"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Infos"
 msgstr ""
@@ -702,6 +721,9 @@ msgid "Nichts gefunden. Anders formulieren oder direkt auf die Karte klicken."
 msgstr ""
 
 msgid "Noch nicht bereit"
+msgstr ""
+
+msgid "Nur ganze Wörter"
 msgstr ""
 
 msgid "Nur getaggte zeigen"
@@ -905,6 +927,15 @@ msgstr ""
 msgid "Suchen (Code, Name, Team) – Enter: weiter"
 msgstr ""
 
+msgid "Suchen und Ersetzen"
+msgstr ""
+
+msgid "Suchen und Ersetzen in der Auswahl"
+msgstr ""
+
+msgid "Suchen und Ersetzen …"
+msgstr ""
+
 msgid "Suchen: Dateiname, Titel, Beschreibung, Tags"
 msgstr ""
 
@@ -1000,6 +1031,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Templates nicht geladen: {errors}"
+msgstr ""
+
+msgid "Text oder Code, z. B. #bn9# oder Mcpherson"
 msgstr ""
 
 msgid "Titel"
@@ -1199,6 +1233,9 @@ msgstr ""
 msgid "leer = Aufnahmedatum des Bildes, z. B. 18.10.26"
 msgstr ""
 
+msgid "leer = Fundstelle löschen"
+msgstr ""
+
 msgid "leer = automatisch suchen"
 msgstr ""
 
@@ -1273,6 +1310,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{count} Bild ändern"
+msgid_plural "{count} Bilder ändern"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{count} Code"
 msgid_plural "{count} Codes"
 msgstr[0] ""
@@ -1331,8 +1374,20 @@ msgid "{count} Treffer – den passenden in der Liste wählen."
 msgstr ""
 
 #, python-brace-format
+msgid "{count} angezeigtes Bild"
+msgid_plural "alle {count} angezeigten Bilder"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{count} ausgewählt"
 msgstr ""
+
+#, python-brace-format
+msgid "{count} ausgewähltes Bild"
+msgid_plural "{count} ausgewählte Bilder"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "{count} weiteres"
@@ -1381,6 +1436,12 @@ msgstr ""
 #, python-brace-format
 msgid "{folder} – {count} Bild ({seconds} s)"
 msgid_plural "{folder} – {count} Bilder ({seconds} s)"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{hits} Treffer in {photos} Bild"
+msgid_plural "{hits} Treffer in {photos} Bildern"
 msgstr[0] ""
 msgstr[1] ""
 

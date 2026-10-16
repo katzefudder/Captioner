@@ -40,7 +40,8 @@ def code_pattern(delimiter):
     return re.compile(d + r'(?P<code>[A-Za-z0-9_]+)' + d)
 
 
-def resolve(text, roster, delimiter='#'):
+def resolve(text, roster, delimiter='#', wrap=None):
+    """wrap(ersetzung) rahmt jede Ersetzung ein, z. B. zum Hervorheben in der Vorschau."""
     used, unknown = [], []
 
     def replace(match):
@@ -51,7 +52,7 @@ def resolve(text, roster, delimiter='#'):
                 unknown.append(code)
             return match.group(0)
         used.append(entry)
-        return entry.replacement
+        return wrap(entry.replacement) if wrap else entry.replacement
 
     resolved = code_pattern(delimiter).sub(replace, text or '')
     return Resolution(text=resolved, unknown=unknown, used=used)

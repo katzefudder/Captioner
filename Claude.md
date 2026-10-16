@@ -19,6 +19,7 @@ Bedienung: `readme.md`.
 | `transfer.py` | Kopieren zwischen Ordnern: Gruppen (RAW+JPG+Sidecar), Konflikte (überspringen/umbenennen/ersetzen) |
 | `keywords.py` | Gemerkte Stichwörter (`<cache>/keywords.json`) und Vorschläge fürs Tag-Feld |
 | `updates.py` | Versionsvergleich und GitHub-Release-Antwort (ohne Qt); `ui/updatecheck.py` fragt ab |
+| `replace.py` | Suchen und Ersetzen über mehrere Bilder: `plan()` rechnet je Bild wie Speichern (Rohtext mit Codes, Anhang neu, Personen-Tags) |
 | `undo.py` | Rückgängig/Wiederholen: Schritte mit Vorher/Nachher je Bild (Metadaten + Rohtext) |
 | `previews.py` | Kacheln/Großansicht aus eingebetteten JPEGs, Plattencache |
 | `exiftool.py` | `-stay_open`-Prozess, Pool pro OS-Thread, Aufräumen verwaister Prozesse |
@@ -30,6 +31,7 @@ Bedienung: `readme.md`.
 | `ui/tabs.py` | `FolderTab` (Zustand je Ordner), `FolderTabBar` (Drop auf Reiter), Konfliktdialog, `CopyWorker` |
 | `ui/instance.py` | Windows: eine App je Benutzer, weitere Starts reichen Ordner per `QLocalServer` weiter |
 | `ui/folderdialog.py` | „Ordner öffnen“ mit Mehrfachauswahl: macOS `NSOpenPanel` per ctypes, sonst Qt-Dialog |
+| `ui/replacedialog.py` | „Suchen und Ersetzen“: Eingabe, Vorschau je Bild (vorher/nachher), abwählbar; `MainWindow.find_replace` schreibt |
 | `ui/rostereditor.py` | „Roster bearbeiten“: lokale Roster-Dateien mit Prüfung (`roster.check`), Speichern über `roster.write_file` |
 | `ui/about.py` | „Über Captioner“: Logo, `captioner.version()`, Link `captioner.WEBSITE_LINK` (mit `mtm_campaign`/`mtm_source`) |
 | `i18n.py` | gettext: `_`, `ngettext`, `N_`, Sprache wählen (`resolve`, `setup`) |
@@ -37,7 +39,7 @@ Bedienung: `readme.md`.
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
-Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`, `files`) importiert kein Qt.
+Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`, `files`, `replace`) importiert kein Qt.
 
 ## Regeln, die nicht verletzt werden dürfen
 
@@ -87,6 +89,9 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - `NSSpellChecker` per ctypes (wie `folderdialog`); anderswo keine Prüfung. Bereiche sind UTF-16
   (wie QString): nie mit Python-Indizes mischen, `utf16_slice`/`utf16_spans` benutzen.
 - Nicht angestrichen: Codes und Wörter aus Roster-Ersetzungen (`set_known_words` in `set_roster`).
+- Abgeschlossene Codes hinterlegt derselbe Highlighter: bekannt grün, unbekannt rot (`set_lookup`,
+  `code_spans` in UTF-16). Die Vorschau hinterlegt Ersetzungen grün (`codes.resolve(wrap=…)` mit
+  `MARK_START`/`MARK_END`, erst nach `compose` in HTML umgesetzt).
 - „Ins Wörterbuch aufnehmen“ ruft `learnWord:` auf, wirkt systemweit.
 
 ## Rückgängig
@@ -100,6 +105,8 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 
 ## Großansicht mit Beschriftung
 
+- Das Panel scrollt (`CaptionEditor.scroll`), Bytezähler, Kopieren/Einfügen und Speichern stehen
+  fest darunter (Fußzeile): sonst überlappten die Felder bei wenig Höhe bzw. Speichern war weg.
 - Das `CaptionEditor` gibt es nur einmal. Es wird in `Viewer.caption_slot` umgehängt und beim
   Schließen (`finished`) bzw. Ausblenden zurück in `main_splitter` (`_move_editor`). Inhalt,
   Template und die am Panel hängenden Kürzel wandern mit.
@@ -309,7 +316,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 221 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 230 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)
