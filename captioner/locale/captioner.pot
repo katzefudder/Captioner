@@ -59,9 +59,6 @@ msgstr ""
 msgid "Alle Farben"
 msgstr ""
 
-msgid "Inhalte überschreiben"
-msgstr ""
-
 msgid "Alle Kameras"
 msgstr ""
 
@@ -560,6 +557,9 @@ msgid "In diesen Ordner wird gerade kopiert."
 msgstr ""
 
 msgid "Infos"
+msgstr ""
+
+msgid "Inhalte überschreiben"
 msgstr ""
 
 msgid "Ins Wörterbuch aufnehmen"

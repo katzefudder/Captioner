@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 13:46+0200\n"
+"POT-Creation-Date: 2026-10-16 13:59+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -83,9 +83,6 @@ msgstr "All files (*)"
 
 msgid "Alle Farben"
 msgstr "All colors"
-
-msgid "Inhalte überschreiben"
-msgstr "Overwrite all content"
 
 msgid "Alle Kameras"
 msgstr "All cameras"
@@ -617,6 +614,9 @@ msgstr "Files are being copied into this folder."
 msgid "Infos"
 msgstr "Info"
 
+msgid "Inhalte überschreiben"
+msgstr "Overwrite content"
+
 msgid "Ins Wörterbuch aufnehmen"
 msgstr "Learn spelling"
 
@@ -1059,7 +1059,7 @@ msgid ""
 "Beschreibungen bleiben erhalten, außer bei „Inhalte überschreiben“"
 msgstr ""
 "Write the template's title, location and tags into all selected images; "
-"descriptions are kept unless “Overwrite all content” is checked"
+"descriptions are kept unless “Overwrite content” is checked"
 
 msgid "URL (GitHub-Links wie im Browser gehen auch):"
 msgstr "URL (GitHub links as shown in the browser work too):"
