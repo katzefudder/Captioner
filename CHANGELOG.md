@@ -29,6 +29,8 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 - **Beschriftungs-Panel kompakter:** Hinweise direkt unter ihren Feldern statt in eigenen Zeilen,
   Template-Datei im Tooltip, Roster in einer Zeile mit Menü (Bearbeiten, Neu laden, Datei
   hinzufügen; Probleme bleiben sichtbar), Bytezähler neben Kopieren/Einfügen.
+- **Anleitung** als PDF ([docs/Captioner-Anleitung.pdf](docs/Captioner-Anleitung.pdf)), in der App
+  unter Hilfe → „Anleitung (PDF)“, dazu im DMG und im Windows-Startmenü.
 - **Kontextmenü an den Kacheln:** Bewertung, Farbklasse, Tag, Großansicht, Beschriftung
   kopieren/einfügen, in Tab kopieren, im Finder/Explorer zeigen, Pfade kopieren, in den
   Papierkorb legen (alle Dateien des Bildes, nach Rückfrage; `⌘⌫` bzw. `Entf`).

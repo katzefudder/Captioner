@@ -68,6 +68,7 @@ Type: filesandordirs; Name: "{app}\_internal"
 
 [Icons]
 Name: "{autoprograms}\Captioner"; Filename: "{app}\Captioner.exe"
+Name: "{autoprograms}\Captioner Anleitung"; Filename: "{app}\_internal\docs\Captioner-Anleitung.pdf"
 Name: "{autodesktop}\Captioner"; Filename: "{app}\Captioner.exe"; Tasks: desktopicon
 
 [Registry]

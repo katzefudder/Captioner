@@ -8,7 +8,7 @@ EXIFTOOL_DIR = vendor/exiftool
 
 POETRY = env -u VIRTUAL_ENV poetry
 
-.PHONY: install run test icons translations bundle verify dmg pkg installer notarize clean
+.PHONY: install run test icons translations manual manual-screenshots bundle verify dmg pkg installer notarize clean
 
 install:
 	$(POETRY) install
@@ -22,6 +22,14 @@ test:
 # Alle Icons aus captioner/resources/logo.svg neu erzeugen (Ergebnis ist eingecheckt)
 icons:
 	$(POETRY) run python scripts/make_icons.py
+
+# Anleitung: docs/manual/anleitung.html (+ .css) -> docs/Captioner-Anleitung.pdf (eingecheckt),
+# braucht WeasyPrint (brew install weasyprint). Screenshots erzeugt manual-screenshots (ExifTool noetig).
+manual:
+	cd docs/manual && weasyprint anleitung.html ../Captioner-Anleitung.pdf
+
+manual-screenshots:
+	$(POETRY) run python scripts/manual_screenshots.py
 
 # Uebersetzungen: Texte herausziehen, Kataloge (.po) aktualisieren, kompilieren (.mo).
 # Die .po-Dateien von Hand (oder mit Poedit) uebersetzen; .po und .mo sind eingecheckt.

@@ -60,6 +60,8 @@ def verify():
     foreign = [line for line in machos if 'arm64' not in line or 'x86_64' in line]
     if foreign:
         problems.append(f'{len(foreign)} Binaries nicht reines arm64, z. B. {foreign[0]}')
+    if not any(APP.rglob('Captioner-Anleitung.pdf')):
+        problems.append('Anleitung (PDF) fehlt im Bundle')
     for key in ('CFBundleShortVersionString', 'LSMinimumSystemVersion', 'CFBundleIconFile'):
         if not plist.get(key) or plist.get(key) == '0.0.0':
             problems.append(f'Info.plist: {key} fehlt')
@@ -88,6 +90,7 @@ def dmg():
         # ditto erhaelt Symlinks, Rechte und Signatur-Attribute der App
         run('ditto', APP, staging / 'Captioner.app')
         (staging / 'Programme').symlink_to('/Applications')
+        shutil.copy2(ROOT / 'docs' / 'Captioner-Anleitung.pdf', staging / 'Anleitung.pdf')
         if target.exists():
             target.unlink()
         run('hdiutil', 'create', '-volname', 'Captioner', '-srcfolder', staging,

@@ -1,0 +1,168 @@
+/* Druck-Layout der Anleitung (WeasyPrint), A4 */
+
+@page {
+  size: A4;
+  margin: 22mm 20mm 22mm 20mm;
+  @top-right {
+    content: string(chapter);
+    font: 8.5pt "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #8a8f98;
+  }
+  @bottom-center {
+    content: counter(page);
+    font: 8.5pt "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #8a8f98;
+  }
+}
+@page :first {
+  margin: 0;
+  @top-right { content: none; }
+  @bottom-center { content: none; }
+}
+@page toc {
+  @top-right { content: none; }
+}
+
+html {
+  font-family: "Helvetica Neue", Helvetica, Arial, "Arial Unicode MS", "Apple Symbols", sans-serif;
+  font-size: 10pt;
+  line-height: 1.5;
+  color: #1d2330;
+  hyphens: auto;
+}
+
+/* Titelseite */
+.cover {
+  height: 297mm;
+  box-sizing: border-box;
+  padding-top: 70mm;
+  text-align: center;
+  background: linear-gradient(180deg, #ffffff 0%, #eef3fb 100%);
+  page-break-after: always;
+}
+.cover .logo { width: 62mm; margin-bottom: 10mm; }
+.cover-title { font-size: 40pt; font-weight: 700; letter-spacing: -0.5pt; margin: 0; }
+.cover-sub { font-size: 14pt; color: #5d6573; margin: 4mm 0 26mm; line-height: 1.4; }
+.cover-meta { font-size: 9.5pt; color: #5d6573; }
+
+/* Inhaltsverzeichnis */
+.toc { page: toc; page-break-after: always; }
+.toc + h2 { margin-top: 0; }
+.toc-title { margin: 0 0 4mm; font-size: 18pt; font-weight: 700; }
+.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: chapter; }
+.toc li { counter-increment: chapter; border-bottom: 0.5pt solid #dfe3ea; padding: 2.2mm 0; }
+.toc li a { color: #1d2330; text-decoration: none; }
+.toc li a::before { content: counter(chapter) "  "; color: #2f6fd6; font-weight: 600; display: inline-block; width: 8mm; }
+.toc li a::after { content: leader(" ") target-counter(attr(href), page); color: #5d6573; }
+
+/* Kapitel */
+body { counter-reset: h2; }
+h2 {
+  string-set: chapter content();
+  counter-increment: h2;
+  font-size: 18pt;
+  font-weight: 700;
+  margin: 12mm 0 4mm;
+  padding-top: 2mm;
+  page-break-after: avoid;
+  color: #1d2330;
+}
+h2::before { content: counter(h2) " "; color: #2f6fd6; margin-right: 2mm; }
+h3 { font-size: 12pt; margin: 6mm 0 2mm; page-break-after: avoid; }
+p { margin: 0 0 2.6mm; orphans: 3; widows: 3; }
+ul, ol { margin: 0 0 3mm; padding-left: 5mm; }
+li { margin-bottom: 1.2mm; }
+a { color: #2f6fd6; text-decoration: none; }
+strong { font-weight: 600; }
+.small { font-size: 8.5pt; color: #5d6573; }
+
+code {
+  font-family: Menlo, "SF Mono", monospace;
+  font-size: 8.6pt;
+  background: #f3f6fb;
+  border-radius: 2pt;
+  padding: 0.2pt 2pt;
+  hyphens: none;
+}
+kbd {
+  font-family: "Helvetica Neue", Helvetica, "Arial Unicode MS", "Apple Symbols", sans-serif;
+  font-size: 8.6pt;
+  white-space: nowrap;
+  border: 0.6pt solid #b9c0cc;
+  border-bottom-width: 1.4pt;
+  border-radius: 2.5pt;
+  padding: 0 2.4pt;
+  background: #fff;
+  hyphens: none;
+}
+
+ol.steps li::marker { color: #2f6fd6; font-weight: 600; }
+
+/* Kaesten */
+.note {
+  background: #f3f6fb;
+  border-left: 2.5pt solid #2f6fd6;
+  padding: 3mm 4mm 1mm;
+  margin: 4mm 0;
+  page-break-inside: avoid;
+}
+.example {
+  border: 0.6pt solid #dfe3ea;
+  border-radius: 3pt;
+  padding: 3mm 4mm 1mm;
+  margin: 3mm 0 4mm;
+  page-break-inside: avoid;
+}
+.example .label {
+  font-size: 7.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.6pt;
+  color: #5d6573;
+  margin-bottom: 0.5mm;
+}
+pre.file {
+  font-family: Menlo, "SF Mono", monospace;
+  font-size: 8.4pt;
+  background: #f3f6fb;
+  padding: 3mm 4mm;
+  border-radius: 3pt;
+  tab-size: 8;
+  page-break-inside: avoid;
+}
+
+/* Begriffslisten */
+dl.parts { margin: 2mm 0 4mm; }
+dl.parts dt { font-weight: 600; margin-top: 2mm; page-break-after: avoid; }
+dl.parts dd { margin: 0.5mm 0 0 5mm; }
+dl.faq dt { font-weight: 600; margin-top: 4mm; page-break-after: avoid; }
+dl.faq dd { margin: 1mm 0 0 0; }
+
+/* Bilder */
+figure { margin: 4mm 0 5mm; page-break-inside: avoid; text-align: center; }
+figure img {
+  border: 0.5pt solid #c8ced8;
+  border-radius: 2pt;
+}
+figure.wide img { width: 100%; }
+figure.half img { max-width: 72%; max-height: 120mm; }
+figcaption { font-size: 8.5pt; color: #5d6573; margin-top: 2mm; text-align: left; }
+
+.side { display: flex; align-items: flex-start; margin: 3mm 0 4mm; page-break-inside: avoid; }
+.side img {
+  width: 58mm;
+  flex: none;
+  border: 0.5pt solid #c8ced8;
+  border-radius: 2pt;
+}
+.side > div { flex: 1; margin-left: 6mm; }
+
+/* Tabellen */
+table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 9pt; }
+th { text-align: left; font-weight: 600; color: #5d6573; font-size: 8pt;
+     text-transform: uppercase; letter-spacing: 0.4pt; border-bottom: 1pt solid #1d2330; padding: 1.5mm 2mm; }
+td { border-bottom: 0.5pt solid #dfe3ea; padding: 1.6mm 2mm; vertical-align: top; }
+tr { page-break-inside: avoid; }
+table.keys td:first-child { width: 44%; }
+table.plain td:first-child { width: 30%; font-weight: 600; }
+
+.end { margin-top: 14mm; text-align: center; font-size: 8.5pt; color: #5d6573; }

@@ -6,6 +6,14 @@ from pathlib import Path
 WEBSITE = 'https://www.katzefudder.de/captioner'
 # Links zur Website mit Matomo-Kampagne (Anzeige ohne, Ziel mit Parametern)
 WEBSITE_LINK = WEBSITE + '?mtm_campaign=captioner&mtm_source=app'
+MANUAL_NAME = 'Captioner-Anleitung.pdf'
+
+
+def manual_path():
+    """Die Anleitung (PDF): im Bundle unter docs/ (beide Specs), sonst docs/ im Quellbaum."""
+    if getattr(sys, 'frozen', False):
+        return Path(getattr(sys, '_MEIPASS', '')) / 'docs' / MANUAL_NAME
+    return Path(__file__).resolve().parent.parent / 'docs' / MANUAL_NAME
 
 
 def version():

@@ -109,6 +109,8 @@ def verify():
         problems.append(f'captioner/VERSION fehlt oder passt nicht zu {version()}')
     if not (internal / 'LICENSE').exists() or not (internal / 'licenses' / 'LGPL-3.0.txt').exists():
         problems.append('Lizenztexte fehlen im Bundle (LICENSE, licenses/)')
+    if not (internal / 'docs' / 'Captioner-Anleitung.pdf').exists():
+        problems.append('Anleitung (PDF) fehlt im Bundle')
     if not (internal / 'captioner' / 'locale' / 'en' / 'LC_MESSAGES' / 'captioner.mo').exists():
         problems.append('Englische Uebersetzung fehlt')
     unused = [p.name for p in internal.rglob('*') if p.name.lower().startswith(('qt6quick', 'qt6qml', 'qt6pdf'))]

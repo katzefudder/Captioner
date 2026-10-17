@@ -253,6 +253,18 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Farbklasse 1–8 → `XMP-photomech:ColorClass` + `xmp:Label` aus `Settings.labels`; Tag →
   `XMP-photomech:Tagged` (`Yes`/`No`). Lightroom liest nur das Label.
 
+## Anleitung
+
+- Quelle `docs/manual/anleitung.html` + `anleitung.css` (Druck-CSS für WeasyPrint), Ergebnis
+  `docs/Captioner-Anleitung.pdf` (eingecheckt): `make manual`. Für Anwender geschrieben (du-Form,
+  kein Bauen/Paketieren). Screenshots in `docs/manual/img/` erzeugt `make manual-screenshots`
+  offscreen aus der echten App (`scripts/manual_screenshots.py`: Beispielbilder, Roster mit
+  erfundenen Namen, Template, eigenes `CAPTIONER_HOME`). Neue Funktion mit sichtbarer Bedienung →
+  Anleitung mitziehen.
+- Mitgeliefert: beide Specs bündeln das PDF nach `docs/`, `captioner.manual_path()` findet es (Bundle
+  bzw. Quellbaum), *Hilfe → Anleitung (PDF)* öffnet es. Dazu liegt es als `Anleitung.pdf` im DMG und
+  im Windows-Startmenü; `verify` beider Paket-Skripte prüft, dass es im Bundle ist.
+
 ## Logo
 
 - `captioner/resources/logo.svg` ist die einzige Quelle: Leinwand mit „.dng" hinter einer
@@ -337,7 +349,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 240 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 241 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

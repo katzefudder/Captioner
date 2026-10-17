@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 22:52+0200\n"
+"POT-Creation-Date: 2026-10-17 23:21+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -110,6 +110,12 @@ msgstr "Close other tabs"
 
 msgid "Anhang"
 msgstr "Suffix"
+
+msgid "Anleitung"
+msgstr "Manual"
+
+msgid "Anleitung (PDF)"
+msgstr "Manual (German, PDF)"
 
 #, python-brace-format
 msgid "Antwort von ExifTool nicht lesbar: {error}; {stderr}"
@@ -337,6 +343,10 @@ msgstr "German"
 
 msgid "Deutschland"
 msgstr "Germany"
+
+#, python-brace-format
+msgid "Die Anleitung wurde nicht gefunden: {path}"
+msgstr "The manual was not found: {path}"
 
 msgid ""
 "Die Datei enthält keinen einzigen Code (Code, Tab, Ersetzung). So würde "

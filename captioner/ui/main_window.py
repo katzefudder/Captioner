@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
                                QLabel, QMainWindow, QMenu, QMessageBox, QProgressDialog, QSlider, QSplitter,
                                QPushButton, QToolButton, QVBoxLayout, QWidget)
 
-from .. import (WEBSITE_LINK, codes, config, geo, i18n, keywords, metadata, replace, scanner, transfer, undo,
+from .. import (WEBSITE_LINK, manual_path, codes, config, geo, i18n, keywords, metadata, replace, scanner, transfer, undo,
                updates, version)
 from ..i18n import _, N_, ngettext
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
@@ -242,6 +242,7 @@ class MainWindow(QMainWindow):
         action(roster_menu, _('Roster-Datei hinzufügen …'), self.add_roster_file)
 
         help_menu = bar.addMenu(_('Hilfe'))
+        action(help_menu, _('Anleitung (PDF)'), self.open_manual)
         action(help_menu, _('Tastenkürzel'), self.show_shortcuts)
         action(help_menu, _('Captioner-Website'), lambda: QDesktopServices.openUrl(QUrl(WEBSITE_LINK)))
         action(help_menu, _('Nach Updates suchen …'), lambda: self.check_updates(manual=True))
@@ -535,6 +536,12 @@ class MainWindow(QMainWindow):
 
     def show_shortcuts(self):
         ShortcutsDialog(self).exec()
+
+    def open_manual(self):
+        """Die mitgelieferte Anleitung im PDF-Programm des Systems (Vorschau, Edge, ...)."""
+        path = manual_path()
+        if not path.exists() or not QDesktopServices.openUrl(QUrl.fromLocalFile(str(path))):
+            QMessageBox.information(self, _('Anleitung'), _('Die Anleitung wurde nicht gefunden: {path}').format(path=path))
 
     def customize_shortcuts(self):
         dialog = ShortcutEditorDialog(self)

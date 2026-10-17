@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Captioner – Anleitung</title>
+<meta name="author" content="Captioner">
+<meta name="description" content="Anleitung für Captioner: Fotos sichten, bewerten und beschriften, bevor sie in Lightroom importiert werden.">
+<link rel="stylesheet" href="anleitung.css">
+</head>
+<body>
+
+<!-- Titelseite -->
+<section class="cover">
+  <img class="logo" src="../../captioner/resources/logo.svg" alt="">
+  <h1 class="cover-title">Captioner</h1>
+  <p class="cover-sub">Fotos sichten, bewerten und beschriften,<br>bevor sie in Lightroom importiert werden</p>
+  <p class="cover-meta">Anleitung · Version 0.2 · Oktober 2026</p>
+</section>
+
+<!-- Inhalt -->
+<nav class="toc">
+  <p class="toc-title">Inhalt</p>
+  <ol>
+    <li><a href="#ueberblick">Was Captioner macht</a></li>
+    <li><a href="#installation">Installieren und starten</a></li>
+    <li><a href="#fenster">Das Fenster</a></li>
+    <li><a href="#ordner">Ordner und Tabs</a></li>
+    <li><a href="#sichten">Sichten: Galerie und Großansicht</a></li>
+    <li><a href="#bewerten">Bewerten, Farbklassen, Tags</a></li>
+    <li><a href="#filtern">Suchen und filtern</a></li>
+    <li><a href="#beschriften">Beschriften</a></li>
+    <li><a href="#templates">Templates</a></li>
+    <li><a href="#roster">Roster und Codes</a></li>
+    <li><a href="#ort">Ort, Karte und GPS</a></li>
+    <li><a href="#ersetzen">Suchen und Ersetzen</a></li>
+    <li><a href="#rueckgaengig">Rückgängig</a></li>
+    <li><a href="#lightroom">Übergabe an Lightroom</a></li>
+    <li><a href="#dateien">Kopieren, Papierkorb, Finder</a></li>
+    <li><a href="#einstellungen">Einstellungen</a></li>
+    <li><a href="#kuerzel">Tastenkürzel</a></li>
+    <li><a href="#fragen">Fragen und Probleme</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="ueberblick">Was Captioner macht</h2>
+
+<p>Captioner ist das Werkzeug zwischen Speicherkarte und Lightroom. Du sichtest die Fotos
+eines Spiels, bewertest sie, wählst aus und beschriftest sie. Danach ziehst du die Auswahl
+in Lightroom, und Lightroom übernimmt beim Import Titel, Beschreibung, Stichwörter, Sterne
+und Farbe.</p>
+
+<p>Das Besondere sind die <strong>Codes</strong>: Statt „-23- Max Muster (EC Bad Nauheim)“
+tippst du <code>#bn23#</code>. Captioner schlägt die Spieler beim Tippen vor, setzt beim
+Speichern den vollen Namen ein und trägt die Person automatisch in die Tags ein. Die Codes
+stehen in <strong>Roster-Dateien</strong>, die ein Team einmal pflegt und alle nutzen.</p>
+
+<p>Ein typischer Ablauf:</p>
+<ol class="steps">
+  <li><strong>Ordner öffnen</strong>, z. B. den Bildordner der Speicherkarte.</li>
+  <li><strong>Sichten und bewerten</strong>: Großansicht, Sterne, Farbklassen, Tags.</li>
+  <li><strong>Template wählen</strong>: Ort, Fotograf, Copyright und Anhang für das Spiel.</li>
+  <li><strong>Titel eintragen</strong>, z. B. <code>DEL 2 - EC Bad Nauheim gegen Bietigheim Steelers</code>.</li>
+  <li><strong>Bild für Bild beschreiben</strong>, mit Codes für die Spieler.</li>
+  <li><strong>In Lightroom ziehen.</strong></li>
+</ol>
+
+<div class="note">
+  <p><strong>Deine Dateien sind sicher.</strong> RAW-Dateien (NEF, CR2, ARW …) verändert
+  Captioner nie; alles kommt in eine XMP-Datei daneben. In JPG, DNG und TIFF wird über eine
+  Kopie geschrieben, die erst dann die Originaldatei ersetzt, wenn die Bilddaten nachweislich
+  unverändert sind. Mehr dazu unter <a href="#lightroom">Übergabe an Lightroom</a>.</p>
+</div>
+
+<!-- 2 -->
+<h2 id="installation">Installieren und starten</h2>
+
+<h3>macOS</h3>
+<p>Captioner läuft auf Macs mit Apple-Chip (M1 und neuer) ab macOS 26. Es gibt zwei Wege:</p>
+<ul>
+  <li><strong>Disk-Image (DMG):</strong> öffnen und <em>Captioner</em> auf „Programme“ ziehen.</li>
+  <li><strong>Installer-Paket (PKG):</strong> doppelklicken und dem Assistenten folgen.</li>
+</ul>
+<p>Beim ersten Start meldet macOS eventuell, dass die App nicht geöffnet werden kann, weil sie
+nicht von Apple notarisiert ist. Dann einmal <em>Systemeinstellungen → Datenschutz &amp; Sicherheit</em>
+öffnen und unten auf <strong>„Dennoch öffnen“</strong> klicken. Danach startet die App normal.</p>
+<p>ExifTool, das Captioner zum Lesen und Schreiben der Metadaten braucht, ist eingebaut.</p>
+
+<h3>Windows</h3>
+<p>Den Installer <code>Captioner-…-x64-setup.exe</code> starten. Er installiert für alle Benutzer
+oder, ohne Administratorrechte, nur für dich. Wahlweise legt er ein Desktop-Symbol an und den
+Eintrag <strong>„Mit Captioner öffnen“</strong> im Kontextmenü von Ordnern und Laufwerken.</p>
+<p>Windows SmartScreen warnt beim ersten Start, weil der Installer nicht signiert ist:
+<em>„Weitere Informationen“ → „Trotzdem ausführen“</em>.</p>
+
+<div class="note">
+  <p><strong>Windows-Unterschiede:</strong> Überall, wo hier <kbd>⌘</kbd> steht, gilt unter Windows
+  <kbd>Strg</kbd>; <kbd>⌥</kbd> ist <kbd>Alt</kbd>. Einige Kürzel sind anders belegt (siehe
+  <a href="#kuerzel">Tastenkürzel</a>). Die Rechtschreibprüfung gibt es nur auf dem Mac.</p>
+</div>
+
+<h3>Updates</h3>
+<p>Captioner fragt beim Start höchstens einmal am Tag nach einer neuen Version. Gibt es eine,
+erscheint unten rechts „Update … verfügbar“; ein Klick öffnet die Download-Seite. Von Hand:
+<em>Hilfe → Nach Updates suchen …</em>.</p>
+
+<!-- 3 -->
+<h2 id="fenster">Das Fenster</h2>
+
+<figure class="wide">
+  <img src="img/hauptfenster.png" alt="Hauptfenster">
+  <figcaption>Das Hauptfenster: oben die Reiter der geöffneten Ordner, darunter Filter und
+  Galerie, rechts das Beschriftungs-Panel.</figcaption>
+</figure>
+
+<dl class="parts">
+  <dt>Reiter</dt>
+  <dd>Jeder geöffnete Ordner hat einen eigenen Reiter (Tab), rechts daneben <kbd>+</kbd> für einen
+  neuen. Auf dem Reiter steht der Name der Speicherkarte und des Ordners.</dd>
+  <dt>Filterzeile</dt>
+  <dd>Ordnerpfad und Anzahl der Bilder, Filter für Tags, Sterne, Farben und „nur unbeschriftet“,
+  darunter das Suchfeld und der Uhrzeit-Filter.</dd>
+  <dt>Galerie</dt>
+  <dd>Alle Bilder des Ordners als Kacheln, nach Aufnahmezeit sortiert. Eine Kachel zeigt
+  Dateiname, Dateityp (RAW+JPG mit gleichem Namen sind eine Kachel), Tag-Kästchen, Sterne und
+  als farbigen Rahmen die Farbklasse. Ein Stift-Symbol heißt: Das Bild ist beschriftet.</dd>
+  <dt>Beschriftungs-Panel</dt>
+  <dd>Template, Titel, Beschreibung mit Vorschau, Tags, Stadt und Ort. Unten Speichern und
+  „Speichern &amp; weiter“, Kopieren/Einfügen der Beschriftung und der Roster-Status.</dd>
+  <dt>Statusleiste</dt>
+  <dd>Anzahl der Bilder und der ausgewählten, Hinweise, der Regler <strong>„Vorschau“</strong> für
+  die Größe der Kacheln und ganz rechts, ob alles gespeichert ist.</dd>
+</dl>
+
+<p>Die Menüs stehen auf dem Mac oben in der Menüleiste des Bildschirms:
+<strong>Captioner</strong> (Über, Einstellungen, Beenden), <strong>Ablage</strong> (Ordner öffnen,
+Neu einlesen, Tab schließen, Tastenkürzel anpassen), <strong>Bearbeiten</strong> (Rückgängig,
+Wiederholen, Suchen und Ersetzen), <strong>Template</strong>, <strong>Roster</strong> und
+<strong>Hilfe</strong> (Tastenkürzel, Website, Updates).</p>
+
+<!-- 4 -->
+<h2 id="ordner">Ordner und Tabs</h2>
+
+<h3>Ordner öffnen</h3>
+<p>Es gibt mehrere Wege:</p>
+<ul>
+  <li><kbd>⌘O</kbd> oder <em>Ablage → Ordner öffnen …</em>. Im Dialog lassen sich mit
+  <kbd>⌘</kbd>-Klick oder <kbd>⇧</kbd>-Klick mehrere Ordner auf einmal markieren.</li>
+  <li><strong>Doppelklick in die leere Galerie</strong>, solange noch kein Ordner offen ist.</li>
+  <li>Ordner aus dem Finder bzw. Explorer <strong>aufs Fenster ziehen</strong>.</li>
+  <li>Ordner aufs <strong>Captioner-Symbol im Dock</strong> ziehen oder im Finder per Rechtsklick
+  <em>Öffnen mit → Captioner</em>. Unter Windows: Rechtsklick → „Mit Captioner öffnen“.</li>
+</ul>
+<p>Gelesen werden JPG, NEF und andere RAW-Formate, DNG und TIFF.</p>
+
+<h3>Ganze Speicherkarte öffnen</h3>
+<p>Enthält ein Ordner selbst keine Bilder, aber Unterordner mit Bildern (die Karte selbst
+oder <code>DCIM</code>), öffnet jeder Bildordner einen eigenen Tab. Zieht man zwei Karten aufs
+Fenster, sind also sofort alle Bildordner beider Karten offen. Bei mehr als acht Ordnern fragt
+Captioner vorher nach.</p>
+<p>Wer lieber alles in einem Tab hat: In den <a href="#einstellungen">Einstellungen</a>
+„Unterordner mit einlesen“ einschalten.</p>
+
+<h3>Mit Tabs arbeiten</h3>
+<ul>
+  <li>Jeder Tab hat eigene Galerie und Auswahl. Filter und Beschriftungs-Panel gelten für den
+  aktiven Tab.</li>
+  <li>Wechseln: Reiter anklicken oder <kbd>⌘⌥→</kbd> / <kbd>⌘⌥←</kbd>. Schließen: <kbd>⌘W</kbd>
+  oder das Kreuz am Reiter. Reiter lassen sich mit der Maus verschieben.</li>
+  <li><strong>Rechtsklick auf einen Reiter:</strong> Tab schließen, Andere Tabs schließen, Alle
+  Tabs schließen.</li>
+  <li>Ein schon offener Ordner wird nicht doppelt geöffnet, sondern nach vorn geholt.</li>
+  <li>Beim nächsten Start sind die Tabs wieder da. Fehlende Ordner (Karte nicht eingesteckt)
+  werden übersprungen.</li>
+  <li><kbd>F5</kbd> liest den aktiven Ordner neu ein, z. B. nachdem außerhalb von Captioner
+  Bilder dazugekommen sind.</li>
+</ul>
+
+<!-- 5 -->
+<h2 id="sichten">Sichten: Galerie und Großansicht</h2>
+
+<h3>Galerie</h3>
+<p>Klicken wählt ein Bild aus, <kbd>⌘</kbd>-Klick und <kbd>⇧</kbd>-Klick wählen mehrere. Mit
+den Pfeiltasten bewegst du dich durch die Galerie, <kbd>Pos1</kbd> und <kbd>Ende</kbd> springen
+zum ersten bzw. letzten Bild. <kbd>⌘A</kbd> wählt alle, <kbd>⌘D</kbd> hebt die Auswahl auf.
+Die Größe der Kacheln stellt der Regler „Vorschau“ unten rechts ein.</p>
+
+<h3>Großansicht</h3>
+<p><kbd>Leertaste</kbd> oder ein Doppelklick auf eine Kachel öffnet das Bild groß; nochmal
+<kbd>Leertaste</kbd>, <kbd>Esc</kbd> oder <kbd>⌘W</kbd> schließt. Mit <kbd>←</kbd> und
+<kbd>→</kbd> blätterst du. Sterne, Farbklassen und Tag setzt du hier mit denselben Tasten wie
+in der Galerie.</p>
+
+<figure class="wide">
+  <img src="img/grossansicht.png" alt="Großansicht mit Info-Panel">
+  <figcaption>Großansicht mit Info-Panel. Unten Zoom, „Beschriften“ und „Infos“.</figcaption>
+</figure>
+
+<p><strong>Zoom:</strong></p>
+<ul>
+  <li><kbd>Z</kbd> oder <kbd>*</kbd> schaltet zwischen „eingepasst“ und 100 % um.</li>
+  <li><kbd>+</kbd> und <kbd>-</kbd> zoomen stufenweise (50 bis 400 %), der Regler unten stufenlos.</li>
+  <li><kbd>⌥</kbd> + Mausrad oder Doppelklick zoomt an der Mausposition, <kbd>⌘</kbd> + Klick
+  zoomt auf die Stelle und holt sie in die Mitte.</li>
+  <li>Im Zoom verschiebst du den Ausschnitt mit gedrückter Maustaste, mit dem Mausrad oder mit
+  <kbd>⌥</kbd> + Pfeiltasten (mit <kbd>⇧</kbd> schneller).</li>
+</ul>
+<p>Zoom und Ausschnitt bleiben beim Blättern erhalten. So vergleichst du die Schärfe einer
+Serie an derselben Stelle. 100 % ist die volle Auflösung der Vorschau in der Datei, bei
+Nikon-NEFs die volle Sensorauflösung.</p>
+
+<p><strong>Info-Panel:</strong> Rechts stehen EXIF und IPTC des Bildes: Aufnahmezeit mit
+Hundertsteln, Kamera und Seriennummer, Objektiv, Belichtung, GPS, die Beschriftung und die
+zugehörigen Dateien. „Infos“ blendet das Panel aus und ein; Captioner merkt sich das.</p>
+
+<p><strong>Beschriften in der Großansicht:</strong> <kbd>I</kbd> oder „Beschriften“ holt das
+Beschriftungs-Panel neben das Bild und setzt den Cursor in die Beschreibung.
+<kbd>⌘N</kbd> / <kbd>⌘B</kbd> speichern und zeigen das nächste bzw. vorige Bild groß. Beim
+Tippen lösen Ziffern, <kbd>T</kbd>, <kbd>Z</kbd>, <kbd>+</kbd>, <kbd>-</kbd> und die
+Leertaste nichts aus; ein Klick aufs Bild gibt die Tasten wieder an die Großansicht.</p>
+
+<!-- 6 -->
+<h2 id="bewerten">Bewerten, Farbklassen, Tags</h2>
+
+<table class="keys">
+  <thead><tr><th>Was</th><th>macOS</th><th>Windows</th></tr></thead>
+  <tbody>
+    <tr><td>Farbklasse 1–8 · entfernen</td><td><kbd>1</kbd>–<kbd>8</kbd> · <kbd>0</kbd></td><td><kbd>1</kbd>–<kbd>8</kbd> · <kbd>0</kbd></td></tr>
+    <tr><td>Sterne 1–5 · entfernen</td><td><kbd>⌘1</kbd>–<kbd>⌘5</kbd> · <kbd>⌘0</kbd></td><td><kbd>Strg+1</kbd>–<kbd>5</kbd> · <kbd>Strg+0</kbd></td></tr>
+    <tr><td>Tag an/aus · an · aus</td><td><kbd>T</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td><td><kbd>T</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td></tr>
+  </tbody>
+</table>
+
+<p>Alles wirkt auf die Auswahl, also auch auf viele Bilder auf einmal, und lässt sich mit
+<kbd>⌘Z</kbd> zurücknehmen.</p>
+
+<ul>
+  <li><strong>Farbklassen</strong> zeigen sich als farbiger Rahmen um die Kachel. Klasse 1–5 geht
+  zusätzlich als Lightroom-Farbmarkierung in die Datei: Rot, Gelb, Grün, Blau, Lila. Die Namen
+  müssen zu deinem Lightroom passen (siehe <a href="#einstellungen">Einstellungen</a>).</li>
+  <li><strong>Sterne</strong> übernimmt Lightroom als Bewertung.</li>
+  <li><strong>Tags</strong> sind ein Merker zum Auswählen, z. B. „kommt in die Galerie“.
+  <kbd>⌘T</kbd> wählt alle getaggten Bilder aus; <kbd>F3</kbd> zeigt nur getaggte, <kbd>F4</kbd>
+  nur nicht getaggte (nochmal drücken zeigt wieder alle). Lightroom kennt keine Tags.</li>
+</ul>
+
+<h3>Kontextmenü der Kacheln</h3>
+<div class="side">
+  <img src="img/kontextmenue.png" alt="Kontextmenü einer Kachel">
+  <div>
+    <p>Ein Rechtsklick auf eine Kachel öffnet ein Menü für die Auswahl. Klickst du auf ein Bild,
+    das nicht ausgewählt ist, wird zuerst nur dieses ausgewählt (wie im Finder).</p>
+    <p>Darin: <strong>Bewertung</strong> und <strong>Farbklasse</strong> (Untermenüs, der aktuelle
+    Wert ist abgehakt), <strong>Getaggt</strong>, Großansicht, Beschriftung kopieren und einfügen,
+    <strong>In Tab kopieren</strong>, <strong>Im Finder zeigen</strong> (Windows: im Explorer),
+    <strong>Pfade kopieren</strong> und <strong>In den Papierkorb legen</strong>. Rechts neben jedem
+    Punkt steht sein Tastenkürzel.</p>
+  </div>
+</div>
+
+<!-- 7 -->
+<h2 id="filtern">Suchen und filtern</h2>
+<ul>
+  <li><strong>Suchfeld:</strong> findet Wörter in Dateiname, Titel, Beschreibung und Tags. Bei
+  mehreren Wörtern müssen alle vorkommen.</li>
+  <li><strong>Tags, Sterne, Farben:</strong> z. B. „★★★ und mehr“ oder „ohne Farbe“.</li>
+  <li><strong>nur unbeschriftet:</strong> zeigt die Bilder, die noch keine Beschreibung haben.</li>
+  <li><strong>Kamera:</strong> erscheint, wenn im Ordner Bilder mehrerer Kameras liegen. Zwei
+  gleiche Modelle unterscheidet die Seriennummer („NIKON Z 9 · …1234“).</li>
+  <li><strong>Uhrzeit:</strong> zeigt nur Bilder aus einem Zeitraum, z. B. einem Drittel. Beim
+  Einschalten ist der Zeitraum aller Bilder voreingestellt.</li>
+</ul>
+<p>Die Filter gelten für alle Tabs; beim Wechsel wirken sie auf den neuen Tab.</p>
+
+<!-- 8 -->
+<h2 id="beschriften">Beschriften</h2>
+
+<h3>Die Felder</h3>
+<dl class="parts">
+  <dt>Template</dt>
+  <dd>Liefert Ort, Fotograf, Copyright, Zusatz-Tags und den Anhang an die Beschreibung. Siehe
+  <a href="#templates">Templates</a>.</dd>
+  <dt>Titel</dt>
+  <dd>Das Spiel im Format <code>&lt;Anlass&gt; - &lt;Heim&gt; gegen &lt;Gast&gt;</code>, z. B.
+  <code>DEL 2 - EC Bad Nauheim gegen Bietigheim Steelers</code>. Weicht der Titel davon ab,
+  warnt das Panel, speichert aber trotzdem. Ein Bild ohne Titel übernimmt den zuletzt
+  gespeicherten. Auch im Titel gehen Codes, z. B. <code>DEL 2 - #bn# gegen #bi#</code>.</dd>
+  <dt>Beschreibung</dt>
+  <dd>Was auf dem Bild passiert, mit Codes für die Personen. Darunter die Vorschau: so wird es
+  gespeichert, samt Anhang und den Personen, die in die Tags kommen.</dd>
+  <dt>Tags</dt>
+  <dd>Stichwörter, durch Komma getrennt. Beim Tippen schlägt Captioner Wörter vor, die du schon
+  benutzt hast. Personen aus den Codes und die Zusatz-Tags des Templates kommen beim Speichern
+  dazu.</dd>
+  <dt>Stadt, Ort</dt>
+  <dd>Aus dem Template oder von Hand; <strong>Karte …</strong> sucht den Ort auf einer Karte
+  (siehe <a href="#ort">Ort, Karte und GPS</a>).</dd>
+</dl>
+
+<h3>Codes tippen</h3>
+<p>Ein Code steht zwischen zwei Rauten: <code>#bn23#</code>. Schon beim Tippen von
+<code>#bn</code> öffnet sich eine Liste mit den passenden Spielern; die beiden Teams aus dem
+Titel stehen oben. Pfeiltasten und <kbd>Enter</kbd> übernehmen einen Vorschlag.</p>
+
+<div class="example">
+  <p class="label">Eingabe</p>
+  <p><code>Zweikampf zwischen #bn23# und #bi99# vor dem Tor</code></p>
+  <p class="label">Gespeichert wird</p>
+  <p>Zweikampf zwischen -23- Max Muster (EC Bad Nauheim) und -99- John Doe (Bietigheim Steelers)
+  vor dem Tor, DEL 2 - EC Bad Nauheim gegen Bietigheim Steelers, Bad Nauheim,
+  Colonel-Knight-Stadion, 18.10.26</p>
+  <p class="label">Tags</p>
+  <p>Max Muster, John Doe, Eishockey, DEL2</p>
+</div>
+
+<p>Bekannte Codes sind im Text grün hinterlegt, unbekannte rot. <strong>Ein unbekannter Code
+verhindert das Speichern</strong>, damit nie ein Code statt eines Namens in der Datei landet.
+Gespeichert wird immer der aufgelöste Text; den Text mit Codes merkt sich Captioner, damit du
+ihn später wieder bearbeiten kannst.</p>
+
+<h3>Speichern und weiter</h3>
+<table class="keys">
+  <thead><tr><th>Was</th><th>macOS</th><th>Windows</th></tr></thead>
+  <tbody>
+    <tr><td>Speichern</td><td><kbd>Enter</kbd></td><td><kbd>Enter</kbd></td></tr>
+    <tr><td>Speichern und nächstes Bild</td><td><kbd>⌘N</kbd> oder <kbd>⌘]</kbd></td><td><kbd>Strg+M</kbd> oder <kbd>Alt+]</kbd></td></tr>
+    <tr><td>Speichern und voriges Bild</td><td><kbd>⌘B</kbd> oder <kbd>⌘[</kbd></td><td><kbd>Alt+B</kbd> oder <kbd>Alt+[</kbd></td></tr>
+    <tr><td>Speichern und zurück zur Galerie</td><td><kbd>⌘Enter</kbd></td><td><kbd>Strg+Enter</kbd></td></tr>
+    <tr><td>Nächstes · voriges Bild ohne Speichern</td><td><kbd>⌘⇧N</kbd> · <kbd>⌘⇧B</kbd></td><td><kbd>Strg+⇧N</kbd> · <kbd>Strg+⇧B</kbd></td></tr>
+  </tbody>
+</table>
+<p>Speichern geht sofort; geschrieben wird im Hintergrund. Rechts unten steht „alles
+gespeichert“, sobald alle Dateien geschrieben sind. Unter der Beschreibung zählt Captioner die
+Bytes: IPTC erlaubt höchstens 2000 Bytes für die Beschreibung. Ist ein Feld zu lang, wird es
+rot angezeigt und Speichern ist gesperrt.</p>
+
+<h3>Mehrere Bilder auf einmal</h3>
+<p>Sind mehrere Bilder ausgewählt, gelten Titel, Tags, Stadt und Ort für alle. Die
+Beschreibung wird nur übernommen, wenn du sie im Feld geändert hast; sonst behält jedes Bild
+seine eigene.</p>
+
+<h3>Beschriftung von Bild zu Bild übertragen</h3>
+<p><kbd>⌘⇧C</kbd> (oder „Kopieren“ im Panel) kopiert Titel, Beschreibung, Tags, Stadt und Ort,
+auch was noch nicht gespeichert ist. <kbd>⌘⇧V</kbd> (oder „Einfügen“) fügt in alle
+ausgewählten Bilder ein und speichert. Die Codes werden je Bild neu aufgelöst, und der Anhang
+bekommt das Datum des Zielbildes.</p>
+
+<h3>Rechtschreibung (macOS)</h3>
+<p>Tippfehler in der Beschreibung sind rot unterstrichen, mit denselben Wörterbüchern wie Mail
+oder Pages. Codes und Namen aus dem Roster gelten nicht als Fehler. Ein Rechtsklick zeigt
+Vorschläge, „Ins Wörterbuch aufnehmen“ (gilt dann auch in anderen Apps) und „Ignorieren“.
+Die Sprache stellst du in den Einstellungen ein.</p>
+
+<!-- 9 -->
+<h2 id="templates">Templates</h2>
+
+<p>Ein Template enthält alles, was für ein Spiel oder eine Halle immer gleich ist. Du wählst
+es oben im Panel; <strong>Bearbeiten …</strong> daneben öffnet es.</p>
+
+<figure class="half">
+  <img src="img/template.png" alt="Template bearbeiten">
+  <figcaption>Template bearbeiten. Die farbigen Punkte zeigen, welches Feld in welchen
+  Platzhalter des Anhangs geht.</figcaption>
+</figure>
+
+<dl class="parts">
+  <dt>Titel</dt>
+  <dd>Meist leer: Dann trägst du den Titel im Panel ein, und das Template taugt für jedes
+  Spiel. Mit festem Titel passt es zu genau einem Spiel.</dd>
+  <dt>Datum</dt>
+  <dd>Normalerweise leer, dann steht im Anhang das Aufnahmedatum. Zum Vorbereiten (heute
+  schon für Sonntag) einen festen Text wie <code>18.10.26</code> eintragen; passt er nicht zum
+  Aufnahmedatum eines Bildes, warnt das Panel orange.</dd>
+  <dt>Ort</dt>
+  <dd>Stadt, Ort/Halle, Bundesland, Land. „Karte …“ füllt alles auf einmal.</dd>
+  <dt>Urheber und Rechte</dt>
+  <dd>Fotograf, Position, Beschriftet von, Copyright, Copyright-URL, Quelle, Hinweise (z. B.
+  Kontakt und Kontoverbindung).</dd>
+  <dt>Kategorie, Zusatz-Tags</dt>
+  <dd>Zusatz-Tags kommen in jedes Bild, z. B. <code>Eishockey, DEL2</code>.</dd>
+  <dt>Anhang</dt>
+  <dd>Text, der an jede Beschreibung angehängt wird, mit Platzhaltern wie
+  <code>{headline}</code> (Titel), <code>{city}</code>, <code>{sublocation}</code>,
+  <code>{date}</code>, <code>{creator}</code>, <code>{copyright}</code>. Ein Klick auf einen
+  Platzhalter in der Legende fügt ihn ein, „Ergebnis“ zeigt den fertigen Anhang. Leere
+  Platzhalter fallen samt Komma weg.</dd>
+</dl>
+
+<p><strong>Gefüllte Felder</strong> schreibt Captioner beim Speichern in jedes Bild.
+<strong>Leere Felder</strong> lassen den Wert des Bildes stehen, z. B. Fotograf und Copyright,
+die die Kamera schon eingetragen hat.</p>
+
+<h3>Template auf die Auswahl anwenden</h3>
+<p>„Template auf Auswahl anwenden“ (<kbd>⌘⌥A</kbd>) setzt Titel, Ort, Rechte und Tags für alle
+ausgewählten Bilder. Mit <strong>„Inhalte überschreiben“</strong> (voreingestellt) wird dabei
+alles auf das Template zurückgesetzt und vorhandene Beschreibungen geleert; ohne Haken bleiben
+die Beschreibungen stehen.</p>
+
+<h3>Templates verwalten</h3>
+<p>Im Menü <em>Template</em> und unter <kbd>⋯</kbd> neben der Auswahl:</p>
+<ul>
+  <li><strong>Neues Template …</strong> und <strong>Neues Template aus dem gewählten …</strong>
+  (Kopie, z. B. fürs Auswärtsspiel; Abbrechen verwirft die Kopie).</li>
+  <li><strong>Template-Datei laden …</strong> nimmt eine Datei von irgendwo auf dem Rechner
+  dazu, z. B. von einem Kollegen (oder die <code>.toml</code>-Datei aufs Fenster ziehen). Sie
+  bleibt verknüpft: Änderungen landen wieder in genau dieser Datei.</li>
+  <li><strong>Template speichern unter …</strong> schreibt das Template in eine neue Datei, z. B.
+  zum Weitergeben.</li>
+  <li><strong>Template-Ordner im Finder öffnen</strong> zeigt, wo die eigenen Templates liegen.</li>
+  <li><strong>Aus der Liste entfernen</strong>: Dateien außerhalb des Template-Ordners werden
+  dabei nie gelöscht.</li>
+</ul>
+
+<!-- 10 -->
+<h2 id="roster">Roster und Codes</h2>
+
+<p>Ein Roster ist eine Textdatei mit einer Zeile pro Code: Code, ein <strong>Tabulator</strong>,
+dann der Text, der eingesetzt wird. Zeilen wie <code>- EC Bad Nauheim -</code> sind
+Abschnittsköpfe für ein Team.</p>
+
+<pre class="file">- EC Bad Nauheim -
+
+bn23	-23- Max Muster (EC Bad Nauheim)
+bn9	-9- Tom Platzhalter (EC Bad Nauheim)
+
+- Bietigheim Steelers -
+
+bi99	-99- John Doe (Bietigheim Steelers)
+
+- Teams -
+
+bn	EC Bad Nauheim
+bi	Bietigheim Steelers</pre>
+
+<p>Personen schreibt man als <code>-Nummer- Name (Team)</code>; so erkennt Captioner sie und
+trägt den Namen in die Tags ein. Team-Codes wie <code>bn</code> lassen sich im Titel nutzen.</p>
+
+<h3>Quellen</h3>
+<p>Roster kommen aus Internetadressen (URL), aus Dateien auf dem Rechner oder aus beidem.
+<em>Roster → Roster-Datei hinzufügen …</em> nimmt eine Datei dazu, oder du ziehst die
+<code>.txt</code> aufs Fenster. In den Einstellungen lassen sich Quellen hinzufügen, entfernen und
+sortieren. Hat derselbe Code in zwei Quellen verschiedene Texte, gewinnt die obere, und
+Captioner zeigt den Konflikt an. Ohne Internet nimmt Captioner die zuletzt geladene Fassung
+einer URL. „Roster neu laden“ holt alle Quellen frisch.</p>
+
+<h3>Roster bearbeiten</h3>
+<p><em>Roster → Roster bearbeiten …</em> öffnet einen Editor für die Roster-Dateien auf dem
+Rechner. Tabulatoren sind blau hinterlegt. Zeilen, die beim Laden ignoriert würden (Leerzeichen
+statt Tabulator, fehlender Text) und widersprüchliche doppelte Codes sind rot markiert und unten
+aufgelistet; ein Klick springt zur Zeile. <kbd>⌘F</kbd> sucht, <kbd>⌘S</kbd> speichert.
+Gespeichert wird in der Zeichenkodierung der Datei, also auch passend für unter Windows
+erstellte Roster.</p>
+
+<!-- 11 -->
+<h2 id="ort">Ort, Karte und GPS</h2>
+
+<p><strong>Karte …</strong> neben „Stadt“ (im Panel und im Template) öffnet eine
+OpenStreetMap-Karte:</p>
+<ul>
+  <li><strong>Suchen:</strong> Adresse, PLZ oder Halle eintippen, z. B.
+  <code>Colonel-Knight-Stadion</code>, dann <kbd>Enter</kbd>. Die Karte springt hin und füllt
+  Stadt und Ort. Bei mehreren Treffern den passenden wählen.</li>
+  <li><strong>Klicken:</strong> Ein Klick setzt den Punkt; Stadt und Ort werden dazu
+  nachgeschlagen. Ziehen verschiebt, Mausrad zoomt.</li>
+  <li>Stadt und Ort bleiben änderbar, bevor du mit OK übernimmst.</li>
+</ul>
+<p>Jeder gewählte Ort wird gemerkt. Beim Tippen in „Stadt“ schlägt Captioner gemerkte Orte vor,
+auch ohne Internet. Ohne Verbindung zeigt der Dialog statt der Karte einen Hinweis; Stadt und
+Ort kannst du trotzdem eintragen.</p>
+
+<h3>GPS</h3>
+<p>Hat der gewählte Ort Koordinaten, schreibt Captioner sie beim Speichern als GPS-Position in
+die Datei; Lightroom zeigt sie im Karten-Modul. Das passiert <strong>nur bei Bildern ohne
+GPS</strong>: Hat die Kamera selbst GPS aufgezeichnet, bleibt es unangetastet. Der Hinweis unter
+„Ort“ sagt, was passiert.</p>
+
+<p class="small">Für die Karte nutzt Captioner OpenStreetMap. Gesucht wird erst auf
+<kbd>Enter</kbd>, höchstens einmal pro Sekunde; dabei gehen der Suchtext bzw. der angeklickte
+Punkt an openstreetmap.org.</p>
+
+<!-- 12 -->
+<h2 id="ersetzen">Suchen und Ersetzen</h2>
+
+<p><em>Bearbeiten → Suchen und Ersetzen …</em> (<kbd>⌘⌥F</kbd>) ersetzt Text in den
+ausgewählten Bildern, ohne Auswahl in allen angezeigten.</p>
+
+<figure class="half">
+  <img src="img/suchen-ersetzen.png" alt="Suchen und Ersetzen">
+  <figcaption>Vorschau je Bild: vorher rot, nachher grün. Einzelne Bilder lassen sich
+  abwählen.</figcaption>
+</figure>
+
+<ul>
+  <li>Wählbar: Beschreibung, Titel, Tags, Stadt und Ort; dazu „Groß/klein beachten“ und „Nur
+  ganze Wörter“.</li>
+  <li>In der Beschreibung wird im Text mit Codes gesucht. <code>#bn9#</code> → <code>#bn10#</code>
+  tauscht also den Spieler samt Personen-Tag. Ein ausgeschriebener Name wird auch gefunden, wenn
+  dort ein Code steht.</li>
+  <li>Der Anhang des Templates wird nicht durchsucht, sondern neu gebildet.</li>
+  <li>Bilder, bei denen ein unbekannter Code oder ein zu langes Feld entstünde, sind gesperrt.</li>
+  <li><kbd>⌘Z</kbd> nimmt alles in einem Schritt zurück.</li>
+</ul>
+
+<!-- 13 -->
+<h2 id="rueckgaengig">Rückgängig</h2>
+<p><kbd>⌘Z</kbd> nimmt die letzte Änderung zurück: Sterne, Farbklasse, Tag, gespeicherte
+Beschriftung, Einfügen, Template anwenden, Suchen und Ersetzen, auch für viele Bilder auf
+einmal. <kbd>⌘⇧Z</kbd> stellt sie wieder her. Das Menü <em>Bearbeiten</em> zeigt, was
+zurückgenommen wird. In einem Textfeld gilt <kbd>⌘Z</kbd> für das gerade Getippte.</p>
+<p>Nicht rückgängig zu machen ist der Papierkorb; Bilder holst du dort im Finder bzw. Explorer
+zurück.</p>
+
+<!-- 14 -->
+<h2 id="lightroom">Übergabe an Lightroom</h2>
+
+<p>Die ausgewählten Bilder per Drag &amp; Drop ins Lightroom-Raster ziehen. Lightroom öffnet den
+Import-Dialog und übernimmt Titel, Beschreibung, Stichwörter, Sterne, Farbmarkierung, Ort,
+Rechte und GPS.</p>
+
+<p>Vor dem Ziehen schreibt Captioner alles, was noch aussteht. Bilder, deren Metadaten nicht
+sicher gespeichert sind (Schreibfehler, oder eine beschriftete RAW-Datei ohne XMP-Datei),
+werden nicht mitgezogen; Captioner sagt, welche.</p>
+
+<h3>Wo die Metadaten landen</h3>
+<table class="plain">
+  <thead><tr><th>Datei</th><th>wohin</th></tr></thead>
+  <tbody>
+    <tr><td>NEF, CR2, ARW, … (RAW)</td><td>In die XMP-Datei daneben, <code>&lt;name&gt;.xmp</code>.
+    Die RAW-Datei wird nie verändert. Eine vorhandene XMP-Datei (auch <code>.XMP</code> aus einem
+    anderen Programm) wird fortgeschrieben.</td></tr>
+    <tr><td>JPG, DNG, TIFF</td><td>In die Datei selbst (IPTC, XMP, EXIF). Geschrieben wird in eine
+    Kopie, die das Original erst ersetzt, wenn die Bilddaten unverändert sind.</td></tr>
+  </tbody>
+</table>
+
+<p>Beim Ziehen gehen die XMP-Dateien mit (abschaltbar in den Einstellungen).</p>
+
+<!-- 15 -->
+<h2 id="dateien">Kopieren, Papierkorb, Finder</h2>
+
+<h3>Zwischen Tabs kopieren</h3>
+<p>Bilder aus der Galerie auf den Reiter eines anderen Tabs ziehen (kurz darüber halten wechselt
+hinein, dann kannst du sie auch in dessen Galerie fallen lassen), oder im Kontextmenü
+<strong>In Tab kopieren</strong>. Kopiert werden RAW, JPG und XMP-Datei zusammen, mit allen
+gespeicherten Metadaten. Die Quelle bleibt, wie sie ist.</p>
+<p>Gibt es eine Datei im Ziel schon, fragt Captioner: <strong>Überspringen</strong>,
+<strong>Umbenennen</strong> (<code>DSC_0001-2.NEF</code> + <code>-2.JPG</code> + <code>-2.xmp</code>)
+oder <strong>Ersetzen</strong>, auf Wunsch für alle weiteren. Ein Abbruch hinterlässt keine
+halben Dateien.</p>
+
+<h3>In den Papierkorb legen</h3>
+<p><kbd>⌘⌫</kbd> (Windows: <kbd>Entf</kbd>) oder das Kontextmenü legt die ausgewählten Bilder nach
+einer Rückfrage in den Papierkorb, mit allen Dateien (RAW, JPG, XMP). Endgültig gelöscht wird
+nichts; aus dem Papierkorb lassen sich die Bilder wiederherstellen.</p>
+
+<h3>Im Finder zeigen, Pfade kopieren</h3>
+<p><kbd>⌘⌥R</kbd> oder das Kontextmenü öffnet den Ordner im Finder (Windows: Explorer) und
+markiert die Datei. „Pfade kopieren“ legt die Dateipfade der Auswahl in die Zwischenablage.</p>
+
+<!-- 16 -->
+<h2 id="einstellungen">Einstellungen</h2>
+
+<p><kbd>⌘,</kbd> (Windows: <em>Ablage → Einstellungen …</em>).</p>
+
+<figure class="half">
+  <img src="img/einstellungen.png" alt="Einstellungen">
+</figure>
+
+<dl class="parts">
+  <dt>Roster-Quellen</dt>
+  <dd>Dateien (<em>Datei …</em>) und Internetadressen (<em>URL …</em>), Reihenfolge mit ▲/▼. Links
+  von GitHub kannst du so eintragen, wie sie im Browser stehen.</dd>
+  <dt>Cache für URLs</dt>
+  <dd>Wie lange eine geladene URL gilt, bevor Captioner sie neu holt.</dd>
+  <dt>Code-Trennzeichen</dt>
+  <dd>Standard <code>#</code>.</dd>
+  <dt>Unterordner mit einlesen</dt>
+  <dd>Einen Ordner samt aller Unterordner in einem Tab zeigen.</dd>
+  <dt>Lightroom-Label für Farbklasse 1, 2, 3, …</dt>
+  <dd>Muss zum Farbmarkierungs-Set in Lightroom passen: <code>Red, Yellow, Green, Blue, Purple</code>
+  für ein englisches Lightroom, <code>Rot, Gelb, Grün, Blau, Lila</code> für ein deutsches.</dd>
+  <dt>XMP-Sidecars mit in den Drag legen</dt>
+  <dd>An lassen, solange Lightroom das annimmt.</dd>
+  <dt>Sprache</dt>
+  <dd>Automatisch, Deutsch oder English; gilt nach einem Neustart.</dd>
+  <dt>Rechtschreibprüfung</dt>
+  <dd>Automatisch, Deutsch, Englisch oder Aus (nur macOS).</dd>
+  <dt>Nach Updates suchen</dt>
+  <dd>Höchstens einmal am Tag beim Start.</dd>
+</dl>
+
+<!-- 17 -->
+<h2 id="kuerzel">Tastenkürzel</h2>
+
+<p><kbd>F1</kbd> (oder <em>Hilfe → Tastenkürzel</em>) zeigt alle Kürzel, so wie sie gerade
+belegt sind. Die Tabellen hier zeigen die Standardbelegung.</p>
+
+<h3>Galerie und überall</h3>
+<table class="keys">
+  <thead><tr><th>Was</th><th>macOS</th><th>Windows</th></tr></thead>
+  <tbody>
+    <tr><td>Ordner öffnen · neu einlesen</td><td><kbd>⌘O</kbd> · <kbd>F5</kbd></td><td><kbd>Strg+O</kbd> · <kbd>F5</kbd></td></tr>
+    <tr><td>Farbklasse 1–8 · entfernen</td><td><kbd>1</kbd>–<kbd>8</kbd> · <kbd>0</kbd></td><td><kbd>1</kbd>–<kbd>8</kbd> · <kbd>0</kbd></td></tr>
+    <tr><td>Sterne 1–5 · entfernen</td><td><kbd>⌘1</kbd>–<kbd>⌘5</kbd> · <kbd>⌘0</kbd></td><td><kbd>Strg+1</kbd>–<kbd>5</kbd> · <kbd>Strg+0</kbd></td></tr>
+    <tr><td>Tag an/aus · an · aus</td><td><kbd>T</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td><td><kbd>T</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td></tr>
+    <tr><td>Großansicht</td><td><kbd>Leertaste</kbd></td><td><kbd>Leertaste</kbd></td></tr>
+    <tr><td>Beschriftung bearbeiten</td><td><kbd>I</kbd> oder <kbd>Enter</kbd></td><td><kbd>I</kbd> oder <kbd>Enter</kbd></td></tr>
+    <tr><td>Alle · keins · getaggte auswählen</td><td><kbd>⌘A</kbd> · <kbd>⌘D</kbd> · <kbd>⌘T</kbd></td><td><kbd>Strg+A</kbd> · <kbd>Strg+D</kbd> · <kbd>Strg+T</kbd></td></tr>
+    <tr><td>Nur getaggte · nur nicht getaggte</td><td><kbd>F3</kbd> · <kbd>F4</kbd></td><td><kbd>F3</kbd> · <kbd>F4</kbd></td></tr>
+    <tr><td>Nächstes · voriges Bild</td><td><kbd>⌘N</kbd> · <kbd>⌘B</kbd></td><td><kbd>Strg+M</kbd> · <kbd>Alt+B</kbd></td></tr>
+    <tr><td>Erstes · letztes · zuletzt angesehenes Bild</td><td><kbd>Pos1</kbd> · <kbd>Ende</kbd> · <kbd>L</kbd></td><td><kbd>Pos1</kbd> · <kbd>Ende</kbd> · <kbd>L</kbd></td></tr>
+    <tr><td>Beschriftung kopieren · einfügen</td><td><kbd>⌘⇧C</kbd> · <kbd>⌘⇧V</kbd></td><td><kbd>Strg+⇧C</kbd> · <kbd>Strg+⇧V</kbd></td></tr>
+    <tr><td>Suchen und Ersetzen</td><td><kbd>⌘⌥F</kbd></td><td><kbd>Strg+Alt+F</kbd></td></tr>
+    <tr><td>Template laden · speichern unter · anwenden</td><td><kbd>⌘⌥L</kbd> · <kbd>⌘⌥S</kbd> · <kbd>⌘⌥A</kbd></td><td><kbd>Strg+Alt+L</kbd> · <kbd>S</kbd> · <kbd>A</kbd></td></tr>
+    <tr><td>Roster einstellen · neu laden</td><td><kbd>⌃⌘C</kbd> · <kbd>⌃⇧⌘C</kbd></td><td><kbd>Strg+Alt+C</kbd> · <kbd>Strg+Alt+⇧C</kbd></td></tr>
+    <tr><td>Rückgängig · Wiederholen</td><td><kbd>⌘Z</kbd> · <kbd>⌘⇧Z</kbd></td><td><kbd>Strg+Z</kbd> · <kbd>Strg+⇧Z</kbd></td></tr>
+    <tr><td>Tab schließen · nächster · voriger</td><td><kbd>⌘W</kbd> · <kbd>⌘⌥→</kbd> · <kbd>⌘⌥←</kbd></td><td><kbd>Strg+W</kbd> · <kbd>Strg+Alt+→</kbd> · <kbd>←</kbd></td></tr>
+    <tr><td>Papierkorb · im Finder/Explorer zeigen</td><td><kbd>⌘⌫</kbd> · <kbd>⌘⌥R</kbd></td><td><kbd>Entf</kbd> · <kbd>Strg+Alt+R</kbd></td></tr>
+    <tr><td>Einstellungen · Beenden</td><td><kbd>⌘,</kbd> · <kbd>⌘Q</kbd></td><td>über das Menü</td></tr>
+    <tr><td>Diese Übersicht</td><td><kbd>F1</kbd></td><td><kbd>F1</kbd></td></tr>
+  </tbody>
+</table>
+
+<h3>Großansicht</h3>
+<table class="keys">
+  <thead><tr><th>Was</th><th>macOS</th><th>Windows</th></tr></thead>
+  <tbody>
+    <tr><td>Schließen</td><td><kbd>Esc</kbd>, <kbd>⌘W</kbd>, <kbd>Leertaste</kbd></td><td><kbd>Esc</kbd>, <kbd>Alt+W</kbd>, <kbd>Leertaste</kbd></td></tr>
+    <tr><td>Blättern</td><td><kbd>←</kbd> <kbd>→</kbd></td><td><kbd>←</kbd> <kbd>→</kbd></td></tr>
+    <tr><td>Zoom an/aus · heran · heraus</td><td><kbd>Z</kbd> oder <kbd>*</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td><td><kbd>Z</kbd> oder <kbd>*</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td></tr>
+    <tr><td>Ausschnitt verschieben</td><td><kbd>⌥</kbd> + Pfeiltasten</td><td><kbd>Alt</kbd> + Pfeiltasten</td></tr>
+    <tr><td>Beschriften</td><td><kbd>I</kbd></td><td><kbd>I</kbd></td></tr>
+  </tbody>
+</table>
+
+<p class="small">Auf deutschen Tastaturen liegen <kbd>[</kbd> und <kbd>]</kbd> auf <kbd>⌥5</kbd> und
+<kbd>⌥6</kbd>; deshalb gibt es überall die Alternativen mit Buchstaben (<kbd>⌘N</kbd>,
+<kbd>⌘B</kbd>).</p>
+
+<h3>Kürzel anpassen</h3>
+<div class="side">
+  <img src="img/kuerzel-aufnehmen.png" alt="Kürzel aufnehmen">
+  <div>
+    <p><em>Ablage → Tastenkürzel anpassen …</em> listet alle Aktionen. Aktion wählen, dann
+    <strong>Ändern …</strong> (oder Doppelklick) bzw. <strong>Hinzufügen …</strong>, und die
+    neue Kombination drücken. Das Feld zeigt, was gerade gedrückt ist; höchstens drei Tasten
+    zusammen, z. B. <kbd>⌘⇧K</kbd>.</p>
+    <p>Ist die Kombination schon belegt, sagt der Dialog das; beim Übernehmen wird sie dort
+    entfernt. Geänderte Aktionen stehen fett. „Standard“ und „Alle auf Standard“ stellen die
+    Vorgabe wieder her. Die neuen Kürzel gelten sofort.</p>
+  </div>
+</div>
+
+<!-- 18 -->
+<h2 id="fragen">Fragen und Probleme</h2>
+
+<dl class="faq">
+  <dt>Speichern ist ausgegraut.</dt>
+  <dd>Es gibt einen unbekannten Code (rot im Text) oder ein Feld ist zu lang (rot unter der
+  Beschreibung). Code korrigieren bzw. ins Roster aufnehmen und „Roster neu laden“.</dd>
+
+  <dt>Ein Code wird nicht erkannt, obwohl er im Roster steht.</dt>
+  <dd>Meist steht zwischen Code und Text ein Leerzeichen statt eines Tabulators.
+  <em>Roster bearbeiten …</em> markiert solche Zeilen rot. Bei URL-Quellen: „Roster neu laden“.</dd>
+
+  <dt>Lightroom zeigt die Farbmarkierung nicht.</dt>
+  <dd>Die Label-Namen in den Einstellungen müssen zum Farbmarkierungs-Set in Lightroom passen
+  (deutsches Lightroom: <code>Rot, Gelb, Grün, Blau, Lila</code>). Klassen 6–8 haben kein
+  Lightroom-Label.</dd>
+
+  <dt>Beim Ziehen fehlen Bilder.</dt>
+  <dd>Captioner zieht nur Bilder, deren Metadaten sicher geschrieben sind, und nennt die
+  anderen. Häufig fehlt einer beschrifteten RAW-Datei die XMP-Datei, z. B. weil der Ordner
+  schreibgeschützt ist (gesperrte Speicherkarte).</dd>
+
+  <dt>Das Panel warnt beim Titel.</dt>
+  <dd>Der Titel folgt nicht dem Format <code>&lt;Anlass&gt; - &lt;Heim&gt; gegen &lt;Gast&gt;</code>.
+  Gespeichert wird trotzdem, aber die Spielerkennung später kann das Spiel dann nicht zuordnen.
+  „gegen“ bleibt auch in der englischen Oberfläche deutsch.</dd>
+
+  <dt>Die Karte bleibt leer.</dt>
+  <dd>Ohne Internet zeigt der Dialog einen Hinweis statt der Karte. Gemerkte Orte werden beim
+  Tippen in „Stadt“ trotzdem vorgeschlagen.</dd>
+
+  <dt>Ein Kürzel tut nichts.</dt>
+  <dd><kbd>F1</kbd> zeigt die aktuelle Belegung. Galerie-Kürzel wie <kbd>T</kbd> oder Ziffern wirken
+  nur, wenn die Galerie den Fokus hat, nicht beim Tippen im Panel. Im Zweifel unter
+  <em>Tastenkürzel anpassen</em> „Alle auf Standard“.</dd>
+
+  <dt>Wo liegen Einstellungen und Templates?</dt>
+  <dd>macOS: <code>~/Library/Application Support/captioner/</code>, Templates im Unterordner
+  <code>templates</code>. Schnell dorthin: <em>Template → Template-Ordner im Finder öffnen</em>.</dd>
+</dl>
+
+<p class="end">Captioner ist freie Software unter der GNU General Public License v3.0 oder später.<br>
+www.katzefudder.de/captioner</p>
+
+</body>
+</html>
