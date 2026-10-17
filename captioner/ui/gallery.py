@@ -220,6 +220,7 @@ class GalleryView(QListView):
     # Alle Kuerzel haengen als QShortcut am View, siehe keymap.py.
     files_dropped = Signal()  # Bilder aus der Galerie eines anderen Tabs hierher gezogen
     visible_changed = Signal()  # gescrollt, Groesse oder Inhalt geaendert: Kacheln nachladen
+    background_double_clicked = Signal()  # Doppelklick neben die Kacheln (leere Galerie: Ordner oeffnen)
 
     FALLBACK_ROWS = 100  # solange das Layout noch nicht steht
 
@@ -269,6 +270,13 @@ class GalleryView(QListView):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.schedule_visible()
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and not self.indexAt(event.position().toPoint()).isValid():
+            self.background_double_clicked.emit()
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
 
     def showEvent(self, event):
         super().showEvent(event)

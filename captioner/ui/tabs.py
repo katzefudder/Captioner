@@ -7,7 +7,7 @@ import sys
 from pathlib import Path, PureWindowsPath
 
 from PySide6.QtCore import QObject, QStorageInfo, QThread, Qt, Signal
-from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton,
+from PySide6.QtWidgets import (QCheckBox, QDialog, QHBoxLayout, QLabel, QMenu, QMessageBox, QPushButton,
                                QStackedWidget, QTabBar, QVBoxLayout, QWidget)
 
 from .. import transfer
@@ -85,6 +85,7 @@ class FolderTab(QWidget):
 class FolderTabBar(QTabBar):
     """Reiter nehmen gezogene Bilder an; beim Darueberziehen wechselt der Tab."""
     files_dropped = Signal(int)   # Index des Ziel-Tabs
+    close_requested = Signal(list)  # Kontextmenue: Indizes der zu schliessenden Tabs
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -95,6 +96,18 @@ class FolderTabBar(QTabBar):
         self.setDocumentMode(True)
         self.setExpanding(False)
         self.setElideMode(Qt.TextElideMode.ElideMiddle)
+
+    def contextMenuEvent(self, event):
+        """Wie Finder/Safari/Explorer: diesen, andere oder alle Tabs schliessen."""
+        index = self.tabAt(event.pos())
+        if index < 0:
+            return
+        others = [i for i in range(self.count()) if i != index]
+        menu = QMenu(self)
+        menu.addAction(_('Tab schließen'), lambda: self.close_requested.emit([index]))
+        menu.addAction(_('Andere Tabs schließen'), lambda: self.close_requested.emit(others)).setEnabled(bool(others))
+        menu.addAction(_('Alle Tabs schließen'), lambda: self.close_requested.emit(list(range(self.count()))))
+        menu.exec(event.globalPos())
 
     def dragEnterEvent(self, event):
         if isinstance(event.source(), GalleryView):

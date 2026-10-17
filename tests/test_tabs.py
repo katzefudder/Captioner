@@ -103,6 +103,27 @@ def test_closing_the_last_tab_leaves_an_empty_one(window, cards):
     assert window.tabs.count() == 1 and window.folder is None
 
 
+def test_tab_context_menu_closes_other_and_all_tabs(window, cards):
+    a, b = cards
+    first = window.open_folder(a)
+    window.open_folder(b, new_tab=True)
+    window.tabs.bar.close_requested.emit([1])            # „Andere Tabs schließen“ an Tab 0
+    assert window.tabs.count() == 1 and window.tab is first
+    window.open_folder(b, new_tab=True)
+    window.tabs.bar.close_requested.emit([0, 1])         # „Alle Tabs schließen“
+    assert window.tabs.count() == 1 and window.folder is None
+
+
+def test_double_click_into_empty_gallery_opens_the_folder_dialog(window, cards, monkeypatch):
+    chosen = []
+    monkeypatch.setattr(window, 'choose_folder', lambda new_tab=False: chosen.append(new_tab))
+    window.view.background_double_clicked.emit()
+    assert chosen == [False]
+    window.open_folder(cards[0])
+    window.view.background_double_clicked.emit()         # Ordner offen: nichts
+    assert chosen == [False]
+
+
 def test_drop_on_other_tab_copies_raw_jpeg_and_sidecar(window, cards):
     a, b = cards
     source = window.open_folder(a)

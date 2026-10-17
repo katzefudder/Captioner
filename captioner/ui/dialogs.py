@@ -545,7 +545,7 @@ class ShortcutsDialog(QDialog):
         for context, title in keymap.CONTEXT_TITLES.items():
             rows.append((_(title), None))
             for binding in keymap.BINDINGS:
-                if binding.context != context:
+                if binding.context != context or not binding.keys:   # ohne Kuerzel (angepasst) nicht zeigen
                     continue
                 text = _('  oder  ').join(QKeySequence(k).toString(QKeySequence.SequenceFormat.NativeText)
                                        for k in binding.keys)

@@ -53,6 +53,9 @@ msgstr ""
 msgid "Aktion"
 msgstr ""
 
+msgid "Aktion oder Kürzel suchen"
+msgstr ""
+
 msgid "Alle Dateien (*)"
 msgstr ""
 
@@ -65,10 +68,19 @@ msgstr ""
 msgid "Alle Sterne"
 msgstr ""
 
+msgid "Alle Tabs schließen"
+msgstr ""
+
 msgid "Alle Tags"
 msgstr ""
 
+msgid "Alle auf Standard"
+msgstr ""
+
 msgid "Alle auswählen"
+msgstr ""
+
+msgid "Andere Tabs schließen"
 msgstr ""
 
 msgid "Anhang"
@@ -296,9 +308,6 @@ msgid ""
 "„Rot“ (deutsches Lightroom). Klassen ohne Eintrag bekommen kein Label."
 msgstr ""
 
-msgid "Die Roster-Datei(en) in einem Editor öffnen, der das Format prüft"
-msgstr ""
-
 msgid "Die vorhandene Datei wird überschrieben. Fortfahren?"
 msgstr ""
 
@@ -320,6 +329,9 @@ msgid "EXIF wird gelesen …"
 msgstr ""
 
 msgid "EXIF/IPTC rechts ein-/ausblenden"
+msgstr ""
+
+msgid "Eine Aktion wählen, um ihre Kürzel zu ändern."
 msgstr ""
 
 msgid ""
@@ -553,6 +565,9 @@ msgstr ""
 msgid "Hinweise"
 msgstr ""
 
+msgid "Hinzufügen …"
+msgstr ""
+
 msgid ""
 "IPTC „Special Instructions“ (Lightroom: Anweisungen), z. B. Kontaktdaten "
 "oder Kontoverbindung. Höchstens 256 Bytes. Zeilen stehen im Bild durch „ "
@@ -662,10 +677,23 @@ msgstr ""
 msgid "Kopierte Beschriftung in die Auswahl einfügen und speichern ({keys})"
 msgstr ""
 
+msgid "Kürzel"
+msgstr ""
+
+msgid "Kürzel aufnehmen"
+msgstr ""
+
+#, python-brace-format
+msgid "Kürzel für „{action}“:"
+msgstr ""
+
 msgid "Land"
 msgstr ""
 
 msgid "Lightroom-Label für Farbklasse 1, 2, 3, …"
+msgstr ""
+
+msgid "Menü"
 msgstr ""
 
 msgid "Messung"
@@ -684,7 +712,15 @@ msgstr ""
 msgid "Neu einlesen"
 msgstr ""
 
+#, python-brace-format
+msgid "Neu: {keys}"
+msgstr ""
+
 msgid "Neuer Tab"
+msgstr ""
+
+#, python-brace-format
+msgid "Neues Kürzel für „{action}“:"
 msgstr ""
 
 msgid "Neues Template aus dem gewählten …"
@@ -812,13 +848,15 @@ msgstr ""
 msgid "Roster bearbeiten …"
 msgstr ""
 
+msgid ""
+"Roster bearbeiten, neu laden oder eine Roster-Datei (Code ⇥ Ersetzung) "
+"vom Rechner hinzufügen"
+msgstr ""
+
 msgid "Roster neu laden"
 msgstr ""
 
 msgid "Roster wird geladen …"
-msgstr ""
-
-msgid "Roster-Datei (Code<Tab>Ersetzung) vom Rechner zusätzlich verwenden"
 msgstr ""
 
 msgid "Roster-Datei hinzufügen"
@@ -859,6 +897,10 @@ msgstr[0] ""
 msgstr[1] ""
 
 msgid "Schließen"
+msgstr ""
+
+#, python-brace-format
+msgid "Schon belegt für {actions}; dort wird es entfernt."
 msgstr ""
 
 msgid "Schreiben dauert an"
@@ -907,6 +949,9 @@ msgid "Stadt"
 msgstr ""
 
 msgid "Stadt aus dem Panel"
+msgstr ""
+
+msgid "Standard"
 msgstr ""
 
 msgid "Sterne"
@@ -967,7 +1012,17 @@ msgstr ""
 msgid "Taste"
 msgstr ""
 
+#, python-brace-format
+msgid "Tasten gleichzeitig drücken, höchstens {count}."
+msgstr ""
+
 msgid "Tastenkürzel"
+msgstr ""
+
+msgid "Tastenkürzel anpassen"
+msgstr ""
+
+msgid "Tastenkürzel anpassen …"
 msgstr ""
 
 msgid "Template"
@@ -1171,6 +1226,10 @@ msgid "Zoom an/aus (100 %)"
 msgstr ""
 
 msgid "Zu diesem Punkt ist keine Adresse bekannt; Stadt und Ort bitte eintragen."
+msgstr ""
+
+#, python-brace-format
+msgid "Zu viele Tasten: höchstens {count} zusammen."
 msgstr ""
 
 msgid "Zuletzt angesehenes Bild auswählen"
@@ -1541,6 +1600,9 @@ msgid "© 2026 Vor- und Nachname"
 msgstr ""
 
 msgid "© OpenStreetMap-Mitwirkende"
+msgstr ""
+
+msgid "Ändern …"
 msgstr ""
 
 msgid "Änderungen am Roster speichern?"

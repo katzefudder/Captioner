@@ -14,9 +14,16 @@ Kontexte:
   editor   - im Beschriftungs-Panel
   window   - im ganzen Fenster
   viewer   - in der Grossansicht ("Preview Window")
+  menu     - Kuerzel an Menuepunkten (Ordner oeffnen, Beenden, ...), wirken immer
+
+Die Tabellen hier sind die Standardbelegung (DEFAULTS). Eigene Belegungen stehen in
+Settings.shortcuts (nur Abweichungen) und werden mit apply() wirksam; alle anderen Module
+lesen die wirksame Belegung ueber keys(), BINDINGS und BY_COMMAND.
 """
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+
+from PySide6.QtGui import QKeySequence
 
 from ..i18n import N_
 
@@ -41,6 +48,14 @@ def _bindings(mac):
 
     def add(command, context, keys, label):
         b.append(Binding(command, context, tuple(keys), label))
+
+    # Menue (Kuerzel stehen am Menuepunkt, auf dem Mac auch in der Menueleiste)
+    add('open_folder', 'menu', ['Ctrl+O'], N_('Ordner öffnen …'))
+    add('open_folder_tab', 'menu', [], N_('Ordner in neuem Tab öffnen …'))
+    add('rescan', 'menu', ['F5'], N_('Neu einlesen'))
+    add('preferences', 'menu', ['Ctrl+,'] if mac else [], N_('Einstellungen …'))
+    add('customize_shortcuts', 'menu', [], N_('Tastenkürzel anpassen …'))
+    add('quit', 'menu', ['Ctrl+Q'] if mac else [], N_('Beenden'))
 
     # Kontaktbogen / Galerie
     for n in range(1, 9):
@@ -120,12 +135,50 @@ def _bindings(mac):
     return b
 
 
-BINDINGS = _bindings(MAC)
+DEFAULTS = _bindings(MAC)
+DEFAULT_KEYS = {binding.command: binding.keys for binding in DEFAULTS}
+BINDINGS = list(DEFAULTS)
 BY_COMMAND = {binding.command: binding for binding in BINDINGS}
+
+MAX_KEYS = 3  # eigene Kuerzel: hoechstens drei gleichzeitig gedrueckte Tasten
+
+# Welche Kontexte gleichzeitig aktiv sein koennen: das Fenster-Kontext-Kuerzel gilt immer,
+# dazu entweder Galerie oder Panel; in der Grossansicht deren Kuerzel und das dorthin
+# umgehaengte Panel. Menue-Kuerzel gelten ueberall.
+ACTIVE_TOGETHER = [{'gallery', 'window', 'menu'}, {'editor', 'window', 'menu'}, {'viewer', 'editor', 'menu'}]
 
 
 def keys(command):
     return BY_COMMAND[command].keys
+
+
+def apply(overrides):
+    """Eigene Belegung wirksam machen: {Befehl: [Tasten, ...]}; unbekannte Befehle fallen weg."""
+    global BINDINGS, BY_COMMAND
+    overrides = overrides or {}
+    BINDINGS = [replace(binding, keys=tuple(overrides[binding.command])) if binding.command in overrides else binding
+                for binding in DEFAULTS]
+    BY_COMMAND = {binding.command: binding for binding in BINDINGS}
+
+
+def overrides(keys_by_command):
+    """Nur die Abweichungen vom Standard, so wie sie in Settings.shortcuts stehen."""
+    return {command: list(keys) for command, keys in keys_by_command.items()
+            if command in DEFAULT_KEYS and tuple(keys) != DEFAULT_KEYS[command]}
+
+
+def normalized(key):
+    return QKeySequence(key).toString()
+
+
+def clashes(keys_by_command, command, key):
+    """Befehle, die `key` schon belegen und zugleich mit `command` aktiv sein koennen."""
+    context = BY_COMMAND[command].context
+    together = set().union(*(group for group in ACTIVE_TOGETHER if context in group))
+    wanted = normalized(key)
+    return [other for other, keys in keys_by_command.items()
+            if other != command and BY_COMMAND[other].context in together
+            and any(normalized(k) == wanted for k in keys)]
 
 
 CONTEXT_TITLES = {
@@ -133,4 +186,5 @@ CONTEXT_TITLES = {
     'editor': N_('Beschriftung (IPTC Info)'),
     'window': N_('Überall'),
     'viewer': N_('Großansicht'),
+    'menu': N_('Menü'),
 }

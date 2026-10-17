@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-16 18:10+0200\n"
+"POT-Creation-Date: 2026-10-17 17:13+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -78,6 +78,9 @@ msgstr "Agency, newsroom"
 msgid "Aktion"
 msgstr "Action"
 
+msgid "Aktion oder Kürzel suchen"
+msgstr "Search action or shortcut"
+
 msgid "Alle Dateien (*)"
 msgstr "All files (*)"
 
@@ -90,11 +93,20 @@ msgstr "All cameras"
 msgid "Alle Sterne"
 msgstr "All stars"
 
+msgid "Alle Tabs schließen"
+msgstr "Close all tabs"
+
 msgid "Alle Tags"
 msgstr "All tags"
 
+msgid "Alle auf Standard"
+msgstr "Reset all to defaults"
+
 msgid "Alle auswählen"
 msgstr "Select all"
+
+msgid "Andere Tabs schließen"
+msgstr "Close other tabs"
 
 msgid "Anhang"
 msgstr "Suffix"
@@ -332,9 +344,6 @@ msgstr ""
 "must match Lightroom’s label set: “Red” (English) or “Rot” (German "
 "Lightroom). Classes without an entry get no label."
 
-msgid "Die Roster-Datei(en) in einem Editor öffnen, der das Format prüft"
-msgstr "Open the roster file(s) in an editor that checks the format"
-
 msgid "Die vorhandene Datei wird überschrieben. Fortfahren?"
 msgstr "The existing file will be overwritten. Continue?"
 
@@ -360,6 +369,9 @@ msgstr "Reading EXIF …"
 
 msgid "EXIF/IPTC rechts ein-/ausblenden"
 msgstr "Show/hide EXIF/IPTC on the right"
+
+msgid "Eine Aktion wählen, um ihre Kürzel zu ändern."
+msgstr "Choose an action to change its shortcuts."
 
 msgid ""
 "Eine Zeile pro Code: <b>Code</b>, <b>Tab</b>, Ersetzung (z. B. "
@@ -608,6 +620,9 @@ msgstr "Help"
 msgid "Hinweise"
 msgstr "Instructions"
 
+msgid "Hinzufügen …"
+msgstr "Add …"
+
 msgid ""
 "IPTC „Special Instructions“ (Lightroom: Anweisungen), z. B. Kontaktdaten "
 "oder Kontoverbindung. Höchstens 256 Bytes. Zeilen stehen im Bild durch „ "
@@ -725,11 +740,24 @@ msgstr "Copying in progress"
 msgid "Kopierte Beschriftung in die Auswahl einfügen und speichern ({keys})"
 msgstr "Paste the copied caption into the selection and save ({keys})"
 
+msgid "Kürzel"
+msgstr "Shortcut"
+
+msgid "Kürzel aufnehmen"
+msgstr "Record shortcut"
+
+#, python-brace-format
+msgid "Kürzel für „{action}“:"
+msgstr "Shortcuts for “{action}”:"
+
 msgid "Land"
 msgstr "Country"
 
 msgid "Lightroom-Label für Farbklasse 1, 2, 3, …"
 msgstr "Lightroom label for color class 1, 2, 3, …"
+
+msgid "Menü"
+msgstr "Menu"
 
 msgid "Messung"
 msgstr "Metering"
@@ -747,8 +775,16 @@ msgstr "Name"
 msgid "Neu einlesen"
 msgstr "Reload"
 
+#, python-brace-format
+msgid "Neu: {keys}"
+msgstr "New: {keys}"
+
 msgid "Neuer Tab"
 msgstr "New tab"
+
+#, python-brace-format
+msgid "Neues Kürzel für „{action}“:"
+msgstr "New shortcut for “{action}”:"
 
 msgid "Neues Template aus dem gewählten …"
 msgstr "New template from the selected one …"
@@ -875,14 +911,18 @@ msgstr "Edit roster"
 msgid "Roster bearbeiten …"
 msgstr "Edit roster …"
 
+msgid ""
+"Roster bearbeiten, neu laden oder eine Roster-Datei (Code ⇥ Ersetzung) "
+"vom Rechner hinzufügen"
+msgstr ""
+"Edit or reload the roster, or add a roster file (code ⇥ replacement) from"
+" this computer"
+
 msgid "Roster neu laden"
 msgstr "Reload roster"
 
 msgid "Roster wird geladen …"
 msgstr "Loading roster …"
-
-msgid "Roster-Datei (Code<Tab>Ersetzung) vom Rechner zusätzlich verwenden"
-msgstr "Also use a roster file (code<tab>replacement) from this computer"
 
 msgid "Roster-Datei hinzufügen"
 msgstr "Add roster file"
@@ -923,6 +963,10 @@ msgstr[1] "Undone: {action} ({count} images)"
 
 msgid "Schließen"
 msgstr "Close"
+
+#, python-brace-format
+msgid "Schon belegt für {actions}; dort wird es entfernt."
+msgstr "Already used for {actions}; it will be removed there."
 
 msgid "Schreiben dauert an"
 msgstr "Still writing"
@@ -971,6 +1015,9 @@ msgstr "City"
 
 msgid "Stadt aus dem Panel"
 msgstr "city from the panel"
+
+msgid "Standard"
+msgstr "Default"
 
 msgid "Sterne"
 msgstr "Stars"
@@ -1030,8 +1077,18 @@ msgstr "Tags, comma-separated"
 msgid "Taste"
 msgstr "Key"
 
+#, python-brace-format
+msgid "Tasten gleichzeitig drücken, höchstens {count}."
+msgstr "Press the keys together, at most {count}."
+
 msgid "Tastenkürzel"
 msgstr "Keyboard shortcuts"
+
+msgid "Tastenkürzel anpassen"
+msgstr "Customize keyboard shortcuts"
+
+msgid "Tastenkürzel anpassen …"
+msgstr "Customize keyboard shortcuts …"
 
 msgid "Template"
 msgstr "Template"
@@ -1241,6 +1298,10 @@ msgstr "Zoom on/off (100 %)"
 
 msgid "Zu diesem Punkt ist keine Adresse bekannt; Stadt und Ort bitte eintragen."
 msgstr "No address is known for this point; please enter city and location."
+
+#, python-brace-format
+msgid "Zu viele Tasten: höchstens {count} zusammen."
+msgstr "Too many keys: at most {count} together."
 
 msgid "Zuletzt angesehenes Bild auswählen"
 msgstr "Select last viewed image"
@@ -1615,6 +1676,9 @@ msgstr "© 2026 first and last name"
 
 msgid "© OpenStreetMap-Mitwirkende"
 msgstr "© OpenStreetMap contributors"
+
+msgid "Ändern …"
+msgstr "Change …"
 
 msgid "Änderungen am Roster speichern?"
 msgstr "Save changes to the roster?"

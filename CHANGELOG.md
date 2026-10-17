@@ -26,6 +26,16 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 - **Galerie ohne Seiten:** alle Bilder eines Ordners in einer scrollbaren Galerie; Vorschauen
   werden beim Scrollen nachgeladen. Die Einstellung „Bilder pro Seite“ und die Seiten-Kürzel
   entfallen, `Bild↑`/`Bild↓` blättern jetzt wie gewohnt in der Galerie.
+- **Beschriftungs-Panel kompakter:** Hinweise direkt unter ihren Feldern statt in eigenen Zeilen,
+  Template-Datei im Tooltip, Roster in einer Zeile mit Menü (Bearbeiten, Neu laden, Datei
+  hinzufügen; Probleme bleiben sichtbar), Bytezähler neben Kopieren/Einfügen.
+- **Tastenkürzel anpassen** (Ablage): jedes Kürzel, auch die der Menüpunkte (Ordner öffnen,
+  Neu einlesen, Einstellungen, Beenden), lässt sich ändern, ergänzen oder entfernen. Das neue
+  Kürzel wird über die Tastatur aufgenommen, höchstens drei Tasten zusammen; schon belegte
+  Kombinationen werden beim anderen Befehl entfernt. Wirkt sofort, ohne Neustart.
+- **Kontextmenü an den Reitern:** Tab schließen, Andere Tabs schließen, Alle Tabs schließen
+  (wie Finder, Safari, Explorer).
+- **Doppelklick in die leere Galerie** (kein Ordner offen) öffnet den Ordner-Dialog wie `⌘O`.
 - **Suchen und Ersetzen** (Bearbeiten, `⌘⌥F`) in Beschreibung, Titel, Tags, Stadt und Ort der
   Auswahl, mit Vorschau je Bild. Codes lassen sich tauschen (`#bn9#` → `#bn10#`), Personen-Tags
   und der Anhang des Templates passen sich an; ein Schritt für `⌘Z`.

@@ -14,16 +14,12 @@ from PySide6.QtTest import QTest  # noqa: E402
 from captioner.ui import keymap  # noqa: E402
 
 
-# Welche Kontexte gleichzeitig aktiv sein koennen: das Fenster-Kontext-Kuerzel
-# gilt immer, dazu entweder Galerie oder Panel; in der Grossansicht deren Kuerzel
-# und das dorthin umgehaengte Panel
-ACTIVE_TOGETHER = [{'gallery', 'window'}, {'editor', 'window'}, {'viewer', 'editor'}]
 
 
 @pytest.mark.parametrize('mac', [True, False], ids=['macOS', 'Windows'])
 def test_no_ambiguous_shortcuts(mac):
     bindings = keymap._bindings(mac)
-    for contexts in ACTIVE_TOGETHER:
+    for contexts in keymap.ACTIVE_TOGETHER:
         seen = {}
         for binding in bindings:
             if binding.context not in contexts:
@@ -551,3 +547,90 @@ def test_find_replace_over_the_selection(window, roster, monkeypatch):
     assert window.undo_action.text() == 'Rückgängig: Ersetzen'
     window.undo()
     assert first.meta.caption == 'Tor -23- Marius Erk (EC Bad Nauheim)' and window.raw_captions.get(first) == 'Tor #bn23#'
+
+
+@requires_exiftool
+def test_customized_shortcut_works_without_restart(window, monkeypatch):
+    item = window.filtered[0]
+
+    class Accepting:
+        def __init__(self, parent):
+            pass
+
+        def exec(self):
+            return True
+
+        def overrides(self):
+            return {'tag_toggle': ['Y']}
+
+    monkeypatch.setattr(window.settings, 'save', lambda: None)
+    monkeypatch.setattr('captioner.ui.main_window.ShortcutEditorDialog', Accepting)
+    try:
+        window.customize_shortcuts()
+        assert window.settings.shortcuts == {'tag_toggle': ['Y']} and keymap.keys('tag_toggle') == ('Y',)
+        press(window.view, Qt.Key.Key_T)
+        assert not item.meta.tagged                      # T ist nicht mehr belegt
+        press(window.view, Qt.Key.Key_Y)
+        assert item.meta.tagged
+    finally:
+        keymap.apply({})
+
+
+def test_capture_field_shows_pressed_keys_and_records_up_to_three(app):
+    from captioner.ui.shortcuteditor import KeyCaptureField, native
+    field = KeyCaptureField()
+    field.show()
+    captured, too_many = [], []
+    field.captured.connect(captured.append)
+    field.too_many.connect(lambda: too_many.append(True))
+    shift, alt = Qt.KeyboardModifier.ShiftModifier, Qt.KeyboardModifier.AltModifier
+    assert field.text() == ''
+    QTest.keyPress(field, Qt.Key.Key_Control, CMD)
+    assert field.text() == native('Ctrl+A')[:-1]          # nur der Modifier, z. B. „⌘“
+    QTest.keyPress(field, Qt.Key.Key_K, CMD | shift)
+    assert captured == ['Ctrl+Shift+K'] and field.text() == native('Ctrl+Shift+K')
+    QTest.keyRelease(field, Qt.Key.Key_K, CMD | shift)
+    QTest.keyRelease(field, Qt.Key.Key_Control, Qt.KeyboardModifier.NoModifier)
+    assert field.text() == ''                              # nichts gedrueckt: leer
+    QTest.keyPress(field, Qt.Key.Key_K, CMD | shift | alt)  # vier Tasten
+    assert too_many and captured == ['Ctrl+Shift+K']
+    QTest.keyClick(field, Qt.Key.Key_Asterisk, shift)       # * braucht Shift, gemerkt wird nur *
+    QTest.keyClick(field, Qt.Key.Key_Escape)                # auch Esc und Tab sind Kuerzel
+    QTest.keyClick(field, Qt.Key.Key_Tab)
+    assert captured[1:] == ['*', 'Esc', 'Tab']
+
+
+def test_editor_dialog_replaces_and_takes_over_clashing_keys(app):
+    from PySide6.QtCore import QTimer
+    from captioner.ui.shortcuteditor import ShortcutEditorDialog
+
+    def record(key, modifiers=Qt.KeyboardModifier.NoModifier):
+        def drive():
+            capture = dialog.capture_dialog
+            QTest.keyClick(capture.field, key, modifiers)
+            capture.ok_button.click()
+        QTimer.singleShot(0, drive)
+
+    dialog = ShortcutEditorDialog()
+    dialog.select('tag_on')
+    assert dialog.key_list.count() == 1 and not dialog.default_button.isEnabled()
+    record(Qt.Key.Key_T)                                   # T gehoert tag_toggle (gleicher Kontext)
+    dialog.change_key()
+    assert dialog.keys['tag_on'] == ['T'] and dialog.keys['tag_toggle'] == []
+    assert dialog.items['tag_on'].font(0).bold()          # geaendert: fett
+    # gleiche Taste in einem anderen, nie gleichzeitig aktiven Kontext bleibt
+    assert dialog.keys['viewer_tag_toggle'] == ['T']
+    dialog.select('open_folder_tab')
+    record(Qt.Key.Key_N, CMD | Qt.KeyboardModifier.ShiftModifier)
+    dialog.add_key()
+    assert dialog.keys['open_folder_tab'] == ['Ctrl+Shift+N']
+    # Menue-Kuerzel gelten ueberall: das Panel verliert seine Belegung
+    assert dialog.keys['next_nosave'] == [k for k in keymap.DEFAULT_KEYS['next_nosave'] if k != 'Ctrl+Shift+N']
+    assert dialog.overrides()['tag_toggle'] == [] and 'color_1' not in dialog.overrides()
+    dialog.select('tag_on')
+    dialog.reset_command()
+    assert dialog.keys['tag_on'] == ['+']
+    dialog.reset_all()
+    assert dialog.overrides() == {}
+    dialog.search.setText('Großansicht schließen')
+    assert not dialog.items['viewer_close'].isHidden() and dialog.items['tag_on'].isHidden()

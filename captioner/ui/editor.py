@@ -38,8 +38,9 @@ MARK_START, MARK_END = '\ue000', '\ue001'
 
 
 def shortcut_text(command):
-    """Erstes Kuerzel eines Befehls in der Schreibweise der Plattform (auf dem Mac mit ⌘)."""
-    return QKeySequence(binding_keys(command)[0]).toString(QKeySequence.SequenceFormat.NativeText)
+    """Erstes Kuerzel eines Befehls in der Schreibweise der Plattform (auf dem Mac mit ⌘), '–' ohne."""
+    keys = binding_keys(command)
+    return QKeySequence(keys[0]).toString(QKeySequence.SequenceFormat.NativeText) if keys else '–'
 
 
 class WrappingLineEdit(QPlainTextEdit):
@@ -287,11 +288,6 @@ class CaptionEditor(QWidget):
         template_row.addWidget(self.edit_template_button)
         template_row.addWidget(more_button)
         layout.addLayout(template_row)
-        # Nur der Dateiname; der volle Pfad als Tooltip
-        self.template_source = QLabel()
-        self.template_source.setStyleSheet('color: gray;')
-        self.template_source.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        layout.addWidget(self.template_source)
 
         self.apply_button = QPushButton(_('Template auf Auswahl anwenden'))
         self.apply_button.setToolTip(_('Titel, Ort und Tags des Templates in alle ausgewählten Bilder schreiben; '
@@ -347,6 +343,7 @@ class CaptionEditor(QWidget):
         self.map_button.setToolTip(_('Ort auf der Karte oder per Adresssuche wählen (OpenStreetMap)'))
         self.map_button.clicked.connect(self.pick_place)
         city_row = QHBoxLayout()
+        city_row.setContentsMargins(0, 0, 0, 0)
         city_row.addWidget(self.city, 1)
         city_row.addWidget(self.map_button)
         self.gps_hint = QLabel()
@@ -360,32 +357,33 @@ class CaptionEditor(QWidget):
         self.date_hint.setWordWrap(True)
         self.date_hint.hide()
 
-        form.addRow(_('Titel'), self.headline)
-        form.addRow('', self.headline_preview)
-        form.addRow('', self.headline_hint)
-        form.addRow(_('Beschreibung'), self.caption)
-        form.addRow('', self.preview)
-        form.addRow('', self.date_hint)
+        def column(*widgets):
+            # Feld mit seinen Hinweisen darunter; ausgeblendete Hinweise kosten keinen Platz
+            # (als eigene Formularzeilen hinterliessen sie Luecken)
+            box = QVBoxLayout()
+            box.setContentsMargins(0, 0, 0, 0)
+            box.setSpacing(3)
+            for widget in widgets:
+                box.addWidget(widget)
+            return box
+
+        form.setVerticalSpacing(8)
+        form.addRow(_('Titel'), column(self.headline, self.headline_preview, self.headline_hint))
+        form.addRow(_('Beschreibung'), column(self.caption, self.preview, self.date_hint))
         form.addRow(_('Tags'), self.keywords)
         form.addRow(_('Stadt'), city_row)
-        form.addRow(_('Ort'), self.sublocation)
-        form.addRow('', self.gps_hint)
-        form.addRow('', self.rights_hint)
+        form.addRow(_('Ort'), column(self.sublocation, self.gps_hint, self.rights_hint))
         layout.addLayout(form)
 
         self.limits = QLabel()
         self.limits.setWordWrap(True)
-        footer.addWidget(self.limits)
 
         # Beschriftung von Bild zu Bild, wie die Kuerzel snapshot_take/snapshot_paste
         snapshot_buttons = QHBoxLayout()
+        snapshot_buttons.addWidget(self.limits, 1)
         self.snapshot_take_button = QPushButton(_('Kopieren'))
-        self.snapshot_take_button.setToolTip(_('Beschriftung dieses Bildes kopieren ({keys})').format(
-            keys=shortcut_text('snapshot_take')))
         self.snapshot_take_button.clicked.connect(self.snapshot_take_requested)
         self.snapshot_paste_button = QPushButton(_('Einfügen'))
-        self.snapshot_paste_button.setToolTip(_('Kopierte Beschriftung in die Auswahl einfügen und speichern ({keys})').format(
-            keys=shortcut_text('snapshot_paste')))
         self.snapshot_paste_button.clicked.connect(self.snapshot_paste_requested)
         snapshot_buttons.addWidget(self.snapshot_take_button)
         snapshot_buttons.addWidget(self.snapshot_paste_button)
@@ -402,31 +400,28 @@ class CaptionEditor(QWidget):
         buttons.addWidget(self.next_button)
         footer.addLayout(buttons)
 
-        hint = QLabel(_('Enter speichert · {save_next} speichert und weiter · '
-                      '{save_close} speichert und zurück zur Galerie · {shortcuts} alle Tastenkürzel').format(
-            save_next=shortcut_text('save_next'), save_close=shortcut_text('save_close'),
-            shortcuts=shortcut_text('shortcuts')))
-        hint.setWordWrap(True)
-        hint.setStyleSheet('color: gray;')
-        layout.addWidget(hint)
+        self.shortcut_hint = QLabel()
+        self.shortcut_hint.setWordWrap(True)
+        self.shortcut_hint.setStyleSheet('color: gray; font-size: 11px;')
+        layout.addWidget(self.shortcut_hint)
+        self.update_shortcut_texts()
 
+        # Roster: eine Zeile Status (Quellen im Tooltip, Probleme sichtbar), Befehle im Menue
         self.roster_status = QLabel()
         self.roster_status.setWordWrap(True)
-        reload_button = QPushButton(_('Roster neu laden'))
-        reload_button.clicked.connect(self.reload_roster_requested)
-        add_roster_button = QPushButton(_('Roster-Datei hinzufügen …'))
-        add_roster_button.setToolTip(_('Roster-Datei (Code<Tab>Ersetzung) vom Rechner zusätzlich verwenden'))
-        add_roster_button.clicked.connect(self.add_roster_file_requested)
-        edit_roster_button = QPushButton(_('Roster bearbeiten …'))
-        edit_roster_button.setToolTip(_('Die Roster-Datei(en) in einem Editor öffnen, der das Format prüft'))
-        edit_roster_button.clicked.connect(self.edit_roster_requested)
-        roster_buttons = QHBoxLayout()
-        roster_buttons.addWidget(reload_button)
-        roster_buttons.addWidget(add_roster_button)
+        self.roster_menu = QMenu(self)
+        self.roster_menu.addAction(_('Roster bearbeiten …'), self.edit_roster_requested.emit)
+        self.roster_menu.addAction(_('Roster neu laden'), self.reload_roster_requested.emit)
+        self.roster_menu.addAction(_('Roster-Datei hinzufügen …'), self.add_roster_file_requested.emit)
+        roster_button = QPushButton(_('Roster'))
+        roster_button.setToolTip(_('Roster bearbeiten, neu laden oder eine Roster-Datei (Code ⇥ Ersetzung) '
+                                   'vom Rechner hinzufügen'))
+        roster_button.setMenu(self.roster_menu)
+        roster_row = QHBoxLayout()
+        roster_row.addWidget(self.roster_status, 1)
+        roster_row.addWidget(roster_button, 0, Qt.AlignmentFlag.AlignTop)
         layout.addStretch(1)
-        layout.addWidget(self.roster_status)
-        layout.addWidget(edit_roster_button)
-        layout.addLayout(roster_buttons)
+        layout.addLayout(roster_row)
 
         self.selection_info = QLabel()
         layout.insertWidget(0, self.selection_info)
@@ -495,8 +490,10 @@ class CaptionEditor(QWidget):
         highlighter.language = language if language in ('de', 'en') else None
         highlighter.rehighlight()
 
-    def set_roster_status(self, html_text):
-        self.roster_status.setText(html_text)
+    def set_roster_status(self, summary, details=(), problems=()):
+        """Zusammenfassung (HTML) und Probleme sichtbar, Quellen und Stand im Tooltip."""
+        self.roster_status.setText('<br>'.join([summary, *problems]))
+        self.roster_status.setToolTip('<br>'.join(details))
 
     def set_templates(self, templates, active_path=''):
         """Templates werden ueber ihren Dateipfad identifiziert, Namen koennen doppelt sein."""
@@ -521,9 +518,8 @@ class CaptionEditor(QWidget):
     def _template_selected(self, index):
         self.template = self.template_box.itemData(index)
         path = self.template.path if self.template else ''
-        self.template_source.setText(f'<small>{html.escape(Path(path).name)}</small>' if path else '')
-        self.template_source.setToolTip(path)
-        self.template_source.setVisible(bool(path))
+        # Datei nur im Tooltip (frueher eine eigene Zeile darunter)
+        self.template_box.setToolTip(path)
         for widget in (self.copy_action, self.save_as_action, self.remove_action, self.edit_template_button):
             widget.setEnabled(self.template is not None)
         self._update_completions()
@@ -598,6 +594,17 @@ class CaptionEditor(QWidget):
         """Personen-Tags werden beim Speichern aus der Beschreibung neu erzeugt."""
         persons = set(codes.persons_in(caption, self.roster))
         return [k for k in keywords if k not in persons]
+
+    def update_shortcut_texts(self):
+        """Kuerzel in Tooltips und Hinweis; neu nach "Tastenkürzel anpassen"."""
+        self.snapshot_take_button.setToolTip(_('Beschriftung dieses Bildes kopieren ({keys})').format(
+            keys=shortcut_text('snapshot_take')))
+        self.snapshot_paste_button.setToolTip(_('Kopierte Beschriftung in die Auswahl einfügen und speichern ({keys})').format(
+            keys=shortcut_text('snapshot_paste')))
+        self.shortcut_hint.setText(_('Enter speichert · {save_next} speichert und weiter · '
+                                     '{save_close} speichert und zurück zur Galerie · {shortcuts} alle Tastenkürzel').format(
+            save_next=shortcut_text('save_next'), save_close=shortcut_text('save_close'),
+            shortcuts=shortcut_text('shortcuts')))
 
     def focus_caption(self):
         """Beschreibung markiert, damit Tippen sie ersetzt."""

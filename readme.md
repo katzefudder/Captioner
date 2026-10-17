@@ -229,7 +229,14 @@ Kopiert wird über eine Zwischendatei, ein Abbruch hinterlässt keine halben Bil
 ## Tastenkürzel
 
 Belegung wie in einem Workflow-Tool für die Auswahl von Fotos. `F1` (oder
-Hilfe → „Tastenkürzel“) zeigt alle Kürzel für das aktuelle System.
+Hilfe → „Tastenkürzel“) zeigt alle Kürzel für das aktuelle System. Die Tabelle zeigt die
+Standardbelegung.
+
+Jedes Kürzel lässt sich unter Ablage → „Tastenkürzel anpassen …“ ändern, ergänzen oder entfernen:
+Aktion wählen, „Ändern …“ und die neue Kombination drücken (höchstens drei Tasten zusammen,
+z. B. `⌘⇧K`). Das Feld zeigt, was gerade gedrückt ist. Ist die Kombination schon belegt, sagt
+der Dialog das; beim Übernehmen wird sie dort entfernt. Geänderte Aktionen stehen fett,
+„Standard“ bzw. „Alle auf Standard“ stellen die Vorgabe wieder her.
 
 | Aktion | macOS | Windows |
 |---|---|---|

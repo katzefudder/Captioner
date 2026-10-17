@@ -24,6 +24,7 @@ from .. import templates as template_files
 from ..templates import TemplateError, TemplateStore, unique
 from . import keymap
 from .dialogs import ROSTER_FILE_FILTER, SettingsDialog, ShortcutsDialog, TemplateDialog
+from .shortcuteditor import ShortcutEditorDialog
 from .about import AboutDialog
 from .updatecheck import UpdateChecker
 from .editor import CaptionEditor, template_folder_label
@@ -121,6 +122,10 @@ def _tab_attribute(name):
     return property(lambda self: getattr(self.tab, name), lambda self, value: setattr(self.tab, name, value))
 
 
+# Fenstertitel; Markenzeile, in jeder Sprache gleich (nicht uebersetzt)
+WINDOW_TITLE = 'Captioner - The Photo Captioning Tool for Professionals'
+
+
 class MainWindow(QMainWindow):
     folder = _tab_attribute('folder')
     all_items = _tab_attribute('all_items')
@@ -135,7 +140,8 @@ class MainWindow(QMainWindow):
     def __init__(self, settings: config.Settings, folder=None):
         super().__init__()
         self.settings = settings
-        self.setWindowTitle('Captioner')
+        keymap.apply(settings.shortcuts)   # eigene Kuerzel, bevor Menues und Panel sie anzeigen
+        self.setWindowTitle(WINDOW_TITLE)
         self.resize(1500, 950)
 
         self.pool = ExifToolPool(find_exiftool(settings.exiftool_path))
@@ -183,11 +189,12 @@ class MainWindow(QMainWindow):
         Qt nicht aus, und Cmd+W gehoert in der Grossansicht dieser.
         """
         bar = self.menuBar()
+        self._menu_actions = {}   # Befehl der Keymap (Kontext menu) -> Menuepunkt mit dessen Kuerzeln
 
-        def action(menu, text, handler, shortcut=None, role=None):
+        def action(menu, text, handler, command=None, role=None):
             item = QAction(text, self)
-            if shortcut is not None:
-                item.setShortcut(shortcut)
+            if command is not None:
+                self._menu_actions[command] = item
             if role is not None:
                 item.setMenuRole(role)
             item.triggered.connect(lambda checked=False: handler())
@@ -196,15 +203,16 @@ class MainWindow(QMainWindow):
 
         role = QAction.MenuRole
         file_menu = bar.addMenu(_('Ablage'))
-        action(file_menu, _('Ordner öffnen …'), self.choose_folder, QKeySequence.StandardKey.Open)
-        action(file_menu, _('Ordner in neuem Tab öffnen …'), lambda: self.choose_folder(new_tab=True))
-        action(file_menu, _('Neu einlesen'), lambda: self.folder and self.rescan(self.tab), QKeySequence('F5'))
+        action(file_menu, _('Ordner öffnen …'), self.choose_folder, 'open_folder')
+        action(file_menu, _('Ordner in neuem Tab öffnen …'), lambda: self.choose_folder(new_tab=True), 'open_folder_tab')
+        action(file_menu, _('Neu einlesen'), lambda: self.folder and self.rescan(self.tab), 'rescan')
         file_menu.addSeparator()
         action(file_menu, _('Tab schließen'), lambda: self.close_tab(self.tabs.currentIndex()))
         file_menu.addSeparator()
-        action(file_menu, _('Einstellungen …'), self.edit_settings, QKeySequence.StandardKey.Preferences,
-               role.PreferencesRole)
-        action(file_menu, _('Beenden'), self.close, QKeySequence.StandardKey.Quit, role.QuitRole)
+        action(file_menu, _('Einstellungen …'), self.edit_settings, 'preferences', role.PreferencesRole)
+        action(file_menu, _('Tastenkürzel anpassen …'), self.customize_shortcuts, 'customize_shortcuts')
+        action(file_menu, _('Beenden'), self.close, 'quit', role.QuitRole)
+        self._apply_menu_shortcuts()
 
         edit_menu = bar.addMenu(_('Bearbeiten'))
         # Kuerzel Cmd+Z/Cmd+Shift+Z kommen aus der Keymap (im Textfeld gilt dessen Rueckgaengig)
@@ -358,6 +366,7 @@ class MainWindow(QMainWindow):
         self.tabs = FolderTabs(self)
         self.tabs.bar.files_dropped.connect(lambda index: self.copy_dragged_to(self.tabs.widget(index)))
         self.tabs.tabCloseRequested.connect(self.close_tab)
+        self.tabs.bar.close_requested.connect(self.close_tabs)
         self.tabs.currentChanged.connect(self._on_tab_changed)
         self.tabs.bar.tabMoved.connect(self._remember_tabs)
         new_tab_button = QToolButton(text='+')
@@ -492,6 +501,12 @@ class MainWindow(QMainWindow):
         self._bind(e, self.editor, widget_ctx)
 
     def _bind(self, handlers, widget, context):
+        """QShortcuts nach der wirksamen Keymap; gemerkt, damit _rebind_shortcuts sie neu anlegen kann."""
+        self._bindings = getattr(self, '_bindings', [])
+        self._bindings.append((handlers, widget, context))
+        self._create_shortcuts(handlers, widget, context)
+
+    def _create_shortcuts(self, handlers, widget, context):
         self._shortcuts = getattr(self, '_shortcuts', [])
         for command, handler in handlers.items():
             for sequence in keymap.keys(command):
@@ -500,8 +515,33 @@ class MainWindow(QMainWindow):
                 shortcut.activated.connect(handler)
                 self._shortcuts.append(shortcut)
 
+    def _apply_menu_shortcuts(self):
+        for command, item in self._menu_actions.items():
+            item.setShortcuts([QKeySequence(key) for key in keymap.keys(command)])
+
+    def _rebind_shortcuts(self):
+        """Nach dem Anpassen: alle Kuerzel neu, ohne Neustart (auch die der Grossansicht)."""
+        for shortcut in self._shortcuts:
+            shortcut.setEnabled(False)
+            shortcut.setParent(None)
+            shortcut.deleteLater()
+        self._shortcuts = []
+        for handlers, widget, context in self._bindings:
+            self._create_shortcuts(handlers, widget, context)
+        self._apply_menu_shortcuts()
+        self.editor.update_shortcut_texts()
+
     def show_shortcuts(self):
         ShortcutsDialog(self).exec()
+
+    def customize_shortcuts(self):
+        dialog = ShortcutEditorDialog(self)
+        if not dialog.exec():
+            return
+        self.settings.shortcuts = dialog.overrides()
+        self.settings.save()
+        keymap.apply(self.settings.shortcuts)
+        self._rebind_shortcuts()
 
     # --- Tabs und Ordner ---------------------------------------------------------
 
@@ -519,6 +559,8 @@ class MainWindow(QMainWindow):
         tab.view.files_dropped.connect(lambda t=tab: self.copy_dragged_to(t))
         # Doppelklick auf eine Kachel: Grossansicht wie mit der Leertaste (erster Klick macht sie aktuell)
         tab.view.doubleClicked.connect(lambda index: self.open_viewer())
+        # Doppelklick in die leere Galerie ohne Ordner: wie Cmd+O
+        tab.view.background_double_clicked.connect(lambda t=tab: t.folder or self.choose_folder())
         tab.view.visible_changed.connect(lambda t=tab: self._request_thumbnails(t))
         tab.view.set_tile_width(self.settings.thumbnail_size)
         index = self.tabs.addTab(tab, tab_title(folder))
@@ -715,6 +757,11 @@ class MainWindow(QMainWindow):
         if self.tabs.count() == 0:
             self.new_tab()
         self._remember_tabs()
+
+    def close_tabs(self, indices):
+        """Mehrere Tabs schliessen (Kontextmenue am Reiter); ueber die Widgets, Indizes verschieben sich."""
+        for tab in [self.tabs.widget(index) for index in indices]:
+            self.close_tab(self.tabs.indexOf(tab))
 
     # --- Filter, Auswahl -------------------------------------------------------
 
@@ -1659,25 +1706,29 @@ class MainWindow(QMainWindow):
     def _on_roster_loaded(self, roster):
         self.roster = roster
         self.editor.set_roster(roster, self.settings.code_delimiter)
-        lines = ['<b>%s</b> %s, %s' % (
+        summary = '<b>%s</b> %s, %s' % (
             _('Roster:'), ngettext('{count} Code', '{count} Codes', len(roster.entries)).format(count=len(roster.entries)),
-            ngettext('{count} Team', '{count} Teams', len(roster.teams)).format(count=len(roster.teams)))]
+            ngettext('{count} Team', '{count} Teams', len(roster.teams)).format(count=len(roster.teams)))
+        # Quellen mit Stand im Tooltip; was nicht stimmt, bleibt sichtbar
+        details, problems = [], []
         for status in roster.status:
             stamp = time.strftime('%d.%m. %H:%M', time.localtime(status.fetched_at)) if status.fetched_at else ''
-            color = '' if status.ok and status.origin != 'letzte gute Version' else ' style="color:#d64541"'
             name = html.escape(status.source.rsplit('/', 1)[-1])
             detail = f' – {html.escape(status.message)}' if status.message else ''
             origin = html.escape(_(status.origin)) if status.origin else ''
-            lines.append(f'<span{color}>{name}: {origin} {stamp}{detail}</span>')
+            line = f'{name}: {origin} {stamp}{detail}'
+            details.append(line)
+            if not status.ok or status.origin == 'letzte gute Version':
+                problems.append(f'<span style="color:#d64541">{line}</span>')
         if roster.conflicts:
             text = ngettext('{count} widersprüchlicher Code: {codes}', '{count} widersprüchliche Codes: {codes}',
                             len(roster.conflicts)).format(count=len(roster.conflicts),
                                                           codes=', '.join(c[0] for c in roster.conflicts[:10]))
-            lines.append(f'<span style="color:#d64541">{html.escape(text)}</span>')
+            problems.append(f'<span style="color:#d64541">{html.escape(text)}</span>')
         if not roster.is_usable:
-            lines.append('<span style="color:#d64541">%s</span>'
-                         % html.escape(_('Kein Roster verfügbar – Codes können nicht aufgelöst werden.')))
-        self.editor.set_roster_status('<br>'.join(lines))
+            problems.append('<span style="color:#d64541">%s</span>'
+                            % html.escape(_('Kein Roster verfügbar – Codes können nicht aufgelöst werden.')))
+        self.editor.set_roster_status(summary, details, problems)
 
     def edit_settings(self):
         dialog = SettingsDialog(self.settings, self)

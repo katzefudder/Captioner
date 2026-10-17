@@ -37,6 +37,7 @@ Bedienung: `readme.md`.
 | `i18n.py` | gettext: `_`, `ngettext`, `N_`, Sprache wählen (`resolve`, `setup`) |
 | `ui/spelling.py` | Rechtschreibprüfung der Beschreibung über macOS `NSSpellChecker` (ctypes) |
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
+| `ui/shortcuteditor.py` | „Tastenkürzel anpassen“: `KeyCaptureField` nimmt Kombinationen auf (≤ `keymap.MAX_KEYS` Tasten) |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
 Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`, `files`, `replace`) importiert kein Qt.
@@ -112,7 +113,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   Template und die am Panel hängenden Kürzel wandern mit.
 - Viewer-Kürzel sind `WindowShortcut`. Beim Tippen lösen sie nicht aus, weil Textfelder
   druckbare Tasten ohne Cmd/Strg per `ShortcutOverride` beanspruchen; deshalb dürfen
-  Viewer- und Panel-Kürzel sich nicht überschneiden (`ACTIVE_TOGETHER` im Test).
+  Viewer- und Panel-Kürzel sich nicht überschneiden (`keymap.ACTIVE_TOGETHER`).
 - Laden in zwei Stufen, eigene Threads (`ThumbnailLoader.view_threads`, nie hinter Kacheln):
   `previews.render_view` dekodiert erst per JPEG-Draft auf `display_edge` (Bildschirmkante in
   Pixeln), dann voll. Das `QImage` trägt `stage` und `full_size` als Text; `ZoomView` rechnet immer
@@ -132,6 +133,9 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   `DCIM/100…`), außer bei `Settings.recursive`. Mehr als `MANY_FOLDERS` nur nach Rückfrage.
 - Reiter (`FolderTabs.bar`) laufen oben über die ganze Fensterbreite, die Galerien liegen im
   `FolderTabs.stack` darunter; `FolderTabs` bietet die nötige `QTabWidget`-API.
+- Kontextmenü am Reiter (`FolderTabBar.contextMenuEvent` → `close_requested` → `close_tabs`): dieser,
+  andere, alle; Schließen über die Widgets, weil sich Indizes verschieben. Doppelklick neben die
+  Kacheln (`GalleryView.background_double_clicked`) öffnet ohne Ordner den Dialog wie `⌘O`.
 - Offene Tabs: `Settings.open_tabs`/`active_tab`, gepflegt von `_remember_tabs` (Öffnen, Schließen,
   Wechseln, Verschieben), beim Start `_restore_tabs` (fehlende Ordner fallen weg).
 - Filter: Suche (`scanner.matches_text`), Kamera (Modell + Seriennummer aus der RAW bzw. dem
@@ -221,7 +225,16 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - `captioner.version()`: gebündelt aus `Info.plist` (Release-Version), sonst Paket-Metadaten.
 
 - Einzige Quelle ist `ui/keymap.py`. Daraus entstehen
-  die `QShortcut`s und die F1-Übersicht; nie Kürzel anderswo fest verdrahten.
+  die `QShortcut`s, die Kürzel der Menüpunkte (Kontext `menu`, `_menu_actions`) und die
+  F1-Übersicht; nie Kürzel anderswo fest verdrahten.
+- Anpassbar: `keymap.DEFAULTS` ist die Standardbelegung, `Settings.shortcuts` hält nur Abweichungen
+  (`keymap.overrides`), `keymap.apply` macht sie wirksam (`BINDINGS`/`BY_COMMAND` neu, also immer
+  über `keymap.…` bzw. `keys()` lesen, nie Kopien halten). `MainWindow._bind` merkt sich Handler,
+  `_rebind_shortcuts` legt nach dem Dialog alle `QShortcut`s neu an (auch die der Großansicht) und
+  aktualisiert die Texte im Panel (`CaptionEditor.update_shortcut_texts`). Doppelbelegung prüft
+  `keymap.clashes` über `keymap.ACTIVE_TOGETHER`; der Dialog entfernt die Taste beim anderen Befehl.
+- Aufnahme (`KeyCaptureField`): das Feld beansprucht alle Tasten (auch Esc, Tab, Enter), die Knöpfe
+  im Aufnahme-Dialog nur per Maus. Shift bei Zeichen, die Shift brauchen (`*`, `+`), fällt weg.
 - Qt-Schreibweise: auf macOS ist `Ctrl` = ⌘, `Meta` = Control, `Alt` = Option.
 - Kontexte: `gallery` (nur bei Fokus auf der Galerie, damit `T`, `I`, `+`, `-` beim Tippen
   nicht auslösen), `editor`, `window`, `viewer`. Zwei gleichzeitig aktive gleiche Kürzel
@@ -316,7 +329,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 230 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 235 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

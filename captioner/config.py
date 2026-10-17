@@ -77,6 +77,8 @@ class Settings:
     places: list = field(default_factory=list)
     thumbnail_size: int = 220    # Kachelbreite in der Galerie (Regler), siehe gallery.tile_size
     roster_font_size: int = 0    # Schriftgroesse im Roster-Editor (Punkt), 0 = Systemvorgabe
+    # Eigene Tastenkuerzel, nur Abweichungen vom Standard: {Befehl: [Tasten, ...]}, siehe keymap.apply
+    shortcuts: dict = field(default_factory=dict)
 
     @classmethod
     def path(cls) -> Path:

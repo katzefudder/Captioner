@@ -169,9 +169,12 @@ def test_menus_replace_the_toolbar(window):
     # keine Doppelbelegung mit der Keymap (Qt loest doppelte Kuerzel gar nicht aus)
     from captioner.ui import keymap
     from PySide6.QtGui import QKeySequence
-    keymap_keys = {QKeySequence(k).toString() for b in keymap.BINDINGS for k in b.keys}
+    keymap_keys = {QKeySequence(k).toString() for b in keymap.BINDINGS if b.context != 'menu' for k in b.keys}
     for entry in entries.values():
         assert entry.shortcut().isEmpty() or entry.shortcut().toString() not in keymap_keys, entry.text()
+    # Menue-Kuerzel kommen aus der Keymap (Kontext menu), damit sie sich anpassen lassen
+    assert [k.toString() for k in entries['Ordner öffnen …'].shortcuts()] == ['Ctrl+O']
+    assert [k.toString() for k in entries['Neu einlesen'].shortcuts()] == ['F5']
 
 
 def test_about_dialog_links_to_the_website(app):
