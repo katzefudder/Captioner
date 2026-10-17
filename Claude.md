@@ -37,6 +37,7 @@ Bedienung: `readme.md`.
 | `i18n.py` | gettext: `_`, `ngettext`, `N_`, Sprache wählen (`resolve`, `setup`) |
 | `ui/spelling.py` | Rechtschreibprüfung der Beschreibung über macOS `NSSpellChecker` (ctypes) |
 | `ui/keymap.py` | Tastenkürzel wie in einem Workflow-Tool für die Auswahl von Fotos, je eine Tabelle macOS/Windows, Kontexte |
+| `ui/filemanager.py` | Finder/Explorer: `reveal` (Datei markieren), `move_to_trash` (`QFile.moveToTrash`) |
 | `ui/shortcuteditor.py` | „Tastenkürzel anpassen“: `KeyCaptureField` nimmt Kombinationen auf (≤ `keymap.MAX_KEYS` Tasten) |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
@@ -149,6 +150,13 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   rechnet Höhe und Bildhöhe. `GalleryView.set_tile_width` muss `setUniformItemSizes` aus/an
   schalten, sonst behält Qt die alte Größe. Vorschauen haben `previews.TILE_SIZE` = 512 px;
   `ThumbnailLoader` begrenzt nach Bytes (`MEMORY_BYTES`) und verwirft nie `wanted`.
+- Kontextmenü der Kacheln: `GalleryView.contextMenuEvent` passt die Auswahl an (Finder-Art) und
+  meldet `context_menu_requested`; `MainWindow.gallery_menu` baut das Menü aus denselben Methoden
+  wie die Kürzel (Kürzeltext nach `\t` aus der Keymap, kein eigenes `QAction`-Kürzel).
+- Papierkorb (`trash_selected`): nur nach Rückfrage, erst `writer.flush`, dann alle Dateien des
+  Bildes einzeln (`filemanager.move_to_trash`, nie endgültig löschen). Gelöschte Items fliegen aus
+  dem Tab und per `UndoStack.forget` aus Rückgängig; schlägt eine Datei fehl, wird neu eingelesen.
+  Tests ersetzen `move_to_trash`/`reveal` immer (sonst landen Testdateien im echten Papierkorb).
 - Galerie-Kürzel hängen am `FolderTabs.stack` (gelten in jedem Tab), nicht an einer Galerie.
 - Ordner-Dialog: Qts nativer macOS-Dialog kann für Ordner nur Einzelauswahl.
   `folderdialog.choose_folders` ruft deshalb `NSOpenPanel` direkt über die Objective-C-Laufzeit
@@ -329,7 +337,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 235 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 240 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

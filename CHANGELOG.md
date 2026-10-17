@@ -29,6 +29,9 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 - **Beschriftungs-Panel kompakter:** Hinweise direkt unter ihren Feldern statt in eigenen Zeilen,
   Template-Datei im Tooltip, Roster in einer Zeile mit Menü (Bearbeiten, Neu laden, Datei
   hinzufügen; Probleme bleiben sichtbar), Bytezähler neben Kopieren/Einfügen.
+- **Kontextmenü an den Kacheln:** Bewertung, Farbklasse, Tag, Großansicht, Beschriftung
+  kopieren/einfügen, in Tab kopieren, im Finder/Explorer zeigen, Pfade kopieren, in den
+  Papierkorb legen (alle Dateien des Bildes, nach Rückfrage; `⌘⌫` bzw. `Entf`).
 - **Tastenkürzel anpassen** (Ablage): jedes Kürzel, auch die der Menüpunkte (Ordner öffnen,
   Neu einlesen, Einstellungen, Beenden), lässt sich ändern, ergänzen oder entfernen. Das neue
   Kürzel wird über die Tastatur aufgenommen, höchstens drei Tasten zusammen; schon belegte

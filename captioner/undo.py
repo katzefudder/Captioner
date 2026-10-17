@@ -62,6 +62,14 @@ class UndoStack:
         self.undo_steps.append(step)
         return step
 
+    def forget(self, items):
+        """Geloeschte Bilder aus allen Schritten nehmen; leere Schritte fallen weg."""
+        gone = {id(item) for item in items}
+        for steps in (self.undo_steps, self.redo_steps):
+            for step in steps:
+                step.changes = [c for c in step.changes if id(c.item) not in gone]
+            steps[:] = [step for step in steps if step.changes]
+
     @property
     def undo_label(self):
         return self.undo_steps[-1].label if self.undo_steps else None

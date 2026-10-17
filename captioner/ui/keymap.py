@@ -73,6 +73,8 @@ def _bindings(mac):
     add('select_all', 'gallery', ['Ctrl+A'], N_('Alle auswählen'))
     add('deselect_all', 'gallery', ['Ctrl+D'], N_('Auswahl aufheben'))
     add('select_tagged', 'gallery', ['Ctrl+T'], N_('Getaggte auswählen'))
+    add('trash', 'gallery', ['Ctrl+Backspace'] if mac else ['Del'], N_('In den Papierkorb legen'))
+    add('reveal', 'gallery', ['Ctrl+Alt+R'], N_('Im Finder bzw. Explorer zeigen'))
     add('home', 'gallery', ['Home'], N_('Zum ersten Bild'))
     add('end', 'gallery', ['End'], N_('Zum letzten Bild'))
     # Wie im Panel, nur ohne Speichern (in der Galerie gibt es nichts zu speichern)

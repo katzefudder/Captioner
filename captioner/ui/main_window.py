@@ -9,9 +9,9 @@ import time
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QItemSelection, QItemSelectionModel, QMimeData, QObject, Qt, QTime, QTimer, QUrl
-from PySide6.QtGui import QAction, QColor, QDesktopServices, QKeySequence, QShortcut
+from PySide6.QtGui import QAction, QColor, QDesktopServices, QIcon, QKeySequence, QPixmap, QShortcut
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QHBoxLayout, QLineEdit, QTimeEdit,
-                               QLabel, QMainWindow, QMessageBox, QProgressDialog, QSlider, QSplitter,
+                               QLabel, QMainWindow, QMenu, QMessageBox, QProgressDialog, QSlider, QSplitter,
                                QPushButton, QToolButton, QVBoxLayout, QWidget)
 
 from .. import (WEBSITE_LINK, codes, config, geo, i18n, keywords, metadata, replace, scanner, transfer, undo,
@@ -30,7 +30,7 @@ from .updatecheck import UpdateChecker
 from .editor import CaptionEditor, template_folder_label
 from .replacedialog import ReplaceDialog
 from .rostereditor import RosterEditorDialog
-from . import folderdialog, instance
+from . import filemanager, folderdialog, instance
 from .viewer import Viewer
 from .gallery import CLASS_COLORS, MAX_TILE_W, MIN_TILE_W, ItemRole
 from .tabs import CopyWorker, FolderTab, FolderTabs, ask_conflicts, tab_title
@@ -464,6 +464,8 @@ class MainWindow(QMainWindow):
             'next_image': lambda: self.step_selection(1),
             'prev_image': lambda: self.step_selection(-1),
             'roster_settings': self.edit_settings,
+            'trash': self.trash_selected,
+            'reveal': self.reveal_current,
         }
         for n in range(0, 9):
             g[f'color_{n}'] = lambda n=n: self.set_color_class(n)
@@ -560,6 +562,7 @@ class MainWindow(QMainWindow):
         # Doppelklick auf eine Kachel: Grossansicht wie mit der Leertaste (erster Klick macht sie aktuell)
         tab.view.doubleClicked.connect(lambda index: self.open_viewer())
         # Doppelklick in die leere Galerie ohne Ordner: wie Cmd+O
+        tab.view.context_menu_requested.connect(self.show_gallery_menu)
         tab.view.background_double_clicked.connect(lambda t=tab: t.folder or self.choose_folder())
         tab.view.visible_changed.connect(lambda t=tab: self._request_thumbnails(t))
         tab.view.set_tile_width(self.settings.thumbnail_size)
@@ -1357,6 +1360,146 @@ class MainWindow(QMainWindow):
                 self.open_template_file(str(path))
             else:
                 self.add_roster_file(str(path))
+
+    # --- Kontextmenue der Galerie ----------------------------------------------------
+
+    def show_gallery_menu(self, position):
+        menu = self.gallery_menu(self)
+        menu.exec(position)
+        menu.deleteLater()
+
+    def gallery_menu(self, parent):
+        """Rechtsklick auf Kacheln: wirkt auf die Auswahl, wie die Kuerzel daneben."""
+        items = self._selected_items()
+        menu = QMenu(parent)
+        if not items:
+            return menu
+
+        def entry(target, text, handler, command=None, checked=None, icon=None):
+            keys = keymap.keys(command) if command else ()
+            if keys:
+                text += '\t' + QKeySequence(keys[0]).toString(QKeySequence.SequenceFormat.NativeText)
+            item = target.addAction(text)
+            item.triggered.connect(lambda checked=False: handler())
+            if checked is not None:
+                item.setCheckable(True)
+                item.setChecked(checked)
+            if icon is not None:
+                item.setIcon(icon)
+            return item
+
+        def same(values):
+            values = set(values)
+            return values.pop() if len(values) == 1 else None
+
+        rating = same(item.meta.rating for item in items)
+        stars = menu.addMenu(_('Bewertung'))
+        entry(stars, _('Keine Sterne'), lambda: self.set_rating(0), 'rating_0', rating == 0)
+        for n in range(1, 6):
+            entry(stars, '★' * n, lambda n=n: self.set_rating(n), f'rating_{n}', rating == n)
+
+        color = same(self.color_class_of(item) for item in items)
+        colors = menu.addMenu(_('Farbklasse'))
+        entry(colors, _('Keine Farbe'), lambda: self.set_color_class(0), 'color_0', color == 0)
+        for n in range(1, 9):
+            label = self.settings.labels[n - 1] if n <= len(self.settings.labels) else ''
+            text = _('Farbklasse {number} ({label})').format(number=n, label=label) if label \
+                else _('Farbklasse {number}').format(number=n)
+            swatch = QPixmap(12, 12)
+            swatch.fill(QColor(CLASS_COLORS[n]))
+            entry(colors, text, lambda n=n: self.set_color_class(n), f'color_{n}', color == n, QIcon(swatch))
+
+        entry(menu, _('Getaggt'), lambda: self.set_tag(None), 'tag_toggle', all(item.meta.tagged for item in items))
+        menu.addSeparator()
+        entry(menu, _('Großansicht'), self.open_viewer, 'preview')
+        entry(menu, _('Beschriftung kopieren'), self.take_snapshot, 'snapshot_take')
+        entry(menu, _('Beschriftung einfügen'), self.paste_snapshot, 'snapshot_paste').setEnabled(
+            bool(getattr(self, 'snapshot', None)))
+        targets = [tab for tab in self.all_tabs() if tab is not self.tab and tab.folder]
+        if targets:
+            copy_menu = menu.addMenu(_('In Tab kopieren'))
+            for tab in targets:
+                entry(copy_menu, self.tabs.tabText(self.tabs.indexOf(tab)), lambda t=tab: self.copy_selected_to(t))
+        menu.addSeparator()
+        entry(menu, filemanager.reveal_label(), self.reveal_current, 'reveal')
+        entry(menu, ngettext('Pfad kopieren', 'Pfade kopieren', len(items)), self.copy_paths)
+        menu.addSeparator()
+        entry(menu, _('In den Papierkorb legen …'), self.trash_selected, 'trash')   # Anzahl nennt die Rueckfrage
+        return menu
+
+    def _current_item(self):
+        items = self._focused_first(self._selected_items())
+        return items[0] if items else None
+
+    def reveal_current(self):
+        item = self._current_item()
+        if item is not None and not filemanager.reveal(item.primary):
+            QMessageBox.information(self, filemanager.reveal_label(), str(item.primary))
+
+    def copy_paths(self):
+        paths = [str(path) for item in self._focused_first(self._selected_items()) for path in item.files]
+        if paths:
+            QApplication.clipboard().setText('\n'.join(paths))
+            self.statusBar().showMessage(ngettext('{count} Pfad kopiert', '{count} Pfade kopiert',
+                                                  len(paths)).format(count=len(paths)), 5000)
+
+    def copy_selected_to(self, target):
+        """Wie Ziehen auf den Reiter: erst alles schreiben, dann mit Sidecar kopieren."""
+        if self.build_drag_mime() is not None:
+            self.copy_dragged_to(target)
+
+    def trash_selected(self):
+        """
+        Ausgewaehlte Bilder mit allen Dateien (RAW, JPG, Sidecar) in den Papierkorb, nach
+        Rueckfrage. Wiederherstellen geht im Finder/Explorer, nicht mit Rueckgaengig.
+        """
+        items = self._selected_items()
+        tab = self.tab
+        if not items:
+            return
+        if self.copy_worker and self.copy_worker.isRunning():
+            QMessageBox.information(self, _('Papierkorb'), _('Es wird noch kopiert. Bitte warten, bis das fertig ist.'))
+            return
+        question = (_('„{name}“ in den Papierkorb legen?').format(name=items[0].name) if len(items) == 1 else
+                    ngettext('{count} Bild in den Papierkorb legen?', '{count} Bilder in den Papierkorb legen?',
+                             len(items)).format(count=len(items)))
+        answer = QMessageBox.question(
+            self, _('Papierkorb'),
+            question + '\n\n' + _('Dazu gehören alle Dateien des Bildes (RAW, JPG, XMP-Sidecar). '
+                                   'Aus dem Papierkorb lassen sie sich wiederherstellen.'),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        # Nichts mehr in Dateien schreiben, die gleich im Papierkorb liegen
+        if self.writer.pending_count() and not self._wait_for_writer(_('Papierkorb')):
+            return
+        trashed, failed = [], []
+        for item in items:
+            paths = item.files + ([item.sidecar] if item.sidecar and item.sidecar.exists() else [])
+            missing = [path for path in paths if not filemanager.move_to_trash(path)]
+            (failed if missing else trashed).append(item)
+            failed_names = [path.name for path in missing]
+            if failed_names:
+                logger.warning('Nicht in den Papierkorb: %s', ', '.join(failed_names))
+        self.undo_stack.forget(trashed)
+        self._update_undo_actions()
+        if self.viewer is not None and self.viewer.isVisible() and self.viewer.key in {i.key for i in trashed}:
+            self.viewer.close()
+        if failed:
+            QMessageBox.warning(self, _('Papierkorb'), _('Nicht alle Dateien ließen sich in den Papierkorb legen:')
+                                + '\n\n' + '\n'.join(item.name for item in failed[:20]))
+            self.rescan(tab, wait_for_writer=False)
+            return
+        gone = {item.key for item in trashed}
+        tab.all_items = [item for item in tab.all_items if item.key not in gone]
+        tab.by_key = {item.key: item for item in tab.all_items}
+        tab.selected_keys.difference_update(gone)
+        self._fill_camera_filter()
+        self.apply_filter()
+        self._update_count()
+        self.statusBar().showMessage(ngettext('{count} Bild in den Papierkorb gelegt',
+                                              '{count} Bilder in den Papierkorb gelegt',
+                                              len(trashed)).format(count=len(trashed)), 5000)
 
     # --- Kopieren zwischen Tabs ----------------------------------------------------
 

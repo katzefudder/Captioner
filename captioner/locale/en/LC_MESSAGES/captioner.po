@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 17:13+0200\n"
+"POT-Creation-Date: 2026-10-17 22:52+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -230,6 +230,9 @@ msgid_plural "Beschriftung in {count} Bilder eingefügt"
 msgstr[0] "Caption pasted into {count} image"
 msgstr[1] "Caption pasted into {count} images"
 
+msgid "Beschriftung kopieren"
+msgstr "Copy caption"
+
 msgid "Beschriftung kopieren (IPTC-Snapshot)"
 msgstr "Copy caption (IPTC snapshot)"
 
@@ -318,6 +321,13 @@ msgstr "Date"
 #, python-brace-format
 msgid "Datum aus dem Template: {fixed} – aufgenommen am {taken}"
 msgstr "Date from the template: {fixed} – taken on {taken}"
+
+msgid ""
+"Dazu gehören alle Dateien des Bildes (RAW, JPG, XMP-Sidecar). Aus dem "
+"Papierkorb lassen sie sich wiederherstellen."
+msgstr ""
+"This includes all files of the image (RAW, JPG, XMP sidecar). They can be"
+" restored from the trash."
 
 msgid "Der neue ExifTool-Pfad gilt nach einem Neustart."
 msgstr "The new ExifTool path takes effect after a restart."
@@ -566,6 +576,9 @@ msgstr ""
 "image’s value. Home and away teams are part of the headline and follow "
 "from the codes in the caption."
 
+msgid "Getaggt"
+msgstr "Tagged"
+
 msgid "Getaggte auswählen"
 msgstr "Select tagged"
 
@@ -635,8 +648,29 @@ msgstr ""
 msgid "Ignorieren"
 msgstr "Ignore"
 
+msgid "Im Dateimanager zeigen"
+msgstr "Show in file manager"
+
+msgid "Im Explorer zeigen"
+msgstr "Show in Explorer"
+
+msgid "Im Finder bzw. Explorer zeigen"
+msgstr "Show in Finder or Explorer"
+
+msgid "Im Finder zeigen"
+msgstr "Show in Finder"
+
 msgid "In"
 msgstr "In"
+
+msgid "In Tab kopieren"
+msgstr "Copy to tab"
+
+msgid "In den Papierkorb legen"
+msgstr "Move to trash"
+
+msgid "In den Papierkorb legen …"
+msgstr "Move to trash …"
 
 #, python-brace-format
 msgid ""
@@ -696,10 +730,16 @@ msgstr "No selection"
 msgid "Keine Bilder in diesem Ordner (JPG, NEF und andere RAWs, DNG, TIFF)"
 msgstr "No images in this folder (JPG, NEF and other RAWs, DNG, TIFF)"
 
+msgid "Keine Farbe"
+msgstr "No color"
+
 msgid ""
 "Keine Roster-Quelle eingerichtet. Mit „Roster-Datei hinzufügen …“ eine "
 "Datei auswählen."
 msgstr "No roster source set up. Choose a file with “Add roster file …”."
+
+msgid "Keine Sterne"
+msgstr "No stars"
 
 msgid "Keine Updates"
 msgstr "No updates"
@@ -803,6 +843,9 @@ msgstr "New template, from this one, load file, save as, remove, open folder"
 msgid "Nicht alle Bilder übergeben"
 msgstr "Not all images handed over"
 
+msgid "Nicht alle Dateien ließen sich in den Papierkorb legen:"
+msgstr "Not all files could be moved to the trash:"
+
 msgid "Nicht alles kopiert"
 msgstr "Not everything copied"
 
@@ -883,9 +926,17 @@ msgstr "Looking up location …"
 msgid "Ort wählen"
 msgstr "Choose location"
 
+msgid "Papierkorb"
+msgstr "Trash"
+
 #, python-brace-format
 msgid "Personen-Tags: {persons}"
 msgstr "Person tags: {persons}"
+
+msgid "Pfad kopieren"
+msgid_plural "Pfade kopieren"
+msgstr[0] "Copy path"
+msgstr[1] "Copy paths"
 
 msgid "Platzhalter – Klick fügt ihn an der Cursorposition ein"
 msgstr "Placeholders – click to insert at the cursor"
@@ -1434,6 +1485,18 @@ msgstr[0] "{count} image"
 msgstr[1] "{count} images"
 
 #, python-brace-format
+msgid "{count} Bild in den Papierkorb gelegt"
+msgid_plural "{count} Bilder in den Papierkorb gelegt"
+msgstr[0] "{count} image moved to trash"
+msgstr[1] "{count} images moved to trash"
+
+#, python-brace-format
+msgid "{count} Bild in den Papierkorb legen?"
+msgid_plural "{count} Bilder in den Papierkorb legen?"
+msgstr[0] "Move {count} image to the trash?"
+msgstr[1] "Move {count} images to the trash?"
+
+#, python-brace-format
 msgid "{count} Bild nach {folder} kopiert"
 msgid_plural "{count} Bilder nach {folder} kopiert"
 msgstr[0] "{count} image copied to {folder}"
@@ -1480,6 +1543,12 @@ msgid "{count} Ordner mit Bildern gefunden. Alle in Tabs öffnen?"
 msgid_plural "{count} Ordner mit Bildern gefunden. Alle in Tabs öffnen?"
 msgstr[0] "{count} folder with images found. Open it in a tab?"
 msgstr[1] "{count} folders with images found. Open all in tabs?"
+
+#, python-brace-format
+msgid "{count} Pfad kopiert"
+msgid_plural "{count} Pfade kopiert"
+msgstr[0] "{count} path copied"
+msgstr[1] "{count} paths copied"
 
 #, python-brace-format
 msgid "{count} Problem"
@@ -1713,6 +1782,10 @@ msgid ""
 msgstr ""
 "“{code}” is already in line {line} with a different replacement "
 "(conflicting, not used)"
+
+#, python-brace-format
+msgid "„{name}“ in den Papierkorb legen?"
+msgstr "Move “{name}” to the trash?"
 
 #, python-brace-format
 msgid "„{name}“ löschen?"

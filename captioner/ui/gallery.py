@@ -5,7 +5,7 @@ Drag & Drop nach Lightroom (ADR 0001, Punkte 3 und 7).
 """
 import collections
 
-from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QAbstractListModel, QItemSelectionModel, QModelIndex, QRect, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QBrush, QColor, QDrag, QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QAbstractItemView, QListView, QStyle, QStyledItemDelegate
 
@@ -220,6 +220,7 @@ class GalleryView(QListView):
     # Alle Kuerzel haengen als QShortcut am View, siehe keymap.py.
     files_dropped = Signal()  # Bilder aus der Galerie eines anderen Tabs hierher gezogen
     visible_changed = Signal()  # gescrollt, Groesse oder Inhalt geaendert: Kacheln nachladen
+    context_menu_requested = Signal(object)  # globale Position; die Auswahl ist schon angepasst
     background_double_clicked = Signal()  # Doppelklick neben die Kacheln (leere Galerie: Ordner oeffnen)
 
     FALLBACK_ROWS = 100  # solange das Layout noch nicht steht
@@ -270,6 +271,16 @@ class GalleryView(QListView):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.schedule_visible()
+
+    def contextMenuEvent(self, event):
+        """Wie im Finder: Rechtsklick auf ein nicht ausgewaehltes Bild waehlt nur dieses."""
+        index = self.indexAt(event.pos())
+        if not index.isValid():
+            return
+        flag = QItemSelectionModel.SelectionFlag
+        selection = self.selectionModel()
+        selection.setCurrentIndex(index, flag.NoUpdate if selection.isSelected(index) else flag.ClearAndSelect)
+        self.context_menu_requested.emit(event.globalPos())
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and not self.indexAt(event.position().toPoint()).isValid():

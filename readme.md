@@ -255,6 +255,13 @@ der Dialog das; beim Übernehmen wird sie dort entfernt. Geänderte Aktionen ste
 | Roster einstellen · neu laden | `⌘Control-C` · `⇧⌘Control-C` | `Strg+Alt+C` · `⇧Strg+Alt+C` |
 | Rückgängig · Wiederholen | `⌘Z` · `⌘⇧Z` | `Strg+Z` · `Strg+⇧Z` |
 | Tab schließen · nächster · vorheriger | `⌘W` · `⌘⌥→` · `⌘⌥←` | `Strg+W` · `Strg+Alt+→` · `Strg+Alt+←` |
+| In den Papierkorb (mit Rückfrage) · im Finder/Explorer zeigen | `⌘⌫` · `⌘⌥R` | `Entf` · `Strg+Alt+R` |
+
+Rechtsklick auf eine Kachel öffnet ein Kontextmenü für die Auswahl (ein nicht ausgewähltes
+Bild wird dabei allein ausgewählt): Bewertung, Farbklasse, Tag, Großansicht, Beschriftung
+kopieren/einfügen, in einen anderen Tab kopieren, im Finder/Explorer zeigen, Pfade kopieren
+und in den Papierkorb legen. Der Papierkorb nimmt alle Dateien eines Bildes (RAW, JPG,
+Sidecar); zurückholen lassen sie sich im Finder/Explorer, nicht mit `⌘Z`.
 
 Im Beschriftungs-Panel:
 

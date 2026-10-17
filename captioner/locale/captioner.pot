@@ -201,6 +201,9 @@ msgid_plural "Beschriftung in {count} Bilder eingefügt"
 msgstr[0] ""
 msgstr[1] ""
 
+msgid "Beschriftung kopieren"
+msgstr ""
+
 msgid "Beschriftung kopieren (IPTC-Snapshot)"
 msgstr ""
 
@@ -286,6 +289,11 @@ msgstr ""
 
 #, python-brace-format
 msgid "Datum aus dem Template: {fixed} – aufgenommen am {taken}"
+msgstr ""
+
+msgid ""
+"Dazu gehören alle Dateien des Bildes (RAW, JPG, XMP-Sidecar). Aus dem "
+"Papierkorb lassen sie sich wiederherstellen."
 msgstr ""
 
 msgid "Der neue ExifTool-Pfad gilt nach einem Neustart."
@@ -511,6 +519,9 @@ msgid ""
 "den Codes in der Beschreibung."
 msgstr ""
 
+msgid "Getaggt"
+msgstr ""
+
 msgid "Getaggte auswählen"
 msgstr ""
 
@@ -577,7 +588,28 @@ msgstr ""
 msgid "Ignorieren"
 msgstr ""
 
+msgid "Im Dateimanager zeigen"
+msgstr ""
+
+msgid "Im Explorer zeigen"
+msgstr ""
+
+msgid "Im Finder bzw. Explorer zeigen"
+msgstr ""
+
+msgid "Im Finder zeigen"
+msgstr ""
+
 msgid "In"
+msgstr ""
+
+msgid "In Tab kopieren"
+msgstr ""
+
+msgid "In den Papierkorb legen"
+msgstr ""
+
+msgid "In den Papierkorb legen …"
 msgstr ""
 
 #, python-brace-format
@@ -635,9 +667,15 @@ msgstr ""
 msgid "Keine Bilder in diesem Ordner (JPG, NEF und andere RAWs, DNG, TIFF)"
 msgstr ""
 
+msgid "Keine Farbe"
+msgstr ""
+
 msgid ""
 "Keine Roster-Quelle eingerichtet. Mit „Roster-Datei hinzufügen …“ eine "
 "Datei auswählen."
+msgstr ""
+
+msgid "Keine Sterne"
 msgstr ""
 
 msgid "Keine Updates"
@@ -740,6 +778,9 @@ msgstr ""
 msgid "Nicht alle Bilder übergeben"
 msgstr ""
 
+msgid "Nicht alle Dateien ließen sich in den Papierkorb legen:"
+msgstr ""
+
 msgid "Nicht alles kopiert"
 msgstr ""
 
@@ -820,9 +861,17 @@ msgstr ""
 msgid "Ort wählen"
 msgstr ""
 
+msgid "Papierkorb"
+msgstr ""
+
 #, python-brace-format
 msgid "Personen-Tags: {persons}"
 msgstr ""
+
+msgid "Pfad kopieren"
+msgid_plural "Pfade kopieren"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Platzhalter – Klick fügt ihn an der Cursorposition ein"
 msgstr ""
@@ -1363,6 +1412,18 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{count} Bild in den Papierkorb gelegt"
+msgid_plural "{count} Bilder in den Papierkorb gelegt"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} Bild in den Papierkorb legen?"
+msgid_plural "{count} Bilder in den Papierkorb legen?"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{count} Bild nach {folder} kopiert"
 msgid_plural "{count} Bilder nach {folder} kopiert"
 msgstr[0] ""
@@ -1407,6 +1468,12 @@ msgstr[1] ""
 #, python-brace-format
 msgid "{count} Ordner mit Bildern gefunden. Alle in Tabs öffnen?"
 msgid_plural "{count} Ordner mit Bildern gefunden. Alle in Tabs öffnen?"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} Pfad kopiert"
+msgid_plural "{count} Pfade kopiert"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1635,6 +1702,10 @@ msgstr ""
 msgid ""
 "„{code}“ steht schon in Zeile {line} mit anderer Ersetzung "
 "(widersprüchlich, wird nicht verwendet)"
+msgstr ""
+
+#, python-brace-format
+msgid "„{name}“ in den Papierkorb legen?"
 msgstr ""
 
 #, python-brace-format
