@@ -182,10 +182,11 @@ def test_help_menu_opens_the_bundled_manual(window, monkeypatch):
     from captioner.ui import main_window
     assert manual_path().is_file() and manual_path().suffix == '.pdf'   # eingecheckt, von beiden Specs gebuendelt
     opened = []
-    monkeypatch.setattr(main_window.QDesktopServices, 'openUrl', lambda url: opened.append(url.toLocalFile()) or True)
+    # Qt liefert unter Windows '/', Python '\\': als Path vergleichen
+    monkeypatch.setattr(main_window.QDesktopServices, 'openUrl', lambda url: opened.append(Path(url.toLocalFile())) or True)
     help_menu = next(a.menu() for a in window.menuBar().actions() if a.text() == 'Hilfe')
     next(a for a in help_menu.actions() if a.text() == 'Anleitung (PDF)').trigger()
-    assert opened == [str(manual_path())]
+    assert opened == [manual_path()]
 
 
 def test_about_dialog_links_to_the_website(app):
