@@ -233,7 +233,10 @@ class RosterLoader:
             return text, SourceStatus(source, True, N_('datei'), fetched_at=path.stat().st_mtime)
 
         cached = self._cache_file(source)
-        if not force and cached.exists() and time.time() - cached.stat().st_mtime < self.ttl_seconds:
+        # TTL 0 heisst: immer laden. Nicht nur ueber das Alter pruefen, das kann knapp unter 0
+        # liegen (Windows: Dateizeit und time.time() unterschiedlich genau)
+        age = time.time() - cached.stat().st_mtime if cached.exists() else None
+        if not force and self.ttl_seconds and age is not None and age < self.ttl_seconds:
             return (cached.read_text(encoding='utf-8'),
                     SourceStatus(source, True, N_('cache'), fetched_at=cached.stat().st_mtime))
 

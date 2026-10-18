@@ -67,6 +67,8 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 
 ### Behoben
 
+- **Roster-Cache 0 Minuten** nutzte unter Windows manchmal doch die zwischengespeicherte Fassung
+  (Dateizeit minimal vor der Systemuhr). Bei 0 wird jetzt immer neu geladen.
 - **Großansicht: `⌘N`/`⌘B` (speichern und nächstes/voriges Bild) wirkten nur mit Fokus im
   Beschriftungs-Panel.** Jetzt gelten die Panel-Kürzel in der ganzen Großansicht, auch wenn das
   Bild den Fokus hat; der Fokus bleibt dann auf dem Bild.

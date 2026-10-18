@@ -33,6 +33,19 @@ def test_local_file_source(tmp_path):
     assert roster.teams == ['Bietigheim Steelers', 'EC Bad Nauheim']
 
 
+def test_zero_ttl_never_uses_the_cache_even_with_a_future_mtime(tmp_path):
+    import os
+    import time
+    texts = iter([ROSTER_TEXT, ROSTER_TEXT.replace('John Doe', 'Jane Doe')])
+    loader = RosterLoader(tmp_path, ttl_minutes=0, fetch=lambda url: next(texts))
+    loader.load(['https://example.org/r.txt'])
+    for cached in tmp_path.rglob('*'):
+        if cached.is_file():
+            os.utime(cached, (time.time() + 1, time.time() + 1))   # Dateizeit knapp vor der Uhr
+    second = loader.load(['https://example.org/r.txt'])
+    assert second.status[0].origin == 'netz' and 'Jane Doe' in second.entries['bi99'].replacement
+
+
 def test_url_falls_back_to_last_good_version(tmp_path):
     calls = []
 
