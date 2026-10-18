@@ -115,6 +115,9 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Viewer-Kürzel sind `WindowShortcut`. Beim Tippen lösen sie nicht aus, weil Textfelder
   druckbare Tasten ohne Cmd/Strg per `ShortcutOverride` beanspruchen; deshalb dürfen
   Viewer- und Panel-Kürzel sich nicht überschneiden (`keymap.ACTIVE_TOGETHER`).
+- Panel-Kürzel (`save_next` …) sind im Hauptfenster `WidgetWithChildrenShortcut` (die Galerie belegt
+  `⌘N` selbst), im Viewer `WindowShortcut`, damit `⌘N`/`⌘B` auch mit Fokus auf dem Bild wirken:
+  `_editor_shortcut_context`, umgestellt in `_move_editor`. `_advance` lässt den Fokus dann auf dem Bild.
 - Laden in zwei Stufen, eigene Threads (`ThumbnailLoader.view_threads`, nie hinter Kacheln):
   `previews.render_view` dekodiert erst per JPEG-Draft auf `display_edge` (Bildschirmkante in
   Pixeln), dann voll. Das `QImage` trägt `stage` und `full_size` als Text; `ZoomView` rechnet immer

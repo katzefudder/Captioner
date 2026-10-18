@@ -303,12 +303,25 @@ def test_caption_in_viewer_with_copy_paste(window):
     viewer.zoom.setFocus()
     press(viewer.zoom, Qt.Key.Key_4, CMD)
     assert second.meta.rating == 4
+    # auch die des Panels: Cmd+N speichert und zeigt das naechste Bild, ohne Fokus im Panel
+    third = window.filtered[2]
+    press(viewer.zoom, Qt.Key.Key_N if keymap.MAC else Qt.Key.Key_M, CMD)
+    assert viewer.key == third.key and viewer.zoom.hasFocus()
+    prev = QKeySequence(keymap.keys('save_prev')[1])[0]
+    press(viewer.zoom, prev.key(), prev.keyboardModifiers())   # Cmd+B bzw. Alt+B: zurueck
+    assert viewer.key == second.key
     assert window.settings.viewer_caption_panel
 
     # Schliessen: Panel zurueck ins Hauptfenster
     press(viewer.zoom, Qt.Key.Key_Escape)
     assert not viewer.isVisible() and not window._editor_in_viewer()
     assert window.main_splitter.indexOf(window.editor) == 1
+    # im Hauptfenster wieder nur mit Fokus im Panel (die Galerie hat eigene Cmd+N)
+    window.activateWindow()
+    window.view.setFocus()
+    QtWidgets.QApplication.processEvents()
+    press(window.view, Qt.Key.Key_N if keymap.MAC else Qt.Key.Key_M, CMD)
+    assert window._selected_items() == [third]
 
     # Naechstes Oeffnen: Panel wieder dabei (Einstellung gemerkt)
     window.open_viewer()

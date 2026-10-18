@@ -514,9 +514,25 @@ class MainWindow(QMainWindow):
         for command, handler in handlers.items():
             for sequence in keymap.keys(command):
                 shortcut = QShortcut(QKeySequence(sequence), widget)
-                shortcut.setContext(context)
+                shortcut.setContext(self._editor_shortcut_context() if widget is self.editor else context)
                 shortcut.activated.connect(handler)
                 self._shortcuts.append(shortcut)
+
+    def _editor_shortcut_context(self):
+        """
+        Panel-Kuerzel (Cmd+N speichern und weiter, ...): im Hauptfenster nur mit Fokus im Panel,
+        dort belegt die Galerie dieselben Tasten. In der Grossansicht im ganzen Fenster, auch
+        wenn das Bild den Fokus hat; deren eigene Kuerzel ueberschneiden sich nicht (Test).
+        """
+        if self._editor_in_viewer():
+            return Qt.ShortcutContext.WindowShortcut
+        return Qt.ShortcutContext.WidgetWithChildrenShortcut
+
+    def _update_editor_shortcuts(self):
+        context = self._editor_shortcut_context()
+        for shortcut in self._shortcuts:
+            if shortcut.parent() is self.editor:
+                shortcut.setContext(context)
 
     def _apply_menu_shortcuts(self):
         for command, item in self._menu_actions.items():
@@ -1226,8 +1242,11 @@ class MainWindow(QMainWindow):
             return
         target = max(positions) + 1 if step > 0 else min(positions) - 1
         if 0 <= target < len(self.filtered):
+            # in der Grossansicht mit Fokus auf dem Bild bleibt er dort (Cmd+N ohne Panel-Fokus)
+            on_image = self.viewer is not None and self.viewer.isVisible() and self.viewer.zoom.hasFocus()
             self.select_only(self.filtered[target])
-            self.editor.focus_caption()
+            if not on_image:
+                self.editor.focus_caption()
 
     def apply_template(self):
         with self._undoable(N_('Template anwenden')):
@@ -1604,7 +1623,7 @@ class MainWindow(QMainWindow):
     # samt Inhalt, Kuerzeln (haengen am Panel) und Template-Auswahl.
 
     def _editor_in_viewer(self):
-        return self.viewer is not None and self.viewer.caption_slot.widget() is self.editor
+        return getattr(self, 'viewer', None) is not None and self.viewer.caption_slot.widget() is self.editor
 
     def _move_editor(self, into_viewer):
         if into_viewer == self._editor_in_viewer():
@@ -1620,6 +1639,7 @@ class MainWindow(QMainWindow):
             if had_focus:
                 self.view.setFocus()
         self.editor.show()
+        self._update_editor_shortcuts()
 
     def _on_viewer_caption_toggled(self, visible):
         self._move_editor(into_viewer=visible)

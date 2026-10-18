@@ -67,6 +67,9 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 
 ### Behoben
 
+- **Großansicht: `⌘N`/`⌘B` (speichern und nächstes/voriges Bild) wirkten nur mit Fokus im
+  Beschriftungs-Panel.** Jetzt gelten die Panel-Kürzel in der ganzen Großansicht, auch wenn das
+  Bild den Fokus hat; der Fokus bleibt dann auf dem Bild.
 - Bei wenig Höhe rutschte im Beschriftungs-Panel die Vorschau ins Beschreibungsfeld. Das Panel
   scrollt jetzt; Speichern, Kopieren und Einfügen stehen fest darunter.
 - Zeilenumbrüche in Ort-/Rechte-Feldern (aus einer Template-Datei oder einem Bild) zerlegten den
