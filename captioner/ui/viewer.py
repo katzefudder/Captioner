@@ -181,7 +181,9 @@ class ZoomView(QWidget):
     def _clamp(self):
         """Kein leerer Rand, solange das Bild groesser als das Fenster ist."""
         iw, ih = self.image_size()
-        if not iw or not ih:
+        if not iw or not ih or not self.is_zoomed():
+            # Eingepasst (auch Kachel beim Bildwechsel) zaehlt center nicht: nicht anfassen,
+            # sonst ginge der Ausschnitt fuers naechste Vollbild verloren.
             return
         s = self._scale()
         cx, cy = self.center.x(), self.center.y()

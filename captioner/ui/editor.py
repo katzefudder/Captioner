@@ -264,6 +264,10 @@ class CaptionEditor(QWidget):
         template_row = QHBoxLayout()
         self.template_box = QComboBox()
         self.template_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        # Nicht so breit wie der laengste Name: sonst ragt das Panel (Grossansicht, schmales Fenster)
+        # rechts aus der Scrollflaeche und nimmt Roster-Knopf und Feldraender mit
+        self.template_box.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.template_box.setMinimumContentsLength(12)
         self.template_box.currentIndexChanged.connect(self._template_selected)
         self.edit_template_button = QPushButton(_('Bearbeiten …'))
         self.edit_template_button.setToolTip(_('Gewähltes Template anzeigen und ändern'))

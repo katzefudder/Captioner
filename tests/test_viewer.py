@@ -98,6 +98,20 @@ def test_tile_is_never_zoomed(view):
     assert view.zoom == 1.0          # ... aber die Zoomstufe bleibt fuers Vollbild erhalten
 
 
+def test_next_photo_keeps_the_zoomed_section(view):
+    view.zoom_to(1.0)
+    view.pan(100000, 100000)          # linke obere Ecke
+    before = QPointF(view.center)
+    view.set_image(QImage(320, 240, QImage.Format.Format_RGB32), provisional=True)  # Kachel
+    image = QImage(4000, 3000, QImage.Format.Format_RGB32)
+    image.fill(QColor('gray'))
+    view.set_image(image)
+    assert view.is_zoomed()
+    assert view.center.x() == pytest.approx(before.x()) and view.center.y() == pytest.approx(before.y())
+    rect = view._image_rect()
+    assert rect.left() == pytest.approx(0, abs=0.5) and rect.top() == pytest.approx(0, abs=0.5)
+
+
 @pytest.fixture
 def window(app, tmp_path):
     from captioner import config
@@ -272,3 +286,18 @@ def test_view_cache_prefetch_and_stages(app):
     loader._on_view('c', image('display', 20))          # ueber dem Budget: aeltere gehen, das aktuelle bleibt
     assert 'b' in loader.view_images and 'a' not in loader.view_images
     loader.shutdown()
+
+
+@requires_exiftool
+def test_caption_panel_fits_narrow_viewer(window):
+    """Langer Template-Name verbreitert das Panel nicht: Roster-Knopf bleibt im Bild."""
+    window.editor.template_box.addItem('Sehr langer Template-Name ' * 6)
+    window.open_viewer()
+    viewer = window.viewer
+    viewer.set_caption_visible(True)
+    viewer.resize(600, 800)          # schmaler als das Mindestmass
+    QtWidgets.QApplication.processEvents()
+    content = window.editor.scroll.widget()
+    assert content.width() <= window.editor.scroll.viewport().width()
+    roster = next(b for b in content.findChildren(QtWidgets.QPushButton) if b.text() == 'Roster')
+    assert roster.mapTo(content, roster.rect().topRight()).x() <= content.width()
