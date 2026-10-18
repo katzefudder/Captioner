@@ -298,6 +298,9 @@ def test_caption_panel_fits_narrow_viewer(window):
     viewer.resize(600, 800)          # schmaler als das Mindestmass
     QtWidgets.QApplication.processEvents()
     content = window.editor.scroll.widget()
-    assert content.width() <= window.editor.scroll.viewport().width()
+    wide = [f'{type(w).__name__} {w.minimumSizeHint().width()} {getattr(w, "text", lambda: "")()[:60]!r}'
+            for w in content.findChildren(QtWidgets.QWidget)
+            if w.isVisible() and w.minimumSizeHint().width() > 150]
+    assert content.width() <= window.editor.scroll.viewport().width(), wide
     roster = next(b for b in content.findChildren(QtWidgets.QPushButton) if b.text() == 'Roster')
     assert roster.mapTo(content, roster.rect().topRight()).x() <= content.width()

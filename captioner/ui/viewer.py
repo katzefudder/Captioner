@@ -15,11 +15,12 @@ from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 import html
 
-from PySide6.QtWidgets import (QDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QSlider,
-                               QSplitter, QTextBrowser, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QDialog, QHBoxLayout, QLabel, QPushButton, QSlider, QSplitter,
+                               QTextBrowser, QVBoxLayout, QWidget)
 
 from .. import details as details_module
 from ..i18n import _
+from .editor import VerticalScrollArea
 from .gallery import item_color
 from .workers import full_size
 
@@ -356,11 +357,7 @@ class Viewer(QDialog):
         self.info_panel = InfoPanel()
         # Platz fuer das Beschriftungs-Panel des Hauptfensters (wird hierher umgehaengt).
         # Scrollbar statt Quetschen: das Panel ist oft hoeher als die Grossansicht
-        self.caption_slot = QScrollArea()
-        self.caption_slot.setWidgetResizable(True)
-        self.caption_slot.setFrameShape(QFrame.Shape.NoFrame)
-        self.caption_slot.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.caption_slot.setMinimumWidth(420)
+        self.caption_slot = VerticalScrollArea(min_width=420)
         self.caption_slot.setStyleSheet('background: palette(window); color: palette(window-text);')
         self.caption_slot.hide()
         self.splitter = QSplitter()

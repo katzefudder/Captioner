@@ -107,6 +107,9 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 
 ## Großansicht mit Beschriftung
 
+- Scrollflächen des Panels (`CaptionEditor.scroll`, `Viewer.caption_slot`) sind `editor.VerticalScrollArea`:
+  nur senkrecht, Mindestbreite = die des Inhalts. Nie `setMinimumWidth` aufs Panel (überschreibt das),
+  sonst ragt der Inhalt bei schmalem Fenster rechts heraus (unter Windows breiter als auf dem Mac).
 - Das Panel scrollt (`CaptionEditor.scroll`), Bytezähler, Kopieren/Einfügen und Speichern stehen
   fest darunter (Fußzeile): sonst überlappten die Felder bei wenig Höhe bzw. Speichern war weg.
 - Das `CaptionEditor` gibt es nur einmal. Es wird in `Viewer.caption_slot` umgehängt und beim

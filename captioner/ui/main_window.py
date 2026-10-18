@@ -389,7 +389,6 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(self.tabs.stack, 1)
 
         self.editor = CaptionEditor()
-        self.editor.setMinimumWidth(380)
         self.editor.save_requested.connect(self.save_caption)
         self.editor.apply_template_requested.connect(self.apply_template)
         self.editor.template_changed.connect(self._on_template_changed)

@@ -10,7 +10,7 @@ import re
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QStringListModel, Qt, Signal
+from PySide6.QtCore import QEvent, QSize, QStringListModel, Qt, Signal
 from PySide6.QtGui import QAction, QKeySequence, QShortcut, QTextCursor
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QFormLayout, QFrame, QHBoxLayout, QLabel,
                                QLineEdit, QMenu, QPlainTextEdit, QPushButton, QScrollArea, QSizePolicy,
@@ -120,6 +120,41 @@ class TagTextEdit(WrappingLineEdit):
         rect = self.cursorRect()
         rect.setWidth(min(360, self.width()))
         self.completer.complete(rect)
+
+
+class VerticalScrollArea(QScrollArea):
+    """
+    Scrollt nur senkrecht und ist mindestens so breit, wie der Inhalt braucht (plus Scrollbar).
+    QScrollArea meldet sonst eine winzige Mindestbreite: bei schmalem Fenster ragte der Inhalt
+    rechts heraus (Roster-Knopf, Feldraender weg), je nach Stil/Schrift unterschiedlich weit.
+    """
+
+    def __init__(self, min_width=0, parent=None):
+        super().__init__(parent)
+        self.min_width = min_width
+        self.setWidgetResizable(True)
+        self.setFrameShape(QFrame.Shape.NoFrame)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+    def setWidget(self, widget):
+        super().setWidget(widget)
+        widget.installEventFilter(self)
+        self.updateGeometry()
+
+    def eventFilter(self, watched, event):
+        # Inhalt braucht mehr/weniger Platz (Template-Liste, Hinweise): Mindestbreite neu melden
+        if watched is self.widget() and event.type() == QEvent.Type.LayoutRequest:
+            self.updateGeometry()
+        return super().eventFilter(watched, event)
+
+    def minimumSizeHint(self):
+        hint = super().minimumSizeHint()
+        width = self.min_width
+        widget = self.widget()
+        if widget is not None:
+            needed = max(widget.minimumSizeHint().width(), widget.minimumWidth())
+            width = max(width, needed + self.verticalScrollBar().sizeHint().width() + 2 * self.frameWidth())
+        return QSize(max(hint.width(), width), hint.height())
 
 
 class CodeTextEdit(WrappingLineEdit):
@@ -247,10 +282,7 @@ class CaptionEditor(QWidget):
         # Bytezaehler und Knoepfe stehen fest darunter (footer), immer erreichbar
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
-        self.scroll = QScrollArea()
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll = VerticalScrollArea(min_width=380)
         content = QWidget()
         self.scroll.setWidget(content)
         outer.addWidget(self.scroll, 1)
