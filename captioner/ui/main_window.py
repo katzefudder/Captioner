@@ -123,7 +123,7 @@ def _tab_attribute(name):
 
 
 # Fenstertitel; Markenzeile, in jeder Sprache gleich (nicht uebersetzt)
-WINDOW_TITLE = 'Captioner - The Photo Captioning Tool for Professionals'
+WINDOW_TITLE = 'Captioner {version} - The Photo Captioning Tool for Professionals'
 
 
 class MainWindow(QMainWindow):
@@ -141,7 +141,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = settings
         keymap.apply(settings.shortcuts)   # eigene Kuerzel, bevor Menues und Panel sie anzeigen
-        self.setWindowTitle(WINDOW_TITLE)
+        self.setWindowTitle(WINDOW_TITLE.format(version=version()))
         self.resize(1500, 950)
 
         self.pool = ExifToolPool(find_exiftool(settings.exiftool_path))
@@ -226,6 +226,7 @@ class MainWindow(QMainWindow):
         action(template_menu, _('Neues Template …'), lambda: self.edit_template(None))
         action(template_menu, _('Neues Template aus dem gewählten …'),
                lambda: self.editor.template and self.copy_template(self.editor.template))
+        action(template_menu, _('Template aus Foto erzeugen …'), self.template_from_photo)
         action(template_menu, _('Template bearbeiten …'),
                lambda: self.editor.template and self.edit_template(self.editor.template))
         template_menu.addSeparator()
@@ -394,6 +395,7 @@ class MainWindow(QMainWindow):
         self.editor.template_changed.connect(self._on_template_changed)
         self.editor.edit_template_requested.connect(self.edit_template)
         self.editor.copy_template_requested.connect(self.copy_template)
+        self.editor.template_from_photo_requested.connect(self.template_from_photo)
         self.editor.open_template_folder_requested.connect(self.open_template_folder)
         self.editor.open_template_requested.connect(self.open_template_file)
         self.editor.save_template_as_requested.connect(self.save_template_as)
@@ -1774,6 +1776,31 @@ class MainWindow(QMainWindow):
         if not self.edit_template(copy):
             self.template_store.delete(copy)
             self.refresh_templates(template.path)
+
+    def template_from_photo(self):
+        """
+        Neues Template aus der Beschriftung des Bildes unter dem Cursor (Titel, Ort, Rechte,
+        Zusatz-Tags, Anhang), zum Pruefen gleich im Dialog. Gespeichert wird erst mit OK.
+        """
+        items = self._focused_first(self._selected_items())
+        title = _('Template aus Foto')
+        if not items:
+            QMessageBox.information(self, title, _('Bitte zuerst ein beschriftetes Foto auswählen.'))
+            return
+        item = items[0]
+        if not item.meta_loaded:
+            QMessageBox.information(self, title, _('Die Metadaten von {name} werden noch eingelesen.').format(name=item.name))
+            return
+        meta = item.meta
+        if not (meta.headline.strip() or meta.caption.strip()):
+            QMessageBox.information(self, title, _('{name} hat weder Titel noch Beschreibung.').format(name=item.name))
+            return
+        persons = codes.persons_in(meta.caption, self.roster) + codes.person_names_in(meta.caption)
+        template = template_files.from_metadata(
+            meta, item.taken_at, name=meta.headline or _('Aus {name}').format(name=item.name), persons=persons)
+        if self.edit_template(template):
+            self.statusBar().showMessage(_('Template „{name}“ aus {photo} erzeugt').format(
+                name=template.display_name(), photo=item.name), 5000)
 
     def open_template_folder(self):
         """Konfigurationsordner der Templates im Finder/Explorer (dort liegen alle ausser geladenen Dateien)."""

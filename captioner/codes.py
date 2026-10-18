@@ -63,6 +63,11 @@ def person_name(replacement):
     return match.group('name').strip() if match else None
 
 
+def person_names_in(text):
+    """Namen aus Personen im Text wie "-23- Max Muster (EC Bad Nauheim)", auch ohne Roster."""
+    return [match.group(1).strip() for match in re.finditer(r'-\d{1,3}-\s*([^(),]+?)\s*\([^)]*\)', text or '')]
+
+
 def open_code_prefix(text_before_cursor, delimiter='#'):
     """
     Der angefangene Code direkt vor dem Cursor, fuer die Autovervollstaendigung:

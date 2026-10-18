@@ -63,3 +63,17 @@ def test_manual_check_shows_result(tmp_path, monkeypatch, tag, expected):
         assert window.settings.last_update_check > 0
     finally:
         window.close()
+
+
+def test_release_version_goes_into_pyproject_project_section_only():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location('set_version', Path(__file__).parent.parent / 'scripts' / 'set_version.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    text = '[project]\nname = "captioner"\nversion = "0.2"\n\n[tool.other]\nversion = "9"\n'
+    assert module.set_version(text, '0.2.41') == text.replace('version = "0.2"', 'version = "0.2.41"')
+    real = (Path(__file__).parent.parent / 'pyproject.toml').read_text(encoding='utf-8')
+    assert 'version = "0.2.41"' in module.set_version(real, '0.2.41')
+    with pytest.raises(ValueError):
+        module.set_version('[tool.poetry]\nversion = "1"\n', '0.2.41')

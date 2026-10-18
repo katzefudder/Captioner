@@ -29,8 +29,10 @@ LIMITS = {
     'sublocation': 32,
     'state': 32,
     'country': 64,
+    'country_code': 3,
     'creator': 32,
     'authors_position': 32,
+    'credit': 32,
     'caption_writer': 32,
     'copyright': 128,
     'source': 32,
@@ -42,8 +44,11 @@ LIMITS = {
 RIGHTS_TAGS = {
     'state': ('XMP-photoshop:State', 'IPTC:Province-State', None),
     'country': ('XMP-photoshop:Country', 'IPTC:Country-PrimaryLocationName', None),
+    'country_code': ('XMP-iptcCore:CountryCode', 'IPTC:Country-PrimaryLocationCode', None),
     'creator': ('XMP-dc:Creator', 'IPTC:By-line', 'EXIF:Artist'),
+    'contact_email': ('XMP-iptcCore:CreatorWorkEmail', None, None),
     'authors_position': ('XMP-photoshop:AuthorsPosition', 'IPTC:By-lineTitle', None),
+    'credit': ('XMP-photoshop:Credit', 'IPTC:Credit', None),
     'caption_writer': ('XMP-photoshop:CaptionWriter', 'IPTC:Writer-Editor', None),
     'copyright': ('XMP-dc:Rights', 'IPTC:CopyrightNotice', 'EXIF:Copyright'),
     'web_statement': ('XMP-xmpRights:WebStatement', None, None),
@@ -57,8 +62,11 @@ IPTC_CATEGORY_LIMIT = 3
 RIGHTS_READ = {
     'state': ('State', 'Province-State'),
     'country': ('Country', 'Country-PrimaryLocationName'),
+    'country_code': ('CountryCode', 'Country-PrimaryLocationCode'),
     'creator': ('Creator', 'By-line', 'Artist'),
+    'contact_email': ('CreatorWorkEmail',),
     'authors_position': ('AuthorsPosition', 'By-lineTitle'),
+    'credit': ('Credit',),
     'caption_writer': ('CaptionWriter', 'Writer-Editor'),
     'copyright': ('Rights', 'CopyrightNotice', 'Copyright'),
     'web_statement': ('WebStatement',),
@@ -66,8 +74,9 @@ RIGHTS_READ = {
     'category': ('Category',),
     'instructions': ('Instructions', 'SpecialInstructions'),
 }
-LABELS = {'state': N_('Bundesland'), 'country': N_('Land'), 'creator': N_('Fotograf'),
-          'authors_position': N_('Position'), 'caption_writer': N_('Beschriftet von'),
+LABELS = {'state': N_('Bundesland'), 'country': N_('Land'), 'country_code': N_('Ländercode'),
+          'creator': N_('Fotograf'), 'contact_email': N_('E-Mail'),
+          'authors_position': N_('Position'), 'credit': N_('Credit'), 'caption_writer': N_('Beschriftet von'),
           'copyright': N_('Copyright'), 'web_statement': N_('Copyright-URL'), 'source': N_('Quelle'),
           'category': N_('Kategorie'), 'instructions': N_('Hinweise')}
 OBJECT_NAME_LIMIT = 64

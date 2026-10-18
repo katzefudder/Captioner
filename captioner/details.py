@@ -23,6 +23,7 @@ CAMERA_TAGS = [
 ]
 IPTC_TAGS = [
     'Province-State', 'State', 'Country-PrimaryLocationName', 'Country',
+    'Country-PrimaryLocationCode', 'CountryCode', 'CreatorWorkEmail',
     'By-line', 'Creator', 'Artist', 'Credit', 'CopyrightNotice', 'Rights', 'Copyright',
     'Source', 'Writer-Editor', 'CaptionWriter', 'Instructions', 'SpecialInstructions',
 ]
@@ -101,6 +102,21 @@ def camera_name(make, model):
     return f'{make} {model}'
 
 
+def summary(raw):
+    """
+    Eine Zeile unter dem Bild: Kamera, Objektiv, Brennweite, Belichtung, Dateien, z. B.
+    "NIKON Z 9 · NIKKOR Z 70-200mm f/2.8 VR S · 200 mm · 1/500 s · f/2.8 · ISO 64 · DSC_0001.NEF, DSC_0001.JPG".
+    Fehlende Werte fallen weg.
+    """
+    raw = raw or {}
+    focal = re.sub(r'\.0\b', '', _first(raw, 'FocalLength'))
+    aperture, shutter, iso = _first(raw, 'Aperture'), _first(raw, 'ShutterSpeed'), _first(raw, 'ISO')
+    parts = [camera_name(_first(raw, 'Make'), _first(raw, 'Model')), _first(raw, 'LensID', 'LensModel'), focal,
+             f'{shutter} s' if shutter else '', f'f/{aperture}' if aperture else '', f'ISO {iso}' if iso else '',
+             ', '.join(name for name, _size in raw.get('_files', []) if not name.lower().endswith('.xmp'))]
+    return ' · '.join(part for part in parts if part)
+
+
 def sections(raw, meta: Metadata, labels=()):
     """[(Titel, [(Feld, Wert), ...]), ...] - nur Felder mit Inhalt."""
     raw = raw or {}
@@ -147,9 +163,11 @@ def sections(raw, meta: Metadata, labels=()):
         # Ort und Rechte aus den Metadaten des Bildes: nach dem Speichern sofort aktuell
         (_('Bundesland'), meta.state or _first(raw, 'Province-State', 'State')),
         (_('Land'), meta.country or _first(raw, 'Country-PrimaryLocationName', 'Country')),
+        (_('Ländercode'), meta.country_code or _first(raw, 'Country-PrimaryLocationCode', 'CountryCode')),
         (_('Fotograf'), meta.creator or _first(raw, 'By-line', 'Creator', 'Artist')),
+        (_('E-Mail'), meta.contact_email or _first(raw, 'CreatorWorkEmail')),
         (_('Position'), meta.authors_position),
-        (_('Credit'), _first(raw, 'Credit')),
+        (_('Credit'), meta.credit or _first(raw, 'Credit')),
         (_('Copyright'), meta.copyright or _first(raw, 'CopyrightNotice', 'Rights', 'Copyright')),
         (_('Copyright-URL'), meta.web_statement),
         (_('Quelle'), meta.source or _first(raw, 'Source')),

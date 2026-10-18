@@ -182,8 +182,8 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Kein Heim/Gast im Template: `headline` ist ein optionaler fester Titel, `teams` kommt per
   `parse_headline` daraus. Ohne Titel kommt er aus dem Panel und `apply_template` lässt den
   Titel des Bildes stehen.
-- Ort/Rechte (`templates.FIXED_FIELDS`: state, country, creator, authors_position,
-  caption_writer, copyright, web_statement, source, category, instructions) schreibt das Template beim Speichern,
+- Ort/Rechte (`templates.FIXED_FIELDS`: state, country, country_code, creator, contact_email,
+  authors_position, credit, caption_writer, copyright, web_statement, source, category, instructions) schreibt das Template beim Speichern,
   Einfügen und Anwenden in jedes Bild, aber nur gefüllte (`fixed_values()`). Zuordnung zu
   XMP/IPTC/EXIF in `metadata.RIGHTS_TAGS`; beim Schreiben einzeilig (`_rights_value`;
   Hinweise sind im Dialog mehrzeilig (`MultiLineField`), ihre Zeilen werden mit „ · “ verbunden, geprüft wird diese Länge). Gelesen werden sie aus **allen** Dateien eines
@@ -197,6 +197,10 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
   `date_hint` im Panel). Ort/Rechte setzen Aufrufer über `template.field_values(item.meta)` ein (Template,
   sonst Wert des Bildes), überall gleich: Speichern, Template anwenden, Vorschau, `_strip_suffix`.
   Farben/Legende im Dialog: `dialogs.SUFFIX_PLACEHOLDERS` (Feld-Widgets heißen wie die Platzhalter).
+- „Template aus Foto erzeugen“ (`MainWindow.template_from_photo` → `templates.from_metadata`): Felder
+  wie im Bild, Zusatz-Tags ohne Personen (`codes.persons_in` + `codes.person_names_in`), Teams und
+  Stadt; Anhang per `templates.derive_suffix` (von hinten Komma-Segmente, die genau einem Wert
+  entsprechen; leeres Segment nach `{city}` = `{sublocation}`). Dialog mit `path=''`: erst OK speichert.
 - „Neues Template aus diesem“ (`MainWindow.copy_template`): Kopie speichern, wählen, `edit_template`
   öffnen; Abbrechen löscht die Kopie wieder. Neue Templates überschreiben nie ein gleichnamiges
   (`TemplateStore._free_path` → `name-2.toml`).
@@ -296,7 +300,8 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - Release-Workflow `.github/workflows/release.yml`: Jobs `version`, `macos` (`macos-26`),
   `windows` (`windows-latest`), `release` (nur Push/Dispatch auf `main`; PRs bauen und
   testen nur). Version `<major>.<minor>` aus `pyproject.toml` + `github.run_number`, über
-  `CAPTIONER_VERSION` an beide Specs. Lädt DMG, PKG und `setup.exe` als Release `v<version>` hoch.
+  `CAPTIONER_VERSION` an beide Specs; `scripts/set_version.py` trägt sie in den Build-Jobs vor
+  `poetry install` auch in deren `pyproject.toml` ein (nur Arbeitskopie, nie zurück ins Repo). Lädt DMG, PKG und `setup.exe` als Release `v<version>` hoch.
   Release-Notizen: Abschnitt `## <major>.<minor>` aus `CHANGELOG.md` (awk im Job `release`),
   dahinter Installationshinweise und `--generate-notes`. Neue Minor-Version: `pyproject.toml`
   hochsetzen und den Abschnitt in `CHANGELOG.md` anlegen.
@@ -352,7 +357,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 242 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 249 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

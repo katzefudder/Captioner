@@ -223,6 +223,7 @@ class CaptionEditor(QWidget):
     template_changed = Signal(object)
     edit_template_requested = Signal(object)   # None = neues Template
     copy_template_requested = Signal(object)   # neues Template mit den Werten dieses
+    template_from_photo_requested = Signal()   # neues Template aus der Beschriftung des Bildes
     open_template_folder_requested = Signal()  # Konfigurationsordner der Templates im Dateimanager
     open_template_requested = Signal()
     save_template_as_requested = Signal()
@@ -271,6 +272,7 @@ class CaptionEditor(QWidget):
         self.template_menu.addAction(_('Neues Template …'), lambda: self.edit_template_requested.emit(None))
         self.copy_action = self.template_menu.addAction(
             _('Neues Template aus diesem …'), lambda: self.template and self.copy_template_requested.emit(self.template))
+        self.template_menu.addAction(_('Template aus Foto erzeugen …'), self.template_from_photo_requested.emit)
         self.template_menu.addAction(_('Template-Datei laden …'), self.open_template_requested.emit)
         self.template_menu.addSeparator()
         self.save_as_action = self.template_menu.addAction(_('Speichern unter …'), self.save_template_as_requested.emit)
@@ -279,7 +281,8 @@ class CaptionEditor(QWidget):
         self.template_menu.addSeparator()
         self.template_menu.addAction(template_folder_label(), self.open_template_folder_requested.emit)
         more_button = QToolButton(text='⋯')
-        more_button.setToolTip(_('Neues Template, aus diesem, Datei laden, speichern unter, entfernen, Ordner öffnen'))
+        more_button.setToolTip(_('Neues Template, aus diesem, aus Foto, Datei laden, speichern unter, entfernen, '
+                                 'Ordner öffnen'))
         more_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         more_button.setMenu(self.template_menu)
         more_button.setStyleSheet('QToolButton::menu-indicator { image: none; width: 0; }')

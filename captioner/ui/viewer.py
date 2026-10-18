@@ -449,6 +449,15 @@ class Viewer(QDialog):
             return
         self._raw_details = raw
         self._render_details()
+        self._render_info()
+
+    def _render_info(self):
+        """Unten: Datei, Sterne, Farbe (ggf. Beschreibung), ganz unten Kamera, Objektiv, Belichtung."""
+        line = getattr(self, '_info_line', '')
+        exposure = details_module.summary(self._raw_details) if self._raw_details else ''
+        if exposure:
+            line += f'<br><span style="color: #9a9a9a">{html.escape(exposure)}</span>'
+        self.info.setText(line)
 
     def _render_details(self):
         if self._item is None:
@@ -479,17 +488,17 @@ class Viewer(QDialog):
         tag = '☑' if item.meta.tagged else '☐'
         color = ' · ' + _('Farbklasse {number}').format(number=item.meta.color_class) if item.meta.color_class else ''
         label = f' ({item.meta.label})' if item.meta.label else ''
-        line = f'<b>{item.name}</b> ({item.kind}) {tag} {stars}{color}{label}'
+        self._info_line = f'<b>{item.name}</b> ({item.kind}) {tag} {stars}{color}{label}'
         # Die Beschreibung steht im Info-Panel; unten nur, wenn das Panel aus ist
         if not self.info_button.isChecked() and item.meta.caption:
-            line += f'<br>{html.escape(item.meta.caption)}'
-        self.info.setText(line)
+            self._info_line += f'<br>{html.escape(item.meta.caption)}'
         self._item = item
         self.zoom.set_frame_color(item_color(item.meta))
         if changed:
             self._image = image
             self._raw_details = None
             self.zoom.set_image(image, provisional=provisional)
+        self._render_info()
         # Auch ohne Wechsel neu zeichnen: Sterne, Farbklasse, Beschriftung koennen sich geaendert haben
         self._render_details()
 

@@ -120,6 +120,10 @@ msgstr ""
 msgid "Aus der Liste entfernen"
 msgstr ""
 
+#, python-brace-format
+msgid "Aus {name}"
+msgstr ""
+
 msgid "Auslösungen"
 msgstr ""
 
@@ -223,10 +227,16 @@ msgstr ""
 msgid "Bewertung"
 msgstr ""
 
+msgid "Bildnachweis, z. B. Name/Agentur"
+msgstr ""
+
 msgid "Bitte einen Namen eingeben."
 msgstr ""
 
 msgid "Bitte zuerst ein Spiel-Template auswählen oder anlegen."
+msgstr ""
+
+msgid "Bitte zuerst ein beschriftetes Foto auswählen."
 msgstr ""
 
 msgid "Blende"
@@ -270,6 +280,9 @@ msgid "Copyright-URL"
 msgstr ""
 
 msgid "Credit"
+msgstr ""
+
+msgid "DEU (drei Buchstaben, ISO 3166)"
 msgstr ""
 
 msgid "Datei"
@@ -326,6 +339,10 @@ msgid ""
 "„Rot“ (deutsches Lightroom). Klassen ohne Eintrag bekommen kein Label."
 msgstr ""
 
+#, python-brace-format
+msgid "Die Metadaten von {name} werden noch eingelesen."
+msgstr ""
+
 msgid "Die vorhandene Datei wird überschrieben. Fortfahren?"
 msgstr ""
 
@@ -341,6 +358,12 @@ msgid ""
 msgstr ""
 
 msgid "Diese Übersicht"
+msgstr ""
+
+msgid "E-Mail"
+msgstr ""
+
+msgid "E-Mail des Fotografen"
 msgstr ""
 
 msgid "EXIF wird gelesen …"
@@ -590,6 +613,11 @@ msgid "Hinzufügen …"
 msgstr ""
 
 msgid ""
+"IPTC „Credit Line“: wie der Bildnachweis abgedruckt werden soll. "
+"Höchstens 32 Bytes."
+msgstr ""
+
+msgid ""
 "IPTC „Special Instructions“ (Lightroom: Anweisungen), z. B. Kontaktdaten "
 "oder Kontoverbindung. Höchstens 256 Bytes. Zeilen stehen im Bild durch „ "
 "· “ getrennt."
@@ -741,6 +769,9 @@ msgstr ""
 msgid "Lightroom-Label für Farbklasse 1, 2, 3, …"
 msgstr ""
 
+msgid "Ländercode"
+msgstr ""
+
 msgid "Menü"
 msgstr ""
 
@@ -781,8 +812,8 @@ msgid "Neues Template …"
 msgstr ""
 
 msgid ""
-"Neues Template, aus diesem, Datei laden, speichern unter, entfernen, "
-"Ordner öffnen"
+"Neues Template, aus diesem, aus Foto, Datei laden, speichern unter, "
+"entfernen, Ordner öffnen"
 msgstr ""
 
 msgid "Nicht alle Bilder übergeben"
@@ -1093,6 +1124,12 @@ msgstr ""
 msgid "Template auf Auswahl anwenden"
 msgstr ""
 
+msgid "Template aus Foto"
+msgstr ""
+
+msgid "Template aus Foto erzeugen …"
+msgstr ""
+
 msgid "Template bearbeiten …"
 msgstr ""
 
@@ -1116,6 +1153,10 @@ msgid "Template speichern unter …"
 msgstr ""
 
 msgid "Template unvollständig"
+msgstr ""
+
+#, python-brace-format
+msgid "Template „{name}“ aus {photo} erzeugt"
 msgstr ""
 
 #, python-brace-format
@@ -1595,6 +1636,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{name} (Kopie)"
+msgstr ""
+
+#, python-brace-format
+msgid "{name} hat weder Titel noch Beschreibung."
 msgstr ""
 
 #, python-brace-format

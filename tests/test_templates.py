@@ -227,3 +227,40 @@ def test_fixed_date_replaces_capture_date(tmp_path):
     t.date = ''
     assert t.compose_caption('Jubel', '2026:10:13 19:30:00') == 'Jubel, DEL 2 - A gegen B, 13.10.26'
     assert t.date_mismatch('2026:10:13 19:30:00') is None
+
+
+# --- Template aus einem beschrifteten Foto ---------------------------------------------
+
+def test_derive_suffix_from_a_captioned_photo():
+    from captioner.templates import derive_suffix
+    values = {'headline': 'DEL 2 - EC Bad Nauheim gegen ESV Kaufbeuren', 'city': 'Bad Nauheim',
+              'date': '20.02.24', 'creator': 'Florian Dehn', 'caption_writer': 'Florian Dehn'}
+    caption = 'Hellvis (Maskottchen), DEL 2 - EC Bad Nauheim gegen ESV Kaufbeuren, Bad Nauheim, , 20.02.24'
+    # leeres Segment nach der Stadt: dort stand der (leere) Ort
+    assert derive_suffix(caption, values) == ', {headline}, {city}, {sublocation}, {date}'
+    assert derive_suffix('Jubel, Florian Dehn', values) == ', {creator}'          # Vorrang: Fotograf
+    assert derive_suffix('Jubel in Bad Nauheim', values) == ''                   # kein eigenes Segment
+    assert derive_suffix('Jubel', values) == '' and derive_suffix('', values) == ''
+
+
+def test_template_from_photo_metadata():
+    from captioner.scanner import Metadata
+    from captioner.templates import from_metadata
+    meta = Metadata(
+        headline='Impressionen aus der DEL 2 - EC Bad Nauheim gegen ESV Kaufbeuren',
+        caption='-23- Max Muster (EC Bad Nauheim) jubelt, Impressionen aus der DEL 2 - EC Bad Nauheim gegen '
+                'ESV Kaufbeuren, Bad Nauheim, , 20.02.24',
+        keywords=['DEL2', 'EC Bad Nauheim', 'ESV Kaufbeuren', 'Eishockey', 'Max Muster', 'Bad Nauheim', 'Rote Teufel'],
+        city='Bad Nauheim', country='Deutschland', creator='Florian Dehn', caption_writer='Florian Dehn',
+        source='https://chuc.de', web_statement='https://chuc.de', category='Eishockey')
+    template = from_metadata(meta, taken_at='2024:02:20 19:20:19', persons=['Max Muster'])
+    assert template.name == template.headline == meta.headline
+    assert (template.city, template.country, template.creator, template.category) == (
+        'Bad Nauheim', 'Deutschland', 'Florian Dehn', 'Eishockey')
+    assert template.caption_suffix == ', {headline}, {city}, {sublocation}, {date}'
+    # Teams, Stadt und Personen kommen ohnehin dazu, sie gehoeren nicht in die Zusatz-Tags
+    assert template.extra_tags == ['DEL2', 'Eishockey', 'Rote Teufel']
+    assert template.date == '' and template.latitude is None
+    # derselbe Anhang wie im Bild
+    assert template.compose_caption('-23- Max Muster (EC Bad Nauheim) jubelt', '2024:02:20 19:20:19') == \
+        meta.caption.replace(', , ', ', ')

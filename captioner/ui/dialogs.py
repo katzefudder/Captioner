@@ -4,10 +4,10 @@ import re
 
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QColor, QKeySequence
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
                                QFormLayout, QFrame, QGridLayout, QHBoxLayout, QInputDialog, QLabel, QLineEdit,
-                               QListWidget, QPlainTextEdit, QPushButton, QSizePolicy, QSpinBox, QTableWidget, QTableWidgetItem,
-                               QVBoxLayout, QWidget)
+                               QListWidget, QPlainTextEdit, QPushButton, QScrollArea, QSizePolicy, QSpinBox, QTableWidget,
+                               QTableWidgetItem, QVBoxLayout, QWidget)
 
 from .. import geo, i18n, metadata
 from ..i18n import _, N_
@@ -25,8 +25,10 @@ ROSTER_FILE_FILTER = N_('Roster-Dateien (*.txt *.tsv *.csv);;Alle Dateien (*)')
 SUFFIX_PLACEHOLDERS = [
     ('headline', N_('Titel'), '#3b7dd8'), ('city', N_('Stadt'), '#3fa34d'),
     ('sublocation', N_('Ort / Halle'), '#e67e22'), ('state', N_('Bundesland'), '#16a085'),
-    ('country', N_('Land'), '#b8860b'), ('creator', N_('Fotograf'), '#d63384'),
-    ('authors_position', N_('Position'), '#20a8d8'), ('caption_writer', N_('Beschriftet von'), '#8d6e63'),
+    ('country', N_('Land'), '#b8860b'), ('country_code', N_('Ländercode'), '#827717'),
+    ('creator', N_('Fotograf'), '#d63384'), ('contact_email', N_('E-Mail'), '#ad1457'),
+    ('authors_position', N_('Position'), '#20a8d8'), ('credit', N_('Credit'), '#6d4c41'),
+    ('caption_writer', N_('Beschriftet von'), '#8d6e63'),
     ('copyright', N_('Copyright'), '#5c6bc0'), ('web_statement', N_('Copyright-URL'), '#9e9d24'),
     ('source', N_('Quelle'), '#00897b'), ('category', N_('Kategorie'), '#78909c'),
     ('instructions', N_('Hinweise'), '#c0392b'),
@@ -63,7 +65,9 @@ class TemplateDialog(QDialog):
         self.setWindowTitle(_('Template'))
         self.setMinimumWidth(760)   # Platz fuer die Legende der Platzhalter in drei Spalten
         template = template or MatchTemplate()
-        form = QFormLayout(self)
+        # Felder scrollen (der Dialog ist hoeher als ein kleiner Laptop-Bildschirm), Knoepfe fest darunter
+        content = QWidget()
+        form = QFormLayout(content)
         # macOS-Standard laesst Felder auf Mindestbreite; hier sollen sie den Dialog fuellen
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
@@ -93,8 +97,13 @@ class TemplateDialog(QDialog):
         city_row.addWidget(map_button)
         # Koordinaten aus der Datei, solange Stadt/Ort nicht geaendert werden
         self._file_place = geo.Place(template.city, template.sublocation, template.latitude, template.longitude)
+        self.country_code = field(template.country_code, _('DEU (drei Buchstaben, ISO 3166)'))
         self.creator = field(template.creator, _('Vor- und Nachname'))
+        self.contact_email = field(template.contact_email, _('E-Mail des Fotografen'))
         self.authors_position = field(template.authors_position, _('Fotograf'))
+        self.credit = field(template.credit, _('Bildnachweis, z. B. Name/Agentur'))
+        self.credit.setToolTip(_('IPTC „Credit Line“: wie der Bildnachweis abgedruckt werden soll. '
+                                 'Höchstens 32 Bytes.'))
         self.caption_writer = field(template.caption_writer, _('wer beschriftet'))
         self.copyright = field(template.copyright, _('© 2026 Vor- und Nachname'))
         self.web_statement = field(template.web_statement, _('https://… (Nutzungsbedingungen, Lizenz)'))
@@ -121,9 +130,12 @@ class TemplateDialog(QDialog):
         form.addRow(_('Ort / Halle'), self.sublocation)
         form.addRow(_('Bundesland'), self.state)
         form.addRow(_('Land'), self.country)
+        form.addRow(_('Ländercode'), self.country_code)
         section(_('Urheber und Rechte'))
         form.addRow(_('Fotograf'), self.creator)
+        form.addRow(_('E-Mail'), self.contact_email)
         form.addRow(_('Position'), self.authors_position)
+        form.addRow(_('Credit'), self.credit)
         form.addRow(_('Beschriftet von'), self.caption_writer)
         form.addRow(_('Copyright'), self.copyright)
         form.addRow(_('Copyright-URL'), self.web_statement)
@@ -154,7 +166,20 @@ class TemplateDialog(QDialog):
         self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
-        form.addRow(self.buttons)
+        self.scroll = QScrollArea()
+        self.scroll.setWidget(content)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        outer = QVBoxLayout(self)
+        outer.addWidget(self.scroll, 1)
+        outer.addWidget(self.buttons)
+        # so hoch wie der Inhalt, hoechstens 90 % des Bildschirms
+        screen = (parent.screen() if parent is not None else None) or QApplication.primaryScreen()
+        available = screen.availableGeometry().height() if screen is not None else 900
+        content.adjustSize()
+        height = content.sizeHint().height() + self.buttons.sizeHint().height() + 40
+        self.resize(max(760, content.sizeHint().width() + 30), min(height, int(available * 0.9)))
 
         for edit in self.findChildren(QLineEdit) + self.findChildren(MultiLineField):
             edit.textChanged.connect(self._update)
@@ -371,11 +396,14 @@ class TemplateDialog(QDialog):
             sublocation=self.sublocation.text().strip(),
             state=self.state.text().strip(),
             country=self.country.text().strip(),
+            country_code=self.country_code.text().strip().upper(),
             extra_tags=_split(self.extra_tags.text()),
             caption_suffix=self.suffix.text(),
             date=self.date.text().strip(),
             creator=self.creator.text().strip(),
+            contact_email=self.contact_email.text().strip(),
             authors_position=self.authors_position.text().strip(),
+            credit=self.credit.text().strip(),
             caption_writer=self.caption_writer.text().strip(),
             copyright=self.copyright.text().strip(),
             web_statement=self.web_statement.text().strip(),

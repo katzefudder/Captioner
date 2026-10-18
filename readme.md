@@ -76,7 +76,9 @@ poetry run python scripts/package_windows.py all         # dist/Captioner/ und d
 Markdown-Änderungen) auf einem macOS-26-Runner und parallel auf `windows-latest`, führt auf
 beiden die Tests aus und veröffentlicht DMG, PKG und `setup.exe` als ein Release. Pull
 Requests bauen und testen nur. Die Version ist `<major>.<minor>` aus `pyproject.toml` plus die
-fortlaufende Laufnummer des Workflows, z. B. `0.1.17` mit Tag `v0.1.17`. Für eine neue
+fortlaufende Laufnummer des Workflows, z. B. `0.1.17` mit Tag `v0.1.17`. Die Build-Jobs tragen
+sie vor dem Bauen in ihre Arbeitskopie von `pyproject.toml` ein (`scripts/set_version.py`), im Repo
+bleibt `<major>.<minor>`. Für eine neue
 Minor-Version `pyproject.toml` hochsetzen und in `CHANGELOG.md` einen Abschnitt
 `## <major>.<minor>` anlegen: Er steht oben in den Release-Notizen. Manuell: Actions → Release →
 „Run workflow".
@@ -290,6 +292,10 @@ Ausschnitt **mit gedrückter Maustaste gezogen** (Hand-Cursor), alternativ Mausr
 `⌥`+Pfeiltasten (mit `⇧` schneller). Zoom und Ausschnitt bleiben beim Blättern
 erhalten, so lässt sich die Schärfe einer Serie an derselben Stelle vergleichen.
 
+Unter dem Bild stehen Dateiname, Tag, Sterne und Farbklasse, ganz unten Kamera, Objektiv,
+Brennweite, Belichtungszeit, Blende, ISO und die Dateien des Bildes
+(`NIKON Z 9 · NIKKOR Z 70-200mm f/2.8 VR S · 200 mm · 1/500 s · f/2.8 · ISO 64 · DSC_0001.NEF, DSC_0001.JPG`).
+
 Rechts in der Großansicht steht ein **Info-Panel** mit EXIF und IPTC des Bildes: Aufnahmezeit
 (mit Hundertsteln), Kamera, Seriennummer, Auslösungen, Objektiv, Brennweite, Blende, Zeit,
 ISO, Programm, Messung, Fokus, Weißabgleich, Auflösung, GPS; Titel, Beschreibung, Tags, Ort,
@@ -359,11 +365,14 @@ city = "Bad Nauheim"
 sublocation = "Colonel-Knight-Stadion"
 state = "Hessen"
 country = "Deutschland"
+country_code = "DEU"
 extra_tags = ["Eishockey", "DEL2", "Saison 2026/27"]
 caption_suffix = ", {headline}, {city}, {sublocation}, {date}"   # auch {creator}, {copyright}, …
 date = ""                         # optional fester Text für {date}, sonst Aufnahmedatum
 creator = "Florian Dehn"
+contact_email = "foto@example.org"
 authors_position = "Fotograf"
+credit = "Florian Dehn/chuc.de"
 caption_writer = "Florian Dehn"
 copyright = "© 2026 Florian Dehn"
 web_statement = "https://example.org/lizenz"
@@ -384,8 +393,11 @@ sonstige Zeilenumbrüche werden zu Leerzeichen.
 | `headline` (Titel) | `photoshop:Headline`, `dc:title` | `Headline`, `ObjectName` | |
 | `city` · `sublocation` | `photoshop:City` · `Iptc4xmpCore:Location` | `City` · `Sub-location` | |
 | `state` · `country` | `photoshop:State` · `photoshop:Country` | `Province-State` · `Country-PrimaryLocationName` | |
+| `country_code` (Ländercode) | `Iptc4xmpCore:CountryCode` | `Country-PrimaryLocationCode` (3 Zeichen, z. B. `DEU`) | |
 | `creator` (Fotograf) | `dc:creator` | `By-line` | `Artist` |
+| `contact_email` (E-Mail) | `Iptc4xmpCore:CreatorContactInfo/CiEmailWork` | | |
 | `authors_position` | `photoshop:AuthorsPosition` | `By-lineTitle` | |
+| `credit` (Bildnachweis) | `photoshop:Credit` | `Credit` (bis 32 Bytes) | |
 | `caption_writer` | `photoshop:CaptionWriter` | `Writer-Editor` | |
 | `copyright` | `dc:rights`, dazu `xmpRights:Marked` | `CopyrightNotice` | `Copyright` |
 | `web_statement` | `xmpRights:WebStatement` | | |
@@ -410,6 +422,12 @@ Im Panel neben der Template-Auswahl (dieselben Befehle im Menü „Template“):
 * `⋯` → **Neues Template aus diesem …** übernimmt alle Werte des gewählten Templates in ein neues
   („… (Kopie)“), wechselt dorthin und öffnet es zum Bearbeiten, z. B. für das Auswärtsspiel.
   Abbrechen verwirft die Kopie. Auch im Menü **Template**.
+* `⋯` → **Template aus Foto erzeugen …** (auch im Menü **Template**) macht aus der Beschriftung des
+  Fotos unter dem Cursor ein neues Template, z. B. aus einem schon in Lightroom beschrifteten Bild:
+  Titel, Stadt/Ort, Bundesland/Land, Urheber und Rechte, GPS, als Zusatz-Tags die Stichwörter ohne
+  Personen, Teams und Stadt, und als Anhang das Ende der Beschreibung, soweit es aus Werten des
+  Bildes besteht (`…, Titel, Stadt, , 20.02.24` → `, {headline}, {city}, {sublocation}, {date}`).
+  Der Dialog öffnet sich zum Prüfen; gespeichert wird erst mit OK.
 * `⋯` → **Template-Ordner im Finder öffnen** (Windows: im Explorer) zeigt den
   Konfigurationsordner mit den Templates. Auch im Menü **Template**.
 * `⋯` → **Aus der Liste entfernen** nimmt ein Template aus der Liste. Dateien außerhalb des Konfigurationsordners

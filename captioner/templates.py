@@ -35,8 +35,8 @@ def parse_headline(text):
 
 # Felder, die das Template beim Speichern in jedes Bild schreibt, sofern sie gefuellt
 # sind (Namen wie in scanner.Metadata); leere lassen den Wert des Bildes stehen
-FIXED_FIELDS = ('state', 'country', 'creator', 'authors_position', 'caption_writer',
-                'copyright', 'web_statement', 'source', 'category', 'instructions')
+FIXED_FIELDS = ('state', 'country', 'country_code', 'creator', 'contact_email', 'authors_position', 'credit',
+                'caption_writer', 'copyright', 'web_statement', 'source', 'category', 'instructions')
 
 # Platzhalter im Anhang ({city} usw.): Feldnamen wie in scanner.Metadata, dazu {date}
 SUFFIX_FIELDS = ('headline', 'city', 'sublocation') + FIXED_FIELDS
@@ -51,10 +51,13 @@ class MatchTemplate:
     sublocation: str = ''
     state: str = ''             # Bundesland
     country: str = ''
+    country_code: str = ''      # ISO 3166 mit drei Buchstaben, z. B. "DEU"
     extra_tags: list = field(default_factory=list)  # "Eishockey", "DEL2", "2026/27"
     # Urheber und Rechte (Lightroom: "IPTC-Copyright" / "IPTC-Ersteller")
     creator: str = ''           # Fotograf, dc:creator
+    contact_email: str = ''     # E-Mail des Fotografen (IPTC Creator Contact Info)
     authors_position: str = ''  # "Fotograf", "Pressefotograf"
+    credit: str = ''            # Bildnachweis ("Credit Line"), z. B. "Florian Dehn/chuc.de"
     caption_writer: str = ''    # wer beschriftet
     copyright: str = ''         # "© 2026 Florian Dehn"
     web_statement: str = ''     # URL zu Nutzungsbedingungen/Lizenz
@@ -127,6 +130,71 @@ class MatchTemplate:
         if suffix.startswith(',') or suffix.startswith(' '):
             return caption.rstrip(',') + suffix
         return f'{caption} {suffix}'
+
+
+# Reihenfolge, wenn mehrere Felder denselben Wert haben (Fotograf = Beschriftet von)
+_SUFFIX_PRIORITY = ('headline', 'city', 'sublocation', 'date', 'state', 'country') + \
+    tuple(name for name in FIXED_FIELDS if name not in ('state', 'country'))
+
+
+def derive_suffix(caption, values):
+    """
+    Anhang einer fertigen Beschreibung als Platzhalter: "Jubel, DEL 2 - A gegen B, Bad Nauheim, ,
+    20.02.24" mit den Werten des Bildes -> ", {headline}, {city}, {sublocation}, {date}". Gesucht
+    wird von hinten nach Segmenten (durch Komma getrennt), die genau einem Wert entsprechen; ein
+    leeres Segment nach {city} wird zu {sublocation} (leere Platzhalter fallen ohnehin weg).
+    Ohne erkennbaren Anhang: ''.
+    """
+    by_value = {}
+    for key in _SUFFIX_PRIORITY:
+        value = (values.get(key) or '').strip()
+        if value and value not in by_value:
+            by_value[value] = key
+    candidates = sorted(by_value, key=len, reverse=True)
+    rest, parts = (caption or '').rstrip(), []
+    while rest:
+        value = next((v for v in candidates if rest.endswith(v)
+                      and (len(rest) == len(v) or re.search(r',\s*$', rest[:-len(v)]))), None)
+        if value is not None:
+            parts.insert(0, by_value[value])
+            rest = re.sub(r',\s*$', '', rest[:-len(value)], count=1)
+        elif parts and re.search(r',\s*$', rest):
+            parts.insert(0, None)            # leeres Segment ", ,"
+            rest = re.sub(r',\s*$', '', rest, count=1)
+        else:
+            break
+    while parts and parts[0] is None:
+        parts.pop(0)
+    placeholders = []
+    for index, key in enumerate(parts):
+        if key is None:
+            if index and parts[index - 1] == 'city' and 'sublocation' not in parts:
+                key = 'sublocation'
+            else:
+                continue
+        placeholders.append('{' + key + '}')
+    return ''.join(', ' + p for p in placeholders)
+
+
+def from_metadata(meta, taken_at='', name='', persons=()):
+    """
+    Template, das der Beschriftung eines Bildes moeglichst nahe kommt: Titel, Ort, Urheber und
+    Rechte wie im Bild, Zusatz-Tags = Stichwoerter ohne Personen, Stadt und Teams (die kommen
+    ohnehin dazu), Anhang aus dem Ende der Beschreibung (derive_suffix), GPS als Ort.
+    persons: Namen, die nicht in die Zusatz-Tags sollen (Personen-Tags aus Codes).
+    """
+    template = MatchTemplate(
+        name=name or meta.headline,
+        headline=meta.headline,
+        city=meta.city, sublocation=meta.sublocation,
+        **{field_name: getattr(meta, field_name) for field_name in FIXED_FIELDS},
+        caption_suffix='', latitude=meta.latitude, longitude=meta.longitude)
+    values = {key: getattr(meta, key, '') for key in SUFFIX_FIELDS}
+    values['date'] = format_date(taken_at)
+    template.caption_suffix = derive_suffix(meta.caption, values)
+    skip = {tag.casefold() for tag in [*persons, *template.teams, meta.city] if tag}
+    template.extra_tags = unique(tag for tag in meta.keywords if tag.casefold() not in skip)
+    return template
 
 
 def format_date(taken_at):

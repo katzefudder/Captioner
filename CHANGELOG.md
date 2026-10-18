@@ -29,6 +29,16 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 - **Beschriftungs-Panel kompakter:** Hinweise direkt unter ihren Feldern statt in eigenen Zeilen,
   Template-Datei im Tooltip, Roster in einer Zeile mit Menü (Bearbeiten, Neu laden, Datei
   hinzufügen; Probleme bleiben sichtbar), Bytezähler neben Kopieren/Einfügen.
+- **Version im Fenstertitel.**
+- **Großansicht:** ganz unten eine Zeile mit Kamera, Objektiv, Brennweite, Belichtungszeit, Blende,
+  ISO und Dateinamen.
+- **Neue Template-Felder:** Ländercode (`DEU`), E-Mail des Fotografen (IPTC-Kontakt) und Credit
+  (Bildnachweis). Gelesen und geschrieben wie die übrigen Rechte-Felder, auch als Platzhalter im
+  Anhang; das Info-Panel zeigt sie. Der Template-Dialog scrollt, wenn er nicht auf den Bildschirm passt.
+- **Template aus Foto erzeugen …** (unter `⋯` und im Menü Template): neues Template aus der
+  Beschriftung eines Fotos, z. B. aus Lightroom. Titel, Ort, Urheber und Rechte, Zusatz-Tags (ohne
+  Personen, Teams und Stadt) und der Anhang (aus dem Ende der Beschreibung erkannt) kommen in den
+  Template-Dialog zum Prüfen.
 - **Anleitung** als PDF ([docs/Captioner-Anleitung.pdf](docs/Captioner-Anleitung.pdf)), in der App
   unter Hilfe → „Anleitung (PDF)“, dazu im DMG und im Windows-Startmenü.
 - **Kontextmenü an den Kacheln:** Bewertung, Farbklasse, Tag, Großansicht, Beschriftung

@@ -209,6 +209,10 @@ in der Galerie.</p>
 Serie an derselben Stelle. 100 % ist die volle Auflösung der Vorschau in der Datei, bei
 Nikon-NEFs die volle Sensorauflösung.</p>
 
+<p>Unter dem Bild stehen Dateiname, Tag, Sterne und Farbklasse, ganz unten Kamera, Objektiv,
+Brennweite, Belichtungszeit, Blende, ISO und die Dateien des Bildes, z. B.
+<em>NIKON Z 9 · NIKKOR Z 70-200mm f/2.8 VR S · 200 mm · 1/500 s · f/2.8 · ISO 64 · DSC_0001.NEF</em>.</p>
+
 <p><strong>Info-Panel:</strong> Rechts stehen EXIF und IPTC des Bildes: Aufnahmezeit mit
 Hundertsteln, Kamera und Seriennummer, Objektiv, Belichtung, GPS, die Beschriftung und die
 zugehörigen Dateien. „Infos“ blendet das Panel aus und ein; Captioner merkt sich das.</p>
@@ -372,10 +376,12 @@ es oben im Panel; <strong>Bearbeiten …</strong> daneben öffnet es.</p>
   schon für Sonntag) einen festen Text wie <code>18.10.26</code> eintragen; passt er nicht zum
   Aufnahmedatum eines Bildes, warnt das Panel orange.</dd>
   <dt>Ort</dt>
-  <dd>Stadt, Ort/Halle, Bundesland, Land. „Karte …“ füllt alles auf einmal.</dd>
+  <dd>Stadt, Ort/Halle, Bundesland, Land, Ländercode (drei Buchstaben, z. B. <code>DEU</code>).
+  „Karte …“ füllt Stadt, Ort, Bundesland und Land auf einmal.</dd>
   <dt>Urheber und Rechte</dt>
-  <dd>Fotograf, Position, Beschriftet von, Copyright, Copyright-URL, Quelle, Hinweise (z. B.
-  Kontakt und Kontoverbindung).</dd>
+  <dd>Fotograf, E-Mail des Fotografen, Position, Credit (wie der Bildnachweis abgedruckt werden
+  soll), Beschriftet von, Copyright, Copyright-URL, Quelle, Hinweise (z. B. Kontakt und
+  Kontoverbindung).</dd>
   <dt>Kategorie, Zusatz-Tags</dt>
   <dd>Zusatz-Tags kommen in jedes Bild, z. B. <code>Eishockey, DEL2</code>.</dd>
   <dt>Anhang</dt>
@@ -401,6 +407,12 @@ die Beschreibungen stehen.</p>
 <ul>
   <li><strong>Neues Template …</strong> und <strong>Neues Template aus dem gewählten …</strong>
   (Kopie, z. B. fürs Auswärtsspiel; Abbrechen verwirft die Kopie).</li>
+  <li><strong>Template aus Foto erzeugen …</strong> macht aus der Beschriftung des ausgewählten
+  Fotos ein neues Template, z. B. aus einem Bild, das schon in Lightroom beschriftet wurde. Titel,
+  Ort, Urheber und Rechte werden übernommen, die Stichwörter (ohne Personen, Teams und Stadt)
+  werden Zusatz-Tags, und aus dem Ende der Beschreibung erkennt Captioner den Anhang, z. B.
+  <code>, {headline}, {city}, {sublocation}, {date}</code>. Der Dialog öffnet sich zum Prüfen;
+  gespeichert wird erst mit OK.</li>
   <li><strong>Template-Datei laden …</strong> nimmt eine Datei von irgendwo auf dem Rechner
   dazu, z. B. von einem Kollegen (oder die <code>.toml</code>-Datei aufs Fenster ziehen). Sie
   bleibt verknüpft: Änderungen landen wieder in genau dieser Datei.</li>

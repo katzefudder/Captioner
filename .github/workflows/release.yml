@@ -1,7 +1,8 @@
 # Baut bei jedem Push auf main die macOS-App (arm64) und die Windows-Version (x64), testet
 # beide und veroeffentlicht DMG, PKG und setup.exe als ein GitHub-Release. Versionsnummer:
 # <major>.<minor> aus pyproject.toml plus fortlaufende Laufnummer des Workflows, z. B. 0.1.17
-# (Tag v0.1.17).
+# (Tag v0.1.17). Die Build-Jobs tragen sie vor dem Bauen in ihre pyproject.toml ein
+# (scripts/set_version.py), damit auch Paket-Metadaten und Tests sie sehen; ins Repo nicht.
 #
 # Pull Requests und andere Branches (von Hand gestartet) bauen und testen nur; veroeffentlicht
 # wird ausschliesslich von main.
@@ -54,6 +55,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      # Release-Version in pyproject.toml, nur in dieser Arbeitskopie (nicht zurueck ins Repo)
+      - run: python scripts/set_version.py
+
       - name: Poetry und ExifTool
         run: |
           pipx install poetry
@@ -104,6 +108,8 @@ jobs:
         id: python
         with:
           python-version: '3.11'
+
+      - run: python scripts/set_version.py
 
       - name: Poetry
         run: pipx install poetry

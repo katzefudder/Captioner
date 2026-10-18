@@ -48,6 +48,15 @@ def test_caption_fields_come_from_the_app_not_the_file():
     assert result['Bewertung'] == {'Sterne': '★★★☆☆', 'Farbklasse': '1 (Red)', 'Tag': 'ja'}
 
 
+def test_summary_line_under_the_image():
+    raw = {'Make': 'NIKON CORPORATION', 'Model': 'NIKON Z 9', 'LensID': 'NIKKOR Z 70-200mm f/2.8 VR S',
+           'FocalLength': '200.0 mm', 'ShutterSpeed': '1/500', 'Aperture': 2.8, 'ISO': 64,
+           '_files': [('DSC_0001.NEF', 1), ('DSC_0001.JPG', 1), ('DSC_0001.xmp', 1)]}
+    assert details.summary(raw) == ('NIKON Z 9 · NIKKOR Z 70-200mm f/2.8 VR S · 200 mm · 1/500 s · f/2.8 · ISO 64 · '
+                                    'DSC_0001.NEF, DSC_0001.JPG')
+    assert details.summary({'_files': [('a.jpg', 1)]}) == 'a.jpg' and details.summary({}) == ''
+
+
 def test_files_and_empty_sections():
     sections = details.sections({'_files': Z9['_files']}, Metadata())
     titles = [title for title, _ in sections]
@@ -114,6 +123,8 @@ def test_info_panel_in_viewer(tmp_path):
             QTest.qWait(20)
         text = w.viewer.info_panel.toPlainText()
         assert 'NIKON Z 9' in text and 'f/3.2' in text and '1/1600 s' in text and '3200' in text
+        # ganz unten unter dem Bild: Kamera und Belichtung in einer Zeile, mit Dateiname
+        assert 'NIKON Z 9 · 1/1600 s · f/3.2 · ISO 3200 · a.jpg' in w.viewer.info.text()
 
         w.set_rating(4)
         w.viewer.show_item(w.filtered[0])

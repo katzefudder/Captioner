@@ -25,9 +25,12 @@ class Metadata:
     sublocation: str = ''
     state: str = ''              # Bundesland (photoshop:State / IPTC Province-State)
     country: str = ''            # photoshop:Country / IPTC Country-PrimaryLocationName
+    country_code: str = ''       # Iptc4xmpCore:CountryCode / IPTC Country-PrimaryLocationCode ("DEU")
     # Urheber und Rechte (siehe metadata.RIGHTS_TAGS)
     creator: str = ''            # dc:creator / IPTC By-line / EXIF Artist
+    contact_email: str = ''      # Iptc4xmpCore:CreatorContactInfo/CiEmailWork (Lightroom: Kontakt E-Mail)
     authors_position: str = ''   # photoshop:AuthorsPosition / IPTC By-lineTitle
+    credit: str = ''             # photoshop:Credit / IPTC Credit (Bildnachweis, "Credit Line")
     caption_writer: str = ''     # photoshop:CaptionWriter / IPTC Writer-Editor
     copyright: str = ''          # dc:rights / IPTC CopyrightNotice / EXIF Copyright
     web_statement: str = ''      # xmpRights:WebStatement (URL zu Nutzungsbedingungen)

@@ -199,6 +199,7 @@ def main():
     from captioner.ui.dialogs import SettingsDialog, TemplateDialog
     from captioner.ui.shortcuteditor import KeyCaptureDialog, ShortcutEditorDialog
     template_dialog = TemplateDialog(editor.template, window.places, window)
+    template_dialog.resize(800, template_dialog.scroll.widget().sizeHint().height() + 70)  # ganz, ohne Scrollen
     template_dialog.show()
     settle()
     save(template_dialog, 'template')

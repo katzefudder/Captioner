@@ -177,6 +177,11 @@ def test_menus_replace_the_toolbar(window):
     assert [k.toString() for k in entries['Neu einlesen'].shortcuts()] == ['F5']
 
 
+def test_window_title_shows_the_version(window):
+    from captioner import version
+    assert window.windowTitle().startswith(f'Captioner {version()} - ')
+
+
 def test_help_menu_opens_the_bundled_manual(window, monkeypatch):
     from captioner import manual_path
     from captioner.ui import main_window

@@ -199,7 +199,8 @@ def test_gps_is_not_rewritten_unless_changed(tool, tmp_path):
 RIGHTS = dict(state='Hessen', country='Deutschland', creator='Florian Dehn', authors_position='Fotograf',
               caption_writer='Florian Dehn', copyright='© 2026 Florian Dehn',
               web_statement='https://example.org/lizenz', source='chuc.de', category='Sport',
-              instructions='Honorarpflichtig. Kontakt: foto@example.org · IBAN DE00 1234')
+              instructions='Honorarpflichtig. Kontakt: foto@example.org · IBAN DE00 1234',
+              country_code='DEU', credit='Florian Dehn/chuc.de', contact_email='info@chuc.de')
 
 
 def test_rights_go_into_xmp_iptc_and_exif(tool, tmp_path):
@@ -220,6 +221,9 @@ def test_rights_go_into_xmp_iptc_and_exif(tool, tmp_path):
     assert record['XMP:Country'] == record['IPTC:Country-PrimaryLocationName'] == 'Deutschland'
     assert record['XMP:Category'] == 'Sport' and 'IPTC:Category' not in record  # IIM nur 3 Zeichen
     assert record['XMP:Instructions'] == record['IPTC:SpecialInstructions'] == RIGHTS['instructions']
+    assert record['XMP:CountryCode'] == record['IPTC:Country-PrimaryLocationCode'] == 'DEU'
+    assert record['XMP:Credit'] == record['IPTC:Credit'] == 'Florian Dehn/chuc.de'
+    assert record['XMP:CreatorWorkEmail'] == 'info@chuc.de'
     item = scanner.scan(tmp_path)[0]
     list(metadata.read_items(tool, [item]))
     assert {name: getattr(item.meta, name) for name in RIGHTS} == RIGHTS

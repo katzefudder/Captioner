@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 23:21+0200\n"
+"POT-Creation-Date: 2026-10-18 12:41+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -145,6 +145,10 @@ msgstr "From the template: {values}"
 msgid "Aus der Liste entfernen"
 msgstr "Remove from list"
 
+#, python-brace-format
+msgid "Aus {name}"
+msgstr "From {name}"
+
 msgid "Auslösungen"
 msgstr "Shutter count"
 
@@ -252,11 +256,17 @@ msgstr "Show/hide the caption panel (I)"
 msgid "Bewertung"
 msgstr "Rating"
 
+msgid "Bildnachweis, z. B. Name/Agentur"
+msgstr "Credit line, e.g. name/agency"
+
 msgid "Bitte einen Namen eingeben."
 msgstr "Please enter a name."
 
 msgid "Bitte zuerst ein Spiel-Template auswählen oder anlegen."
 msgstr "Please select or create a template first."
+
+msgid "Bitte zuerst ein beschriftetes Foto auswählen."
+msgstr "Please select a captioned photo first."
 
 msgid "Blende"
 msgstr "Aperture"
@@ -302,6 +312,9 @@ msgstr "Copyright URL"
 
 msgid "Credit"
 msgstr "Credit"
+
+msgid "DEU (drei Buchstaben, ISO 3166)"
+msgstr "DEU (three letters, ISO 3166)"
 
 msgid "Datei"
 msgstr "File"
@@ -364,6 +377,10 @@ msgstr ""
 "must match Lightroom’s label set: “Red” (English) or “Rot” (German "
 "Lightroom). Classes without an entry get no label."
 
+#, python-brace-format
+msgid "Die Metadaten von {name} werden noch eingelesen."
+msgstr "The metadata of {name} is still being read."
+
 msgid "Die vorhandene Datei wird überschrieben. Fortfahren?"
 msgstr "The existing file will be overwritten. Continue?"
 
@@ -383,6 +400,12 @@ msgstr ""
 
 msgid "Diese Übersicht"
 msgstr "This overview"
+
+msgid "E-Mail"
+msgstr "Email"
+
+msgid "E-Mail des Fotografen"
+msgstr "Photographer's email"
 
 msgid "EXIF wird gelesen …"
 msgstr "Reading EXIF …"
@@ -647,6 +670,11 @@ msgid "Hinzufügen …"
 msgstr "Add …"
 
 msgid ""
+"IPTC „Credit Line“: wie der Bildnachweis abgedruckt werden soll. "
+"Höchstens 32 Bytes."
+msgstr "IPTC “Credit Line”: how the credit should be printed. At most 32 bytes."
+
+msgid ""
 "IPTC „Special Instructions“ (Lightroom: Anweisungen), z. B. Kontaktdaten "
 "oder Kontoverbindung. Höchstens 256 Bytes. Zeilen stehen im Bild durch „ "
 "· “ getrennt."
@@ -806,6 +834,9 @@ msgstr "Country"
 msgid "Lightroom-Label für Farbklasse 1, 2, 3, …"
 msgstr "Lightroom label for color class 1, 2, 3, …"
 
+msgid "Ländercode"
+msgstr "Country code"
+
 msgid "Menü"
 msgstr "Menu"
 
@@ -846,9 +877,11 @@ msgid "Neues Template …"
 msgstr "New template …"
 
 msgid ""
-"Neues Template, aus diesem, Datei laden, speichern unter, entfernen, "
-"Ordner öffnen"
-msgstr "New template, from this one, load file, save as, remove, open folder"
+"Neues Template, aus diesem, aus Foto, Datei laden, speichern unter, "
+"entfernen, Ordner öffnen"
+msgstr ""
+"New template, from this one, from photo, load file, save as, remove, open"
+" folder"
 
 msgid "Nicht alle Bilder übergeben"
 msgstr "Not all images handed over"
@@ -1160,6 +1193,12 @@ msgstr "Apply template"
 msgid "Template auf Auswahl anwenden"
 msgstr "Apply template to selection"
 
+msgid "Template aus Foto"
+msgstr "Template from photo"
+
+msgid "Template aus Foto erzeugen …"
+msgstr "Create template from photo …"
+
 msgid "Template bearbeiten …"
 msgstr "Edit template …"
 
@@ -1184,6 +1223,10 @@ msgstr "Save template as …"
 
 msgid "Template unvollständig"
 msgstr "Template incomplete"
+
+#, python-brace-format
+msgid "Template „{name}“ aus {photo} erzeugt"
+msgstr "Template “{name}” created from {photo}"
 
 #, python-brace-format
 msgid "Template „{name}“ geladen"
@@ -1669,6 +1712,10 @@ msgstr "{name}  (URL, read-only)"
 #, python-brace-format
 msgid "{name} (Kopie)"
 msgstr "{name} (copy)"
+
+#, python-brace-format
+msgid "{name} hat weder Titel noch Beschreibung."
+msgstr "{name} has neither a headline nor a caption."
 
 #, python-brace-format
 msgid ""
