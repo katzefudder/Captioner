@@ -10,7 +10,7 @@ import re
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QSize, QStringListModel, Qt, Signal
+from PySide6.QtCore import QSize, QStringListModel, Qt, Signal
 from PySide6.QtGui import QAction, QKeySequence, QShortcut, QTextCursor
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QFormLayout, QFrame, QHBoxLayout, QLabel,
                                QLineEdit, QMenu, QPlainTextEdit, QPushButton, QScrollArea, QSizePolicy,
@@ -137,15 +137,10 @@ class VerticalScrollArea(QScrollArea):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     def setWidget(self, widget):
+        # Kein Event-Filter am Inhalt: das Panel wandert zwischen Hauptfenster und Grossansicht,
+        # ein Filter der alten Flaeche brachte Python beim Abbau zum Absturz (macOS-Action)
         super().setWidget(widget)
-        widget.installEventFilter(self)
         self.updateGeometry()
-
-    def eventFilter(self, watched, event):
-        # Inhalt braucht mehr/weniger Platz (Template-Liste, Hinweise): Mindestbreite neu melden
-        if watched is self.widget() and event.type() == QEvent.Type.LayoutRequest:
-            self.updateGeometry()
-        return super().eventFilter(watched, event)
 
     def minimumSizeHint(self):
         hint = super().minimumSizeHint()
