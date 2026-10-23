@@ -261,6 +261,8 @@ class MainWindow(QMainWindow):
         self.update_button.setFlat(True)
         self.update_button.setStyleSheet('color: #2f7de1; font-weight: bold;')
         self.update_button.hide()
+        self.update_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl(self.update_button.toolTip())))
         self.statusBar().addPermanentWidget(self.update_button)
         # Nur die gebuendelte App fragt von selbst, hoechstens einmal am Tag
         if (self.settings.check_updates and getattr(sys, 'frozen', False)
@@ -279,11 +281,6 @@ class MainWindow(QMainWindow):
         self._checked()
         self.update_button.setText(_('Update {version} verfügbar').format(version=latest))
         self.update_button.setToolTip(url)
-        try:
-            self.update_button.clicked.disconnect()
-        except (RuntimeError, TypeError):
-            pass
-        self.update_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(url)))
         self.update_button.show()
         if self._manual_update_check:
             answer = QMessageBox.question(self, _('Update verfügbar'),

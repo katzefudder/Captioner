@@ -207,12 +207,12 @@ def drop_folders(window, widget, folders):
     from PySide6.QtGui import QDragEnterEvent, QDropEvent
     mime = QMimeData()
     mime.setUrls([QUrl.fromLocalFile(str(f)) for f in folders])
-    point = widget.rect().center()
+    point = QPointF(widget.rect().center())
     enter = QDragEnterEvent(point, Qt.DropAction.CopyAction, mime, Qt.MouseButton.LeftButton,
                             Qt.KeyboardModifier.NoModifier)
     QtWidgets.QApplication.sendEvent(widget, enter)
     assert enter.isAccepted()
-    drop = QDropEvent(QPointF(point), Qt.DropAction.CopyAction, mime, Qt.MouseButton.LeftButton,
+    drop = QDropEvent(point, Qt.DropAction.CopyAction, mime, Qt.MouseButton.LeftButton,
                       Qt.KeyboardModifier.NoModifier)
     window.dropEvent(drop)
 
