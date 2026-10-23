@@ -1,5 +1,6 @@
 """Drag-Regeln aus ADR 0001, Punkt 7, im Offscreen-Modus."""
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -161,7 +162,7 @@ def test_menus_replace_the_toolbar(window):
     from PySide6.QtWidgets import QToolBar
     assert window.findChildren(QToolBar) == []
     menus = {a.text(): a.menu() for a in window.menuBar().actions()}
-    assert list(menus) == ['Ablage', 'Bearbeiten', 'Template', 'Roster', 'Hilfe']
+    assert list(menus) == ['Ablage' if sys.platform == 'darwin' else 'Datei', 'Bearbeiten', 'Template', 'Roster', 'Hilfe']
     entries = {a.text(): a for menu in menus.values() for a in menu.actions() if not a.isSeparator()}
     assert entries['Einstellungen …'].menuRole() == QAction.MenuRole.PreferencesRole
     assert entries['Über Captioner'].menuRole() == QAction.MenuRole.AboutRole

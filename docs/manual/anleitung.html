@@ -134,7 +134,8 @@ erscheint unten rechts „Update … verfügbar“; ein Klick öffnet die Downlo
 
 <p>Die Menüs stehen auf dem Mac oben in der Menüleiste des Bildschirms:
 <strong>Captioner</strong> (Über, Einstellungen, Beenden), <strong>Ablage</strong> (Ordner öffnen,
-Neu einlesen, Tab schließen, Tastenkürzel anpassen), <strong>Bearbeiten</strong> (Rückgängig,
+Neu einlesen, Bilder umbenennen, Tab schließen, Tastenkürzel anpassen; unter Windows heißt es
+<strong>Datei</strong>), <strong>Bearbeiten</strong> (Rückgängig,
 Wiederholen, Suchen und Ersetzen), <strong>Template</strong>, <strong>Roster</strong> und
 <strong>Hilfe</strong> (Tastenkürzel, Website, Updates).</p>
 
@@ -519,8 +520,8 @@ ausgewählten Bildern, ohne Auswahl in allen angezeigten.</p>
 Beschriftung, Einfügen, Template anwenden, Suchen und Ersetzen, auch für viele Bilder auf
 einmal. <kbd>⌘⇧Z</kbd> stellt sie wieder her. Das Menü <em>Bearbeiten</em> zeigt, was
 zurückgenommen wird. In einem Textfeld gilt <kbd>⌘Z</kbd> für das gerade Getippte.</p>
-<p>Nicht rückgängig zu machen ist der Papierkorb; Bilder holst du dort im Finder bzw. Explorer
-zurück.</p>
+<p>Nicht rückgängig zu machen sind der Papierkorb (Bilder holst du dort im Finder bzw. Explorer
+zurück) und das Umbenennen.</p>
 
 <!-- 14 -->
 <h2 id="lightroom">Übergabe an Lightroom</h2>
@@ -565,6 +566,18 @@ halben Dateien.</p>
 einer Rückfrage in den Papierkorb, mit allen Dateien (RAW, JPG, XMP). Endgültig gelöscht wird
 nichts; aus dem Papierkorb lassen sich die Bilder wiederherstellen.</p>
 
+<h3>Bilder umbenennen</h3>
+<p><em>Ablage → Bilder umbenennen …</em> (Windows: <em>Datei</em>) benennt alle Bilder des Ordners
+im aktuellen Tab nach dem Schema <code>Datum_Heim_Gast_Nummer</code> um, z. B.
+<code>20261023_MEM_EPC_001</code>. Im Dialog gibst du die Kürzel der Heim- und der Gastmannschaft
+ein (sie werden großgeschrieben und für das nächste Mal gemerkt). Das Datum
+(<code>JJJJMMTT</code>) ist vorbelegt mit heute; leer lassen oder überschreiben.</p>
+<p>Gezählt wird ab 1 in der Reihenfolge der Aufnahmezeit, mit Nullen auf drei Stellen
+(<code>001</code> bis <code>999</code>, darüber vierstellig). RAW, JPG und XMP-Datei eines Bildes
+bekommen dieselbe Nummer, die Endungen bleiben. Gibt es einen der neuen Namen schon für eine
+andere Datei im Ordner, wird nichts umbenannt. Beschriftungen, Sterne und Farbklassen bleiben
+erhalten.</p>
+
 <h3>Im Finder zeigen, Pfade kopieren</h3>
 <p><kbd>⌘⌥R</kbd> oder das Kontextmenü öffnet den Ordner im Finder (Windows: Explorer) und
 markiert die Datei. „Pfade kopieren“ legt die Dateipfade der Auswahl in die Zwischenablage.</p>
@@ -572,7 +585,7 @@ markiert die Datei. „Pfade kopieren“ legt die Dateipfade der Auswahl in die 
 <!-- 16 -->
 <h2 id="einstellungen">Einstellungen</h2>
 
-<p><kbd>⌘,</kbd> (Windows: <em>Ablage → Einstellungen …</em>).</p>
+<p><kbd>⌘,</kbd> (Windows: <em>Datei → Einstellungen …</em>).</p>
 
 <figure class="half">
   <img src="img/einstellungen.png" alt="Einstellungen">

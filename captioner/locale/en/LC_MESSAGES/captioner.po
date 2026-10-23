@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-18 12:41+0200\n"
+"POT-Creation-Date: 2026-10-24 00:02+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -256,6 +256,12 @@ msgstr "Show/hide the caption panel (I)"
 msgid "Bewertung"
 msgstr "Rating"
 
+msgid "Bilder umbenennen"
+msgstr "Rename Images"
+
+msgid "Bilder umbenennen …"
+msgstr "Rename Images …"
+
 msgid "Bildnachweis, z. B. Name/Agentur"
 msgstr "Credit line, e.g. name/agency"
 
@@ -337,6 +343,13 @@ msgstr "Files"
 msgid "Datum"
 msgstr "Date"
 
+msgid "Datum (JJJJMMTT)"
+msgstr "Date (YYYYMMDD)"
+
+#, python-brace-format
+msgid "Datum als JJJJMMTT, z. B. {date}."
+msgstr "Date as YYYYMMDD, e.g. {date}."
+
 #, python-brace-format
 msgid "Datum aus dem Template: {fixed} – aufgenommen am {taken}"
 msgstr "Date from the template: {fixed} – taken on {taken}"
@@ -347,6 +360,9 @@ msgid ""
 msgstr ""
 "This includes all files of the image (RAW, JPG, XMP sidecar). They can be"
 " restored from the trash."
+
+msgid "Der Ordner wird noch eingelesen. Bitte warten, bis das fertig ist."
+msgstr "The folder is still being read. Please wait until it is done."
 
 msgid "Der neue ExifTool-Pfad gilt nach einem Neustart."
 msgstr "The new ExifTool path takes effect after a restart."
@@ -397,6 +413,9 @@ msgstr ""
 "This map can only be shown with an internet connection.\n"
 "You can still enter city and location below; places chosen before are "
 "suggested."
+
+msgid "Diese Namen gibt es im Ordner schon, nichts wurde umbenannt:"
+msgstr "These names already exist in the folder, nothing was renamed:"
 
 msgid "Diese Übersicht"
 msgstr "This overview"
@@ -600,6 +619,9 @@ msgstr "GPS will be set: {latitude}, {longitude}"
 msgid "Galerie (Kontaktbogen)"
 msgstr "Gallery (contact sheet)"
 
+msgid "Gastmannschaft"
+msgstr "Away team"
+
 msgid ""
 "Gefüllte Felder gehen beim Speichern in jedes Bild, leere lassen den Wert"
 " des Bildes stehen. Heim und Gast stehen im Titel und ergeben sich aus "
@@ -650,6 +672,9 @@ msgstr "Thumbnail size"
 
 msgid "Halle, Stadion"
 msgstr "Arena, stadium"
+
+msgid "Heimmannschaft"
+msgstr "Home team"
 
 msgid "Heranzoomen"
 msgstr "Zoom in"
@@ -824,9 +849,15 @@ msgstr "Shortcut"
 msgid "Kürzel aufnehmen"
 msgstr "Record shortcut"
 
+msgid "Kürzel für Heim- und Gastmannschaft eingeben."
+msgstr "Enter the abbreviations for home and away team."
+
 #, python-brace-format
 msgid "Kürzel für „{action}“:"
 msgstr "Shortcuts for “{action}”:"
+
+msgid "Kürzel nur aus Buchstaben, Ziffern und Bindestrich."
+msgstr "Abbreviations may only contain letters, digits and hyphens."
 
 msgid "Land"
 msgstr "Country"
@@ -992,6 +1023,9 @@ msgstr "Program"
 
 msgid "Quelle"
 msgstr "Source"
+
+msgid "RAW, JPG und Sidecar eines Bildes bekommen dieselbe Nummer."
+msgstr "RAW, JPG and sidecar of an image get the same number."
 
 msgid "Rechtschreibprüfung"
 msgstr "Spell checking"
@@ -1308,6 +1342,9 @@ msgstr "Time"
 msgid "Umbenennen"
 msgstr "Rename"
 
+msgid "Umbenennen fehlgeschlagen, nichts wurde umbenannt:"
+msgstr "Renaming failed, nothing was renamed:"
+
 #, python-brace-format
 msgid "Unbekannte Codes im Titel: {codes}"
 msgstr "Unknown codes in the headline: {codes}"
@@ -1393,6 +1430,9 @@ msgstr "Include XMP sidecars when dragging"
 #, python-brace-format
 msgid "Zeile {line}: {message}"
 msgstr "Line {line}: {message}"
+
+msgid "Zieldateien existieren schon."
+msgstr "Target files already exist."
 
 msgid "Zoom 50–400 %"
 msgstr "Zoom 50–400 %"
@@ -1523,6 +1563,12 @@ msgstr "who writes captions"
 msgid "z. B. DEL 2 Heimspiele"
 msgstr "e.g. DEL 2 home games"
 
+msgid "z. B. EPC"
+msgstr "e.g. EPC"
+
+msgid "z. B. MEM"
+msgstr "e.g. MEM"
+
 #, python-brace-format
 msgid "{alt} + Mausrad, Doppelklick"
 msgstr "{alt} + scroll wheel, double-click"
@@ -1556,10 +1602,22 @@ msgstr[0] "{count} image copied to {folder}"
 msgstr[1] "{count} images copied to {folder}"
 
 #, python-brace-format
+msgid "{count} Bild umbenannt"
+msgid_plural "{count} Bilder umbenannt"
+msgstr[0] "{count} image renamed"
+msgstr[1] "{count} images renamed"
+
+#, python-brace-format
 msgid "{count} Bild ändern"
 msgid_plural "{count} Bilder ändern"
 msgstr[0] "Change {count} image"
 msgstr[1] "Change {count} images"
+
+#, python-brace-format
+msgid "{count} Bild, nach Aufnahmezeit: {names}"
+msgid_plural "{count} Bilder, nach Aufnahmezeit: {names}"
+msgstr[0] "{count} image, by capture time: {names}"
+msgstr[1] "{count} images, by capture time: {names}"
 
 #, python-brace-format
 msgid "{count} Code"
@@ -1792,6 +1850,10 @@ msgstr "{name}: latitude/longitude incomplete or out of range"
 #, python-brace-format
 msgid "{name}: nicht lesbar ({error})"
 msgstr "{name}: not readable ({error})"
+
+#, python-brace-format
+msgid "{name}: von einem anderen Programm geöffnet"
+msgstr "{name}: opened by another program"
 
 #, python-brace-format
 msgid "{size} pt"

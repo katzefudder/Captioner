@@ -19,6 +19,7 @@ Bedienung: `readme.md`.
 | `transfer.py` | Kopieren zwischen Ordnern: Gruppen (RAW+JPG+Sidecar), Konflikte (überspringen/umbenennen/ersetzen) |
 | `keywords.py` | Gemerkte Stichwörter (`<cache>/keywords.json`) und Vorschläge fürs Tag-Feld |
 | `updates.py` | Versionsvergleich und GitHub-Release-Antwort (ohne Qt); `ui/updatecheck.py` fragt ab |
+| `rename.py` | Ordner umbenennen `<JJJJMMTT>_<HEIM>_<GAST>_<NNN>`: `plan()` je Bild (Gruppe) eine Nummer, `apply()` über Zwischennamen, bei Fehler zurück |
 | `replace.py` | Suchen und Ersetzen über mehrere Bilder: `plan()` rechnet je Bild wie Speichern (Rohtext mit Codes, Anhang neu, Personen-Tags) |
 | `undo.py` | Rückgängig/Wiederholen: Schritte mit Vorher/Nachher je Bild (Metadaten + Rohtext) |
 | `previews.py` | Kacheln/Großansicht aus eingebetteten JPEGs, Plattencache |
@@ -31,6 +32,7 @@ Bedienung: `readme.md`.
 | `ui/tabs.py` | `FolderTab` (Zustand je Ordner), `FolderTabBar` (Drop auf Reiter), Konfliktdialog, `CopyWorker` |
 | `ui/instance.py` | Windows: eine App je Benutzer, weitere Starts reichen Ordner per `QLocalServer` weiter |
 | `ui/folderdialog.py` | „Ordner öffnen“ mit Mehrfachauswahl: macOS `NSOpenPanel` per ctypes, sonst Qt-Dialog |
+| `ui/renamedialog.py` | „Bilder umbenennen“: Kürzel Heim/Gast (gemerkt in `Settings.rename_home`/`rename_away`), Datum (leer = heute); `MainWindow.rename_folder` benennt um |
 | `ui/replacedialog.py` | „Suchen und Ersetzen“: Eingabe, Vorschau je Bild (vorher/nachher), abwählbar; `MainWindow.find_replace` schreibt |
 | `ui/rostereditor.py` | „Roster bearbeiten“: lokale Roster-Dateien mit Prüfung (`roster.check`), Speichern über `roster.write_file` |
 | `ui/about.py` | „Über Captioner“: Logo, `captioner.version()`, Link `captioner.WEBSITE_LINK` (mit `mtm_campaign`/`mtm_source`) |
@@ -41,7 +43,7 @@ Bedienung: `readme.md`.
 | `ui/shortcuteditor.py` | „Tastenkürzel anpassen“: `KeyCaptureField` nimmt Kombinationen auf (≤ `keymap.MAX_KEYS` Tasten) |
 | `ui/` | Hauptfenster, Galerie (Model/Delegate/View), Editor, Dialoge, Worker-Threads |
 
-Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`, `files`, `replace`) importiert kein Qt.
+Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, `transfer`, `files`, `replace`, `rename`) importiert kein Qt.
 
 ## Regeln, die nicht verletzt werden dürfen
 
@@ -173,6 +175,9 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 - **Kopieren, nie verschieben.** Drop auf Reiter oder Galerie eines anderen Tabs kopiert die
   beim Drag-Start gemerkten Items (`_drag_items`, nach `build_drag_mime`, also nach
   `writer.flush()`), immer mit Sidecar. Über `.<name>.captioner-part` + `os.replace`.
+- Umbenennen (`rename_folder`, Menü Ablage, Windows „Datei“): alle Items des Tabs in Scan-Reihenfolge
+  (Aufnahmezeit), erst nach Scan-Ende und `writer.flush()`. Fremde Datei mit Zielname → nichts
+  passiert. Danach `raw_captions.move`, `undo_stack.forget`, alle Tabs desselben Ordners neu einlesen.
 - Konflikte werden vor dem Kopieren im UI-Thread entschieden, kopiert wird im `CopyWorker`;
   danach liest der Ziel-Tab neu ein.
 
@@ -360,7 +365,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 249 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 258 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

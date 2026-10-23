@@ -79,6 +79,9 @@ class Settings:
     roster_font_size: int = 0    # Schriftgroesse im Roster-Editor (Punkt), 0 = Systemvorgabe
     # Eigene Tastenkuerzel, nur Abweichungen vom Standard: {Befehl: [Tasten, ...]}, siehe keymap.apply
     shortcuts: dict = field(default_factory=dict)
+    # Kuerzel im Dialog "Bilder umbenennen" (zuletzt eingegeben), siehe rename
+    rename_home: str = ''
+    rename_away: str = ''
 
     @classmethod
     def path(cls) -> Path:

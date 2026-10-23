@@ -227,6 +227,12 @@ msgstr ""
 msgid "Bewertung"
 msgstr ""
 
+msgid "Bilder umbenennen"
+msgstr ""
+
+msgid "Bilder umbenennen …"
+msgstr ""
+
 msgid "Bildnachweis, z. B. Name/Agentur"
 msgstr ""
 
@@ -306,6 +312,13 @@ msgstr ""
 msgid "Datum"
 msgstr ""
 
+msgid "Datum (JJJJMMTT)"
+msgstr ""
+
+#, python-brace-format
+msgid "Datum als JJJJMMTT, z. B. {date}."
+msgstr ""
+
 #, python-brace-format
 msgid "Datum aus dem Template: {fixed} – aufgenommen am {taken}"
 msgstr ""
@@ -313,6 +326,9 @@ msgstr ""
 msgid ""
 "Dazu gehören alle Dateien des Bildes (RAW, JPG, XMP-Sidecar). Aus dem "
 "Papierkorb lassen sie sich wiederherstellen."
+msgstr ""
+
+msgid "Der Ordner wird noch eingelesen. Bitte warten, bis das fertig ist."
 msgstr ""
 
 msgid "Der neue ExifTool-Pfad gilt nach einem Neustart."
@@ -355,6 +371,9 @@ msgid ""
 "Diese Karte kann nur bei Verbindung mit dem Internet angezeigt werden.\n"
 "Stadt und Ort lassen sich unten trotzdem eintragen; bereits gewählte Orte"
 " werden vorgeschlagen."
+msgstr ""
+
+msgid "Diese Namen gibt es im Ordner schon, nichts wurde umbenannt:"
 msgstr ""
 
 msgid "Diese Übersicht"
@@ -546,6 +565,9 @@ msgstr ""
 msgid "Galerie (Kontaktbogen)"
 msgstr ""
 
+msgid "Gastmannschaft"
+msgstr ""
+
 msgid ""
 "Gefüllte Felder gehen beim Speichern in jedes Bild, leere lassen den Wert"
 " des Bildes stehen. Heim und Gast stehen im Titel und ergeben sich aus "
@@ -592,6 +614,9 @@ msgid "Größe der Vorschaubilder"
 msgstr ""
 
 msgid "Halle, Stadion"
+msgstr ""
+
+msgid "Heimmannschaft"
 msgstr ""
 
 msgid "Heranzoomen"
@@ -759,8 +784,14 @@ msgstr ""
 msgid "Kürzel aufnehmen"
 msgstr ""
 
+msgid "Kürzel für Heim- und Gastmannschaft eingeben."
+msgstr ""
+
 #, python-brace-format
 msgid "Kürzel für „{action}“:"
+msgstr ""
+
+msgid "Kürzel nur aus Buchstaben, Ziffern und Bindestrich."
 msgstr ""
 
 msgid "Land"
@@ -924,6 +955,9 @@ msgid "Programm"
 msgstr ""
 
 msgid "Quelle"
+msgstr ""
+
+msgid "RAW, JPG und Sidecar eines Bildes bekommen dieselbe Nummer."
 msgstr ""
 
 msgid "Rechtschreibprüfung"
@@ -1233,6 +1267,9 @@ msgstr ""
 msgid "Umbenennen"
 msgstr ""
 
+msgid "Umbenennen fehlgeschlagen, nichts wurde umbenannt:"
+msgstr ""
+
 #, python-brace-format
 msgid "Unbekannte Codes im Titel: {codes}"
 msgstr ""
@@ -1317,6 +1354,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Zeile {line}: {message}"
+msgstr ""
+
+msgid "Zieldateien existieren schon."
 msgstr ""
 
 msgid "Zoom 50–400 %"
@@ -1448,6 +1488,12 @@ msgstr ""
 msgid "z. B. DEL 2 Heimspiele"
 msgstr ""
 
+msgid "z. B. EPC"
+msgstr ""
+
+msgid "z. B. MEM"
+msgstr ""
+
 #, python-brace-format
 msgid "{alt} + Mausrad, Doppelklick"
 msgstr ""
@@ -1481,8 +1527,20 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{count} Bild umbenannt"
+msgid_plural "{count} Bilder umbenannt"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
 msgid "{count} Bild ändern"
 msgid_plural "{count} Bilder ändern"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} Bild, nach Aufnahmezeit: {names}"
+msgid_plural "{count} Bilder, nach Aufnahmezeit: {names}"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1712,6 +1770,10 @@ msgstr ""
 
 #, python-brace-format
 msgid "{name}: nicht lesbar ({error})"
+msgstr ""
+
+#, python-brace-format
+msgid "{name}: von einem anderen Programm geöffnet"
 msgstr ""
 
 #, python-brace-format

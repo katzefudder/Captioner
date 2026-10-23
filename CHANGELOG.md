@@ -7,6 +7,10 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 
 ### Neu
 
+- **Bilder umbenennen …** (Ablage, unter Windows Datei): alle Bilder des Ordners nach dem Schema
+  `JJJJMMTT_HEIM_GAST_NNN` (z. B. `20261023_MEM_EPC_001`), nummeriert nach Aufnahmezeit ab 1.
+  Datum leer = heute. RAW, JPG und Sidecar eines Bildes bekommen dieselbe Nummer.
+- **Menü „Datei“ unter Windows** statt „Ablage“.
 - **Neues Template aus diesem …** (unter `⋯` und im Menü Template): übernimmt alle Werte des
   gewählten Templates in eine Kopie, wechselt dorthin und öffnet sie zum Bearbeiten. Abbrechen
   verwirft die Kopie.

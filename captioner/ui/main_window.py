@@ -14,8 +14,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
                                QLabel, QMainWindow, QMenu, QMessageBox, QProgressDialog, QSlider, QSplitter,
                                QPushButton, QToolButton, QVBoxLayout, QWidget)
 
-from .. import (WEBSITE_LINK, manual_path, codes, config, geo, i18n, keywords, metadata, replace, scanner, transfer, undo,
-               updates, version)
+from .. import (WEBSITE_LINK, manual_path, codes, config, geo, i18n, keywords, metadata, rename, replace, scanner,
+               transfer, undo, updates, version)
 from ..i18n import _, N_, ngettext
 from ..exiftool import ExifToolError, ExifToolPool, find_exiftool, reap_orphans
 from ..previews import PreviewCache
@@ -28,6 +28,7 @@ from .shortcuteditor import ShortcutEditorDialog
 from .about import AboutDialog
 from .updatecheck import UpdateChecker
 from .editor import CaptionEditor, template_folder_label
+from .renamedialog import RenameDialog
 from .replacedialog import ReplaceDialog
 from .rostereditor import RosterEditorDialog
 from . import filemanager, folderdialog, instance
@@ -63,6 +64,16 @@ class RawCaptionStore:
             self.data.pop(str(item.primary), None)
         else:
             self.data[str(item.primary)] = raw
+        self._save()
+
+    def move(self, paths):
+        """Nach dem Umbenennen: {alter Pfad: neuer Pfad} der Hauptdateien."""
+        for old, new in paths.items():
+            if str(old) in self.data:
+                self.data[str(new)] = self.data.pop(str(old))
+        self._save()
+
+    def _save(self):
         try:
             self.path.write_text(json.dumps(self.data, ensure_ascii=False), encoding='utf-8')
         except OSError as e:
@@ -202,10 +213,13 @@ class MainWindow(QMainWindow):
             return item
 
         role = QAction.MenuRole
-        file_menu = bar.addMenu(_('Ablage'))
+        # macOS: "Ablage" wie im Finder, Windows: "Datei"
+        file_menu = bar.addMenu(_('Ablage') if sys.platform == 'darwin' else _('Datei'))
         action(file_menu, _('Ordner öffnen …'), self.choose_folder, 'open_folder')
         action(file_menu, _('Ordner in neuem Tab öffnen …'), lambda: self.choose_folder(new_tab=True), 'open_folder_tab')
         action(file_menu, _('Neu einlesen'), lambda: self.folder and self.rescan(self.tab), 'rescan')
+        file_menu.addSeparator()
+        action(file_menu, _('Bilder umbenennen …'), self.rename_folder)
         file_menu.addSeparator()
         action(file_menu, _('Tab schließen'), lambda: self.close_tab(self.tabs.currentIndex()))
         file_menu.addSeparator()
@@ -1524,6 +1538,58 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(ngettext('{count} Bild in den Papierkorb gelegt',
                                               '{count} Bilder in den Papierkorb gelegt',
                                               len(trashed)).format(count=len(trashed)), 5000)
+
+    def rename_folder(self, answer=None):
+        """
+        Alle Bilder des Ordners nach Schema JJJJMMTT_HEIM_GAST_NNN umbenennen, nummeriert nach
+        Aufnahmezeit (Reihenfolge des Scans). answer=(Datum, Heim, Gast) ersetzt den Dialog (Tests).
+        """
+        tab = self.tab
+        title = _('Bilder umbenennen')
+        if not tab.folder or not tab.all_items:
+            return
+        if tab.scanning():
+            QMessageBox.information(self, title, _('Der Ordner wird noch eingelesen. Bitte warten, bis das fertig ist.'))
+            return
+        if self.copy_worker and self.copy_worker.isRunning():
+            QMessageBox.information(self, title, _('Es wird noch kopiert. Bitte warten, bis das fertig ist.'))
+            return
+        items = list(tab.all_items)
+        if answer is None:
+            dialog = RenameDialog(len(items), self.settings.rename_home, self.settings.rename_away, self)
+            if not dialog.exec():
+                return
+            answer = dialog.values()
+        date, home, away = answer
+        self.settings.rename_home, self.settings.rename_away = home, away
+        self.settings.save()
+        # Erst fertig schreiben: der Writer kennt nur die alten Pfade
+        if self.writer.pending_count() and not self._wait_for_writer(title):
+            return
+        moves = rename.plan(items, date, home, away)
+        taken = rename.conflicts(moves)
+        if taken:
+            QMessageBox.warning(self, title, _('Diese Namen gibt es im Ordner schon, nichts wurde umbenannt:')
+                                + '\n\n' + '\n'.join(path.name for path in taken[:20]))
+            return
+        moved = {move.source: move.target for move in moves}
+        try:
+            rename.apply(moves)
+        except rename.RenameError as error:
+            QMessageBox.warning(self, title, _('Umbenennen fehlgeschlagen, nichts wurde umbenannt:')
+                                + f'\n\n{error}')
+            return
+        self.raw_captions.move({item.primary: moved[item.primary] for item in items if item.primary in moved})
+        # Rueckgaengig kennt die Bilder unter altem Namen; die Items ersetzt das Neueinlesen
+        self.undo_stack.forget(items)
+        self._update_undo_actions()
+        if self.viewer is not None and self.viewer.isVisible():
+            self.viewer.close()
+        for other in self.all_tabs():
+            if other.folder and transfer._same_dir(other.folder, tab.folder):
+                self.rescan(other, wait_for_writer=False)
+        self.statusBar().showMessage(ngettext('{count} Bild umbenannt', '{count} Bilder umbenannt',
+                                              len(items)).format(count=len(items)), 5000)
 
     # --- Kopieren zwischen Tabs ----------------------------------------------------
 
