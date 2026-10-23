@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 00:02+0200\n"
+"POT-Creation-Date: 2026-10-24 00:49+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -343,13 +343,6 @@ msgstr "Files"
 msgid "Datum"
 msgstr "Date"
 
-msgid "Datum (JJJJMMTT)"
-msgstr "Date (YYYYMMDD)"
-
-#, python-brace-format
-msgid "Datum als JJJJMMTT, z. B. {date}."
-msgstr "Date as YYYYMMDD, e.g. {date}."
-
 #, python-brace-format
 msgid "Datum aus dem Template: {fixed} – aufgenommen am {taken}"
 msgstr "Date from the template: {fixed} – taken on {taken}"
@@ -396,6 +389,9 @@ msgstr ""
 #, python-brace-format
 msgid "Die Metadaten von {name} werden noch eingelesen."
 msgstr "The metadata of {name} is still being read."
+
+msgid "Die Nummer (_001, _002, …) wird angehängt."
+msgstr "The number (_001, _002, …) is appended."
 
 msgid "Die vorhandene Datei wird überschrieben. Fortfahren?"
 msgstr "The existing file will be overwritten. Continue?"
@@ -619,9 +615,6 @@ msgstr "GPS will be set: {latitude}, {longitude}"
 msgid "Galerie (Kontaktbogen)"
 msgstr "Gallery (contact sheet)"
 
-msgid "Gastmannschaft"
-msgstr "Away team"
-
 msgid ""
 "Gefüllte Felder gehen beim Speichern in jedes Bild, leere lassen den Wert"
 " des Bildes stehen. Heim und Gast stehen im Titel und ergeben sich aus "
@@ -672,9 +665,6 @@ msgstr "Thumbnail size"
 
 msgid "Halle, Stadion"
 msgstr "Arena, stadium"
-
-msgid "Heimmannschaft"
-msgstr "Home team"
 
 msgid "Heranzoomen"
 msgstr "Zoom in"
@@ -849,15 +839,9 @@ msgstr "Shortcut"
 msgid "Kürzel aufnehmen"
 msgstr "Record shortcut"
 
-msgid "Kürzel für Heim- und Gastmannschaft eingeben."
-msgstr "Enter the abbreviations for home and away team."
-
 #, python-brace-format
 msgid "Kürzel für „{action}“:"
 msgstr "Shortcuts for “{action}”:"
-
-msgid "Kürzel nur aus Buchstaben, Ziffern und Bindestrich."
-msgstr "Abbreviations may only contain letters, digits and hyphens."
 
 msgid "Land"
 msgstr "Country"
@@ -883,6 +867,9 @@ msgstr "Check for updates …"
 
 msgid "Name"
 msgstr "Name"
+
+msgid "Namen eingeben, ohne / \\ : * ? \" < > | und nicht mit einem Punkt vorn."
+msgstr "Enter a name without / \\ : * ? \" < > | and not starting with a dot."
 
 msgid "Neu einlesen"
 msgstr "Reload"
@@ -1563,11 +1550,9 @@ msgstr "who writes captions"
 msgid "z. B. DEL 2 Heimspiele"
 msgstr "e.g. DEL 2 home games"
 
-msgid "z. B. EPC"
-msgstr "e.g. EPC"
-
-msgid "z. B. MEM"
-msgstr "e.g. MEM"
+#, python-brace-format
+msgid "z. B. {example}"
+msgstr "e.g. {example}"
 
 #, python-brace-format
 msgid "{alt} + Mausrad, Doppelklick"

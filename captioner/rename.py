@@ -1,8 +1,9 @@
 """
 Alle Bilder eines Ordners nach Schema umbenennen, ohne Qt.
 
-* Schema `<JJJJMMTT>_<HEIM>_<GAST>_<NNN>`, z. B. 20261023_MEM_EPC_001. Gezaehlt wird ab 1,
-  mit Nullen auf drei Stellen (mehr, wenn es ueber 999 Bilder sind).
+* Name `<frei>_<NNN>`: den Teil vorn bestimmt der Nutzer (vorgeschlagen Datum + Kuerzel, z. B.
+  20261023_MEM_EPC), die Nummer haengt Captioner an. Gezaehlt wird ab 1, mit Nullen auf drei
+  Stellen (mehr, wenn es ueber 999 Bilder sind).
 * Eine Gruppe (RAW, JPG/DNG, Sidecar) bekommt eine Nummer; die Endungen bleiben, wie sie sind.
 * Erst alle Dateien auf Zwischennamen (".<name>.captioner-rename"), dann auf die Zielnamen:
   so darf ein Zielname der alte Name eines anderen Bildes sein (zweimal umbenennen).
@@ -19,8 +20,9 @@ from .files import replace_file
 from .i18n import _
 
 TEMP_SUFFIX = '.captioner-rename'
-# Kuerzel landen im Dateinamen: nur Buchstaben, Ziffern und Bindestrich
-CODE_PATTERN = re.compile(r'[A-Za-z0-9-]+')
+# Unter Windows bzw. macOS in Dateinamen nicht erlaubt (dazu Steuerzeichen)
+FORBIDDEN = set('/\\:*?"<>|')
+DATE_PREFIX = re.compile(r'^\d{8}(?=_|$)')
 
 
 class RenameError(RuntimeError):
@@ -37,23 +39,23 @@ def today():
     return datetime.date.today().strftime('%Y%m%d')
 
 
-def valid_date(text):
-    """JJJJMMTT und ein echtes Datum."""
-    if not re.fullmatch(r'\d{8}', text):
-        return False
-    try:
-        datetime.datetime.strptime(text, '%Y%m%d')
-    except ValueError:
-        return False
-    return True
+def default_prefix(last=''):
+    """Vorschlag fuers Feld: der letzte Name mit heutigem Datum vorn, sonst "<heute>_"."""
+    if DATE_PREFIX.match(last):
+        return DATE_PREFIX.sub(today(), last)
+    return f'{today()}_'
 
 
-def valid_code(text):
-    return bool(CODE_PATTERN.fullmatch(text))
+def valid_prefix(text):
+    """Nicht leer, keine verbotenen Zeichen, kein Punkt vorn (versteckte Datei)."""
+    return (bool(text) and not text.startswith('.') and text == text.strip()
+            and not any(c in FORBIDDEN or ord(c) < 32 for c in text))
 
 
-def stem(date, home, away, number, width=3):
-    return f'{date}_{home}_{away}_{number:0{width}d}'
+def stem(prefix, number, width=3):
+    """Unterstrich als Trenner zur Nummer, ausser der Name endet schon darauf."""
+    separator = '' if prefix.endswith(('_', '-')) else '_'
+    return f'{prefix}{separator}{number:0{width}d}'
 
 
 def width(count):
@@ -68,12 +70,12 @@ def item_files(item):
     return paths
 
 
-def plan(items, date, home, away):
+def plan(items, prefix):
     """Umbenennungen in der Reihenfolge von items; Dateien, die schon richtig heissen, fallen weg."""
     digits = width(len(items))
     moves = []
     for number, item in enumerate(items, start=1):
-        new_stem = stem(date, home, away, number, digits)
+        new_stem = stem(prefix, number, digits)
         for path in item_files(item):
             target = path.with_name(new_stem + path.suffix)
             if target.name != path.name:

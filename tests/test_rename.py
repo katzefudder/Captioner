@@ -18,23 +18,30 @@ def folder_with_images(path):
     return scanner.scan(path)
 
 
-def test_names_follow_the_scheme():
-    assert rename.stem('20261023', 'MEM', 'EPC', 1) == '20261023_MEM_EPC_001'
+def test_number_is_appended_to_the_name():
+    assert rename.stem('20261023_MEM_EPC', 1) == '20261023_MEM_EPC_001'
+    assert rename.stem('20261023_EPC_MEM_', 2) == '20261023_EPC_MEM_002'      # Trenner nicht doppelt
     assert rename.width(999) == 3 and rename.width(1000) == 4
-    assert rename.stem('20261023', 'MEM', 'EPC', 7, rename.width(1200)) == '20261023_MEM_EPC_0007'
-    assert rename.today() == datetime.date.today().strftime('%Y%m%d')
+    assert rename.stem('20261023_MEM_EPC', 7, rename.width(1200)) == '20261023_MEM_EPC_0007'
+
+
+def test_suggestion_puts_todays_date_in_front():
+    today = datetime.date.today().strftime('%Y%m%d')
+    assert rename.today() == today
+    assert rename.default_prefix() == f'{today}_'
+    assert rename.default_prefix('20261023_MEM_EPC') == f'{today}_MEM_EPC'
+    assert rename.default_prefix('Spiel_MEM') == f'{today}_'
 
 
 def test_validation():
-    assert rename.valid_date('20261023')
-    assert not rename.valid_date('261023') and not rename.valid_date('20261332') and not rename.valid_date('2026-10-2')
-    assert rename.valid_code('MEM') and rename.valid_code('EC-BN')
-    assert not rename.valid_code('') and not rename.valid_code('M/M') and not rename.valid_code('A B')
+    assert rename.valid_prefix('20261023_MEM_EPC') and rename.valid_prefix('Spieltag 3 – Memmingen')
+    for bad in ('', 'M/M', 'a:b', '.versteckt', ' MEM', 'a\tb'):
+        assert not rename.valid_prefix(bad), bad
 
 
 def test_group_gets_one_number_and_keeps_extensions(tmp_path):
     items = folder_with_images(tmp_path)
-    rename.apply(rename.plan(items, '20261023', 'MEM', 'EPC'))
+    rename.apply(rename.plan(items, '20261023_MEM_EPC'))
     assert sorted(p.name for p in tmp_path.iterdir()) == [
         '20261023_MEM_EPC_001.JPG', '20261023_MEM_EPC_001.NEF', '20261023_MEM_EPC_001.xmp',
         '20261023_MEM_EPC_002.JPG', '20261023_MEM_EPC_003.NEF']
@@ -43,10 +50,10 @@ def test_group_gets_one_number_and_keeps_extensions(tmp_path):
 
 def test_renaming_twice_swaps_names_without_clashing(tmp_path):
     items = folder_with_images(tmp_path)
-    rename.apply(rename.plan(items, '20261023', 'MEM', 'EPC'))
+    rename.apply(rename.plan(items, '20261023_MEM_EPC'))
     items = scanner.scan(tmp_path)
     items.reverse()      # andere Reihenfolge: 001 <-> 003
-    moves = rename.plan(items, '20261023', 'MEM', 'EPC')
+    moves = rename.plan(items, '20261023_MEM_EPC')
     assert rename.conflicts(moves) == []
     rename.apply(moves)
     assert (tmp_path / '20261023_MEM_EPC_001.NEF').read_bytes() == b'raw3'
@@ -58,7 +65,7 @@ def test_foreign_file_with_target_name_blocks(tmp_path):
     items = folder_with_images(tmp_path)
     (tmp_path / '20261023_MEM_EPC_002.JPG').write_bytes(b'other')
     items = [i for i in scanner.scan(tmp_path) if not i.name.startswith('2026')]
-    moves = rename.plan(items, '20261023', 'MEM', 'EPC')
+    moves = rename.plan(items, '20261023_MEM_EPC')
     assert [p.name for p in rename.conflicts(moves)] == ['20261023_MEM_EPC_002.JPG']
     with pytest.raises(rename.RenameError):
         rename.apply(moves)
@@ -78,7 +85,7 @@ def test_failure_renames_everything_back(tmp_path, monkeypatch):
 
     monkeypatch.setattr(rename, 'replace_file', flaky)
     with pytest.raises(rename.RenameError):
-        rename.apply(rename.plan(items, '20261023', 'MEM', 'EPC'))
+        rename.apply(rename.plan(items, '20261023_MEM_EPC'))
     assert sorted(p.name for p in tmp_path.iterdir()) == before
 
 
@@ -124,8 +131,8 @@ def test_menu_renames_folder_and_keeps_rating(window, tmp_path):
     file_menu = window.menuBar().actions()[0].menu()
     assert any(a.text() == 'Bilder umbenennen …' for a in file_menu.actions())
 
-    window.rename_folder(('20261023', 'MEM', 'EPC'))
-    assert window.settings.rename_home == 'MEM' and window.settings.rename_away == 'EPC'
+    window.rename_folder('20261023_MEM_EPC')
+    assert window.settings.rename_prefix == '20261023_MEM_EPC'
     assert scanned(tab)
     names = sorted(p.name for p in folder.iterdir())
     assert len(names) == 4 and all(n.startswith('20261023_MEM_EPC_00') for n in names)

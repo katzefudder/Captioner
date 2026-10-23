@@ -312,13 +312,6 @@ msgstr ""
 msgid "Datum"
 msgstr ""
 
-msgid "Datum (JJJJMMTT)"
-msgstr ""
-
-#, python-brace-format
-msgid "Datum als JJJJMMTT, z. B. {date}."
-msgstr ""
-
 #, python-brace-format
 msgid "Datum aus dem Template: {fixed} – aufgenommen am {taken}"
 msgstr ""
@@ -357,6 +350,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "Die Metadaten von {name} werden noch eingelesen."
+msgstr ""
+
+msgid "Die Nummer (_001, _002, …) wird angehängt."
 msgstr ""
 
 msgid "Die vorhandene Datei wird überschrieben. Fortfahren?"
@@ -565,9 +561,6 @@ msgstr ""
 msgid "Galerie (Kontaktbogen)"
 msgstr ""
 
-msgid "Gastmannschaft"
-msgstr ""
-
 msgid ""
 "Gefüllte Felder gehen beim Speichern in jedes Bild, leere lassen den Wert"
 " des Bildes stehen. Heim und Gast stehen im Titel und ergeben sich aus "
@@ -614,9 +607,6 @@ msgid "Größe der Vorschaubilder"
 msgstr ""
 
 msgid "Halle, Stadion"
-msgstr ""
-
-msgid "Heimmannschaft"
 msgstr ""
 
 msgid "Heranzoomen"
@@ -784,14 +774,8 @@ msgstr ""
 msgid "Kürzel aufnehmen"
 msgstr ""
 
-msgid "Kürzel für Heim- und Gastmannschaft eingeben."
-msgstr ""
-
 #, python-brace-format
 msgid "Kürzel für „{action}“:"
-msgstr ""
-
-msgid "Kürzel nur aus Buchstaben, Ziffern und Bindestrich."
 msgstr ""
 
 msgid "Land"
@@ -817,6 +801,9 @@ msgid "Nach Updates suchen …"
 msgstr ""
 
 msgid "Name"
+msgstr ""
+
+msgid "Namen eingeben, ohne / \\ : * ? \" < > | und nicht mit einem Punkt vorn."
 msgstr ""
 
 msgid "Neu einlesen"
@@ -1488,10 +1475,8 @@ msgstr ""
 msgid "z. B. DEL 2 Heimspiele"
 msgstr ""
 
-msgid "z. B. EPC"
-msgstr ""
-
-msgid "z. B. MEM"
+#, python-brace-format
+msgid "z. B. {example}"
 msgstr ""
 
 #, python-brace-format

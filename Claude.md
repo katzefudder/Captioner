@@ -19,7 +19,7 @@ Bedienung: `readme.md`.
 | `transfer.py` | Kopieren zwischen Ordnern: Gruppen (RAW+JPG+Sidecar), Konflikte (überspringen/umbenennen/ersetzen) |
 | `keywords.py` | Gemerkte Stichwörter (`<cache>/keywords.json`) und Vorschläge fürs Tag-Feld |
 | `updates.py` | Versionsvergleich und GitHub-Release-Antwort (ohne Qt); `ui/updatecheck.py` fragt ab |
-| `rename.py` | Ordner umbenennen `<JJJJMMTT>_<HEIM>_<GAST>_<NNN>`: `plan()` je Bild (Gruppe) eine Nummer, `apply()` über Zwischennamen, bei Fehler zurück |
+| `rename.py` | Ordner umbenennen `<Name>_<NNN>` (Name frei, `default_prefix`: heutiges Datum vorn): `plan()` je Bild (Gruppe) eine Nummer, `apply()` über Zwischennamen, bei Fehler zurück |
 | `replace.py` | Suchen und Ersetzen über mehrere Bilder: `plan()` rechnet je Bild wie Speichern (Rohtext mit Codes, Anhang neu, Personen-Tags) |
 | `undo.py` | Rückgängig/Wiederholen: Schritte mit Vorher/Nachher je Bild (Metadaten + Rohtext) |
 | `previews.py` | Kacheln/Großansicht aus eingebetteten JPEGs, Plattencache |
@@ -32,7 +32,7 @@ Bedienung: `readme.md`.
 | `ui/tabs.py` | `FolderTab` (Zustand je Ordner), `FolderTabBar` (Drop auf Reiter), Konfliktdialog, `CopyWorker` |
 | `ui/instance.py` | Windows: eine App je Benutzer, weitere Starts reichen Ordner per `QLocalServer` weiter |
 | `ui/folderdialog.py` | „Ordner öffnen“ mit Mehrfachauswahl: macOS `NSOpenPanel` per ctypes, sonst Qt-Dialog |
-| `ui/renamedialog.py` | „Bilder umbenennen“: Kürzel Heim/Gast (gemerkt in `Settings.rename_home`/`rename_away`), Datum (leer = heute); `MainWindow.rename_folder` benennt um |
+| `ui/renamedialog.py` | „Bilder umbenennen“: ein Feld für den Namen (gemerkt in `Settings.rename_prefix`), Nummer angehängt; `MainWindow.rename_folder` benennt um |
 | `ui/replacedialog.py` | „Suchen und Ersetzen“: Eingabe, Vorschau je Bild (vorher/nachher), abwählbar; `MainWindow.find_replace` schreibt |
 | `ui/rostereditor.py` | „Roster bearbeiten“: lokale Roster-Dateien mit Prüfung (`roster.check`), Speichern über `roster.write_file` |
 | `ui/about.py` | „Über Captioner“: Logo, `captioner.version()`, Link `captioner.WEBSITE_LINK` (mit `mtm_campaign`/`mtm_source`) |
@@ -365,7 +365,7 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 ## Entwicklung
 
 ```bash
-make install && make test            # 258 Tests, ExifTool nötig (brew install exiftool)
+make install && make test            # 259 Tests, ExifTool nötig (brew install exiftool)
 make run FOLDER=~/Pictures/2026/03-01
 CAPTIONER_HOME=/tmp/cap make run     # ohne die echten Einstellungen/Caches
 make bundle                          # dist/Captioner.app mit ExifTool 13.59 (arm64)

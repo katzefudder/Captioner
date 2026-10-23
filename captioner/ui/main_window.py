@@ -1539,10 +1539,10 @@ class MainWindow(QMainWindow):
                                               '{count} Bilder in den Papierkorb gelegt',
                                               len(trashed)).format(count=len(trashed)), 5000)
 
-    def rename_folder(self, answer=None):
+    def rename_folder(self, prefix=None):
         """
-        Alle Bilder des Ordners nach Schema JJJJMMTT_HEIM_GAST_NNN umbenennen, nummeriert nach
-        Aufnahmezeit (Reihenfolge des Scans). answer=(Datum, Heim, Gast) ersetzt den Dialog (Tests).
+        Alle Bilder des Ordners in <Name>_NNN umbenennen (Name frei, z. B. 20261023_MEM_EPC), nummeriert
+        nach Aufnahmezeit (Reihenfolge des Scans). prefix ersetzt den Dialog (Tests).
         """
         tab = self.tab
         title = _('Bilder umbenennen')
@@ -1555,18 +1555,17 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, title, _('Es wird noch kopiert. Bitte warten, bis das fertig ist.'))
             return
         items = list(tab.all_items)
-        if answer is None:
-            dialog = RenameDialog(len(items), self.settings.rename_home, self.settings.rename_away, self)
+        if prefix is None:
+            dialog = RenameDialog(len(items), rename.default_prefix(self.settings.rename_prefix), self)
             if not dialog.exec():
                 return
-            answer = dialog.values()
-        date, home, away = answer
-        self.settings.rename_home, self.settings.rename_away = home, away
+            prefix = dialog.prefix()
+        self.settings.rename_prefix = prefix
         self.settings.save()
         # Erst fertig schreiben: der Writer kennt nur die alten Pfade
         if self.writer.pending_count() and not self._wait_for_writer(title):
             return
-        moves = rename.plan(items, date, home, away)
+        moves = rename.plan(items, prefix)
         taken = rename.conflicts(moves)
         if taken:
             QMessageBox.warning(self, title, _('Diese Namen gibt es im Ordner schon, nichts wurde umbenannt:')
