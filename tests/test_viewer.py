@@ -160,6 +160,21 @@ def test_z_and_plus_minus_in_viewer(window):
 
 
 @requires_exiftool
+def test_info_line_keeps_its_height_while_details_load(window):
+    """Beim ersten Anzeigen kommen Kamera/Objektiv spaeter: die Leiste darf nicht wachsen (Bild sprang)."""
+    window.open_viewer()
+    viewer = window.viewer
+    QtWidgets.QApplication.processEvents()
+    viewer.set_details(viewer.key, {})   # Details noch leer: Platzhalterzeile
+    loading = viewer.info.text()
+    viewer.set_details(viewer.key, {'FileName': '0.jpg', 'Model': 'NIKON Z 9'})
+    assert loading.count('<br>') == viewer.info.text().count('<br>') == 1
+    viewer._raw_details = None
+    viewer._render_info()
+    assert viewer.info.text().count('<br>') == 1
+
+
+@requires_exiftool
 def test_option_arrows_pan_and_plain_arrows_navigate(window):
     window.open_viewer()
     viewer = window.viewer

@@ -82,6 +82,8 @@ Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Bu
 
 ### Behoben
 
+- **Großansicht zuckte beim ersten Anzeigen eines Bildes:** die Zeile mit Kamera und Objektiv
+  kam erst nach dem Lesen der Details dazu, das Bild wurde dadurch kurz kleiner.
 - **Roster-Cache 0 Minuten** nutzte unter Windows manchmal doch die zwischengespeicherte Fassung
   (Dateizeit minimal vor der Systemuhr). Bei 0 wird jetzt immer neu geladen.
 - **Großansicht: `⌘N`/`⌘B` (speichern und nächstes/voriges Bild) wirkten nur mit Fokus im

@@ -454,8 +454,9 @@ class Viewer(QDialog):
         """Unten: Datei, Sterne, Farbe (ggf. Beschreibung), ganz unten Kamera, Objektiv, Belichtung."""
         line = getattr(self, '_info_line', '')
         exposure = details_module.summary(self._raw_details) if self._raw_details else ''
-        if exposure:
-            line += f'<br><span style="color: #9a9a9a">{html.escape(exposure)}</span>'
+        # Die Zeile steht immer da, auch solange die Details noch gelesen werden: sonst wuerde
+        # die Leiste beim ersten Anzeigen eines Bildes hoeher und das Bild sprang
+        line += f'<br><span style="color: #9a9a9a">{html.escape(exposure) or "&nbsp;"}</span>'
         self.info.setText(line)
 
     def _render_details(self):
