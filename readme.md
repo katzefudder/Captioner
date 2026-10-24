@@ -183,7 +183,7 @@ Die Menüs stehen auf dem Mac oben in der Menüleiste des Bildschirms: **Caption
 Captioner, Einstellungen `⌘,`, Beenden `⌘Q`), **Ablage** (Ordner öffnen `⌘O`, in neuem
 Tab, Neu einlesen `F5`, Tab schließen), **Bearbeiten** (Rückgängig, Wiederholen, Suchen und
 Ersetzen), **Template**, **Roster** und **Hilfe**
-(Anleitung als PDF, Tastenkürzel, [Captioner-Website](https://www.katzefudder.de/captioner?mtm_campaign=captioner&mtm_source=github)).
+(Anleitung als PDF, deutsch oder englisch je nach Sprache der Oberfläche, Tastenkürzel, [Captioner-Website](https://www.katzefudder.de/captioner?mtm_campaign=captioner&mtm_source=github)).
 
 ## Suchen und Ersetzen
 

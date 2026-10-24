@@ -1,4 +1,4 @@
-"""Kontextmenue der Galerie: Bewertung, Farbe, Tag, Papierkorb, Finder."""
+"""Gallery context menu: rating, color, tag, trash, Finder."""
 import os
 import time
 
@@ -48,7 +48,7 @@ def window(app, tmp_path):
 
 
 def actions(menu):
-    """Text vor dem Tabulator (dahinter steht das Kuerzel) -> Aktion, Untermenues als 'Menue/Punkt'."""
+    """Text before the tab (the shortcut is after it) -> action, submenus as 'menu/item'."""
     found = {}
     for action in menu.actions():
         if action.isSeparator():
@@ -66,14 +66,14 @@ def test_menu_sets_rating_color_and_tag_for_the_selection(window):
     window.selected_keys = {first.key, second.key}
     window.show_gallery()
     from captioner.ui import filemanager
-    widget = window.gallery_menu(window)      # mit Eltern, sonst raeumt Python das Menue weg
+    widget = window.gallery_menu(window)      # with a parent, otherwise Python cleans the menu up
     menu = actions(widget)
     for name in ('Bewertung/★★★', 'Farbklasse/Farbklasse 2 (Yellow)', 'Getaggt', 'Großansicht',
                  'Beschriftung kopieren', filemanager.reveal_label(), 'Pfade kopieren',
                  'In den Papierkorb legen …'):
         assert name in menu, name
-    assert not menu['Beschriftung einfügen'].isEnabled()           # noch nichts kopiert
-    assert menu['Bewertung/★★★'].text().endswith('3')             # Kuerzel daneben (⌘3 bzw. Ctrl+3)
+    assert not menu['Beschriftung einfügen'].isEnabled()           # nothing copied yet
+    assert menu['Bewertung/★★★'].text().endswith('3')             # shortcut next to it (⌘3 or Ctrl+3)
     menu['Bewertung/★★★'].trigger()
     menu['Farbklasse/Farbklasse 2 (Yellow)'].trigger()
     menu['Getaggt'].trigger()
@@ -82,7 +82,7 @@ def test_menu_sets_rating_color_and_tag_for_the_selection(window):
     again = actions(again_widget)
     assert again['Bewertung/★★★'].isChecked() and again['Farbklasse/Farbklasse 2 (Yellow)'].isChecked()
     assert again['Getaggt'].isChecked()
-    window.undo()                                                  # ein Schritt je Menuepunkt
+    window.undo()                                                  # one step per menu item
     assert not first.meta.tagged and first.meta.rating == 3
 
 
@@ -103,7 +103,7 @@ def test_trash_moves_all_files_after_asking(window, monkeypatch):
     from PySide6.QtWidgets import QMessageBox
     raw_item = next(i for i in window.filtered if i.raw)
     window.select_only(raw_item)
-    window.set_rating(4)                                           # schreibt ein Sidecar
+    window.set_rating(4)                                           # writes a sidecar
     assert window.writer.flush(30) and raw_item.sidecar.exists()
     trashed = []
     monkeypatch.setattr(filemanager, 'move_to_trash', lambda path: trashed.append(path.name) or True)
@@ -114,7 +114,7 @@ def test_trash_moves_all_files_after_asking(window, monkeypatch):
     window.trash_selected()
     assert sorted(trashed) == ['DSC_0001.JPG', 'DSC_0001.NEF', 'DSC_0001.xmp']
     assert raw_item not in window.filtered and raw_item not in window.all_items and not window.selected_keys
-    assert window.undo_stack.undo_label is None                   # Bewertung des geloeschten Bildes vergessen
+    assert window.undo_stack.undo_label is None                   # rating of the deleted image forgotten
 
 
 def test_reveal_and_copy_paths(window, monkeypatch):

@@ -1,4 +1,4 @@
-"""Zoom in der Grossansicht (Z, *, +, -, Option/Alt+Pfeile)."""
+"""Zoom in the preview (Z, *, +, -, Option/Alt+arrows)."""
 import os
 
 import pytest
@@ -47,7 +47,7 @@ def test_toggle_goes_to_100_percent_and_back(view):
 
 def test_steps_up_and_down_to_fit(view):
     view.step(1)
-    assert view.zoom == 0.5          # kleinste Stufe, eingepasst liegt darunter
+    assert view.zoom == 0.5          # smallest level, fitted is below it
     view.step(1)
     view.step(1)
     assert view.zoom == 1.0
@@ -82,7 +82,7 @@ def test_anchor_point_stays_under_the_mouse(view):
 
 def test_panning_is_clamped_to_the_image(view):
     view.toggle()
-    view.pan(100000, 100000)  # weit nach links oben schieben
+    view.pan(100000, 100000)  # pan far to the top left
     rect = view._image_rect()
     assert rect.left() == pytest.approx(0, abs=0.5) and rect.top() == pytest.approx(0, abs=0.5)
     view.pan(-100000, -100000)
@@ -94,15 +94,15 @@ def test_tile_is_never_zoomed(view):
     view.toggle()
     small = QImage(320, 240, QImage.Format.Format_RGB32)
     view.set_image(small, provisional=True)
-    assert not view.is_zoomed()      # Kachel bleibt eingepasst ...
-    assert view.zoom == 1.0          # ... aber die Zoomstufe bleibt fuers Vollbild erhalten
+    assert not view.is_zoomed()      # the tile stays fitted ...
+    assert view.zoom == 1.0          # ... but the zoom level is kept for the full image
 
 
 def test_next_photo_keeps_the_zoomed_section(view):
     view.zoom_to(1.0)
-    view.pan(100000, 100000)          # linke obere Ecke
+    view.pan(100000, 100000)          # top left corner
     before = QPointF(view.center)
-    view.set_image(QImage(320, 240, QImage.Format.Format_RGB32), provisional=True)  # Kachel
+    view.set_image(QImage(320, 240, QImage.Format.Format_RGB32), provisional=True)  # tile
     image = QImage(4000, 3000, QImage.Format.Format_RGB32)
     image.fill(QColor('gray'))
     view.set_image(image)
@@ -161,11 +161,11 @@ def test_z_and_plus_minus_in_viewer(window):
 
 @requires_exiftool
 def test_info_line_keeps_its_height_while_details_load(window):
-    """Beim ersten Anzeigen kommen Kamera/Objektiv spaeter: die Leiste darf nicht wachsen (Bild sprang)."""
+    """On first display camera/lens arrive later: the bar must not grow (the image jumped)."""
     window.open_viewer()
     viewer = window.viewer
     QtWidgets.QApplication.processEvents()
-    viewer.set_details(viewer.key, {})   # Details noch leer: Platzhalterzeile
+    viewer.set_details(viewer.key, {})   # details still empty: placeholder line
     loading = viewer.info.text()
     viewer.set_details(viewer.key, {'FileName': '0.jpg', 'Model': 'NIKON Z 9'})
     assert loading.count('<br>') == viewer.info.text().count('<br>') == 1
@@ -187,7 +187,7 @@ def test_option_arrows_pan_and_plain_arrows_navigate(window):
 
     QTest.keyClick(viewer, Qt.Key.Key_Right)
     assert viewer.key == window.filtered[1].key
-    assert viewer.zoom.zoom == 1.0  # Zoom bleibt beim Blaettern
+    assert viewer.zoom.zoom == 1.0  # zoom stays when moving between images
 
 
 def test_drag_with_mouse_moves_the_visible_area(view):
@@ -198,7 +198,7 @@ def test_drag_with_mouse_moves_the_visible_area(view):
     assert view.cursor().shape() == Qt.CursorShape.ClosedHandCursor
     QTest.mouseMove(view, QPointF(300, 250).toPoint())
     QTest.mouseRelease(view, Qt.MouseButton.LeftButton, pos=QPointF(300, 250).toPoint())
-    # Bild folgt der Maus: nach links oben gezogen -> mehr von rechts unten sichtbar
+    # the image follows the mouse: dragged to the top left -> more of the bottom right visible
     assert view.center.x() > before.x() and view.center.y() > before.y()
     assert view.cursor().shape() == Qt.CursorShape.OpenHandCursor
 
@@ -219,7 +219,7 @@ def test_slider_controls_zoom_and_follows_keys(window):
     wait_for_full_image(window)
     slider = viewer.slider
     assert (slider.minimum(), slider.maximum()) == (50, 400)
-    assert slider.focusPolicy() == Qt.FocusPolicy.NoFocus  # Pfeiltasten blaettern weiter
+    assert slider.focusPolicy() == Qt.FocusPolicy.NoFocus  # arrow keys keep moving between images
 
     slider.setValue(250)
     assert viewer.zoom.zoom == pytest.approx(2.5)
@@ -235,7 +235,7 @@ def test_slider_controls_zoom_and_follows_keys(window):
 
 
 def test_screen_stage_keeps_the_original_scale(app):
-    """Bildschirmstufe (halbe Aufloesung): 100 % und Ausschnitt beziehen sich aufs Original."""
+    """Screen stage (half resolution): 100 % and the visible area refer to the original."""
     v = ZoomView()
     v.resize(800, 600)
     half = QImage(2000, 1500, QImage.Format.Format_RGB32)
@@ -248,9 +248,9 @@ def test_screen_stage_keeps_the_original_scale(app):
     center = QPointF(v.center)
     full = QImage(4000, 3000, QImage.Format.Format_RGB32)
     full.fill(QColor('gray'))
-    v.set_image(full)                      # volle Aufloesung kommt nach: nichts springt
+    v.set_image(full)                      # full resolution follows: nothing jumps
     assert v.zoom == 1.0 and v.center == center
-    v.grab()                               # zeichnet aus beiden Groessen ohne Fehler
+    v.grab()                               # paints from both sizes without errors
 
 
 @requires_exiftool
@@ -264,7 +264,7 @@ def test_render_view_decodes_at_screen_size(tmp_path):
     try:
         image, size = previews.render_view(tool, item, 1500)
         assert size == (4000, 3000)
-        assert 1500 <= max(image.size) < 4000      # Draft: verkleinert, aber nie unter die Bildschirmkante
+        assert 1500 <= max(image.size) < 4000      # draft: downscaled, but never below the screen edge
         image, size = previews.render_view(tool, item, None)
         assert image.size == size == (4000, 3000)
     finally:
@@ -288,29 +288,29 @@ def test_view_cache_prefetch_and_stages(app):
     a, b = SimpleNamespace(key='a'), SimpleNamespace(key='b')
     loader.request_full(a, [b])
     assert started == [('a', 'display'), ('a', 'full'), ('b', 'display')]
-    loader._on_view('b', image('display'))             # vorgeladen: noch nicht gezeigt
+    loader._on_view('b', image('display'))             # preloaded: not shown yet
     loader._on_view('a', image('full'))
-    loader._on_view('a', image('display'))             # zu spaet: ersetzt das volle Bild nicht
+    loader._on_view('a', image('display'))             # too late: doesn't replace the full image
     assert shown == [('a', 'full')] and loader.view_images['a'].text('stage') == 'full'
 
     started.clear()
-    loader.request_full(b, [a])                         # weitergeblaettert: sofort aus dem Speicher
+    loader.request_full(b, [a])                         # moved on: right away from memory
     assert shown[-1] == ('b', 'display') and started == [('b', 'full')]
 
     loader.VIEW_BYTES = image('display', 20).sizeInBytes()
-    loader._on_view('c', image('display', 20))          # ueber dem Budget: aeltere gehen, das aktuelle bleibt
+    loader._on_view('c', image('display', 20))          # over the budget: older ones go, the current one stays
     assert 'b' in loader.view_images and 'a' not in loader.view_images
     loader.shutdown()
 
 
 @requires_exiftool
 def test_caption_panel_fits_narrow_viewer(window):
-    """Langer Template-Name verbreitert das Panel nicht: Roster-Knopf bleibt im Bild."""
+    """A long template name doesn't widen the panel: the roster button stays visible."""
     window.editor.template_box.addItem('Sehr langer Template-Name ' * 6)
     window.open_viewer()
     viewer = window.viewer
     viewer.set_caption_visible(True)
-    viewer.resize(600, 800)          # schmaler als das Mindestmass
+    viewer.resize(600, 800)          # narrower than the minimum size
     QtWidgets.QApplication.processEvents()
     content = window.editor.scroll.widget()
     wide = [f'{type(w).__name__} {w.minimumSizeHint().width()} {getattr(w, "text", lambda: "")()[:60]!r}'

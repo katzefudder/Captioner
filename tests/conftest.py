@@ -38,9 +38,9 @@ def make_jpeg(path, size=(600, 400), color='red'):
 
 def pytest_sessionfinish(session, exitstatus):
     """
-    Uebrige Fenster und Dialoge abbauen, solange Qt noch vollstaendig laeuft. Sonst raeumt
-    PySide sie erst beim Beenden des Interpreters ab, in beliebiger Reihenfolge, und stuerzt
-    dabei gelegentlich ab (QPushButtonWrapper-Destruktor, Segfault nach "passed").
+    Tear down remaining windows and dialogs while Qt is still fully running. Otherwise
+    PySide only cleans them up when the interpreter exits, in arbitrary order, and
+    occasionally crashes doing so (QPushButtonWrapper destructor, segfault after "passed").
     """
     import sys
     widgets = sys.modules.get('PySide6.QtWidgets')
@@ -49,8 +49,8 @@ def pytest_sessionfinish(session, exitstatus):
         return
     from PySide6.QtCore import QCoreApplication, QEvent
     from PySide6.QtCore import Qt
-    # Popups (Completer-Listen) sind auch Fenster ohne Eltern-Widget, gehoeren aber ihrem
-    # Completer, der sie selbst loescht; doppelt geloescht stuerzt es ab
+    # Popups (completer lists) are also windows without a parent widget, but belong to their
+    # completer, which deletes them itself; deleting twice crashes
     for widget in app.topLevelWidgets():
         if widget.parentWidget() is None and widget.windowType() != Qt.WindowType.Popup:
             widget.close()

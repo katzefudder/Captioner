@@ -1,15 +1,15 @@
 """
-Grossansicht mit Zoom.
+Preview with zoom.
 
-Z oder * schaltet zwischen eingepasst und 100 % um, + und - zoomen stufenweise,
-der Slider unten stellt stufenlos zwischen 50 % und 400 % ein,
-Option/Alt+Mausrad zoomt an der Mausposition, Cmd/Strg+Klick zoomt auf die
-geklickte Stelle, Option/Alt+Pfeiltasten verschieben (mit Shift schneller), und im Zoom laesst
-sich der Ausschnitt mit gedrueckter Maustaste ziehen (Hand-Cursor).
+Z or * switches between fitted and 100 %, + and - zoom in steps, the slider at the
+bottom sets anything between 50 % and 400 %, Option/Alt+scroll wheel zooms at the
+mouse position, Cmd/Ctrl+click zooms to the clicked spot, Option/Alt+arrow keys pan
+(faster with Shift), and when zoomed the visible area can be dragged with the mouse
+button held (hand cursor).
 
-100 % heisst: ein Bildpixel auf ein Bildschirmpixel (Retina beruecksichtigt).
-Zoomstufe und Ausschnitt bleiben beim Blaettern erhalten, damit man bei
-Serienbildern die Schaerfe an derselben Stelle vergleichen kann.
+100 % means: one image pixel per screen pixel (Retina taken into account).
+Zoom level and visible area are kept when moving to another image, so the sharpness
+of a burst can be compared at the same spot.
 """
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
@@ -24,17 +24,17 @@ from .editor import VerticalScrollArea
 from .gallery import item_color
 from .workers import full_size
 
-# Wertebereich des Zooms; "eingepasst" liegt meist darunter (Z9-Bild ~13 %) und ist
-# ein eigener Zustand, keine Zoomstufe
+# Range of the zoom; "fitted" is usually below it (Z9 image ~13 %) and is a state of
+# its own, not a zoom level
 ZOOM_MIN = 0.5
 ZOOM_MAX = 4.0
 ZOOM_STEPS = [0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0]
-PAN_STEP = 60          # logische Pixel pro Pfeiltaste
+PAN_STEP = 60          # logical pixels per arrow key
 PAN_STEP_FAST = 300
 
-# Knoepfe der unteren Leiste: auf dunklem Grund, aktive Schalter (Beschriften, Infos)
-# deutlich hervorgehoben. Nur an diesen Knoepfen gesetzt, damit das eingehaengte
-# Beschriftungs-Panel sein normales Aussehen behaelt.
+# Buttons of the bottom bar: on a dark background, active toggles (Caption, Info) clearly
+# highlighted. Set only on these buttons so the caption panel moved in keeps its
+# normal look.
 BAR_BUTTON_STYLE = '''
 QPushButton { background: #222; color: #ddd; border: 1px solid #444; border-radius: 5px; padding: 3px 12px; }
 QPushButton:hover { border-color: #777; }
@@ -50,7 +50,7 @@ def clamp_zoom(factor):
 
 class ZoomView(QWidget):
     zoom_changed = Signal(str)
-    zoom_state = Signal(bool, float)   # gezoomt?, Faktor (bei eingepasst: Einpass-Faktor)
+    zoom_state = Signal(bool, float)   # zoomed?, factor (when fitted: the fit factor)
     FRAME_W = 8
 
     def __init__(self, parent=None):
@@ -59,19 +59,19 @@ class ZoomView(QWidget):
         self.setMinimumSize(200, 150)
         self._pixmap = None
         self._full_size = (0, 0)
-        self.provisional = False   # Kachel statt Vollbild: nur eingepasst zeigen
-        self.zoom = None           # None = eingepasst, sonst Faktor (1.0 = 100 %)
-        self.center = QPointF(0.5, 0.5)  # Bildmitte des Ausschnitts, relativ (0..1)
+        self.provisional = False   # tile instead of full image: only show fitted
+        self.zoom = None           # None = fitted, otherwise factor (1.0 = 100 %)
+        self.center = QPointF(0.5, 0.5)  # center of the visible area, relative (0..1)
         self._drag_from = None
-        self.frame_color = None    # Farbklasse/Label des Bildes: Rahmen ums Foto
+        self.frame_color = None    # color class/label of the image: frame around the photo
 
-    # --- Zustand -----------------------------------------------------------
+    # --- State -------------------------------------------------------------
 
     def set_image(self, image, provisional=False):
         """
-        image darf kleiner als das Original sein (Bildschirmstufe, Text 'full_size'): gerechnet
-        wird immer in Pixeln des Originals, damit 100 % stimmt und der Wechsel zur vollen
-        Aufloesung den Ausschnitt nicht verschiebt.
+        image may be smaller than the original (screen stage, text 'full_size'): all
+        computing is in pixels of the original, so 100 % is right and switching to full
+        resolution doesn't move the visible area.
         """
         self._pixmap = QPixmap.fromImage(image) if image is not None and not image.isNull() else None
         self._full_size = full_size(image) if self._pixmap else (0, 0)
@@ -81,14 +81,14 @@ class ZoomView(QWidget):
         self._announce()
 
     def image_size(self):
-        """Groesse des Originals in Pixeln (nicht unbedingt die des geladenen Bildes)."""
+        """Size of the original in pixels (not necessarily that of the loaded image)."""
         return self._full_size if self._pixmap else (0, 0)
 
     def _dpr(self):
         return self.devicePixelRatioF() or 1.0
 
     def fit_factor(self):
-        """Faktor (in Bildschirmpixeln), bei dem das Bild genau hineinpasst."""
+        """Factor (in screen pixels) at which the image fits exactly."""
         iw, ih = self.image_size()
         if not iw or not ih:
             return 1.0
@@ -101,10 +101,10 @@ class ZoomView(QWidget):
         return self.zoom if self.is_zoomed() else self.fit_factor()
 
     def _scale(self):
-        """Logische Pixel pro Bildpixel."""
+        """Logical pixels per image pixel."""
         return self.factor() / self._dpr()
 
-    # --- Zoom und Verschieben ----------------------------------------------------
+    # --- Zoom and panning --------------------------------------------------------
 
     def toggle(self, anchor=None):
         if self.zoom is None:
@@ -135,7 +135,7 @@ class ZoomView(QWidget):
         self._announce()
 
     def zoom_to(self, factor, anchor=None):
-        """Zoomt so, dass der Bildpunkt unter anchor (Widget-Koordinaten) stehen bleibt."""
+        """Zooms so that the image point under anchor (widget coordinates) stays put."""
         factor = clamp_zoom(factor)
         if not self._pixmap:
             self.zoom = factor
@@ -153,7 +153,7 @@ class ZoomView(QWidget):
         self._announce()
 
     def center_on(self, widget_pos, factor):
-        """Cmd/Strg+Klick: auf die Stelle zoomen und sie in die Mitte holen."""
+        """Cmd/Ctrl+click: zoom to the spot and bring it to the center."""
         point = self.image_point(QPointF(widget_pos))
         self.zoom = clamp_zoom(factor)
         self.center = point
@@ -171,7 +171,7 @@ class ZoomView(QWidget):
         self.update()
 
     def image_point(self, widget_pos):
-        """Relative Bildkoordinate (0..1) unter einer Widget-Position."""
+        """Relative image coordinate (0..1) under a widget position."""
         rect = self._image_rect()
         if rect.width() <= 0 or rect.height() <= 0:
             return QPointF(0.5, 0.5)
@@ -180,11 +180,11 @@ class ZoomView(QWidget):
         return QPointF(min(max(x, 0.0), 1.0), min(max(y, 0.0), 1.0))
 
     def _clamp(self):
-        """Kein leerer Rand, solange das Bild groesser als das Fenster ist."""
+        """No empty margin as long as the image is larger than the window."""
         iw, ih = self.image_size()
         if not iw or not ih or not self.is_zoomed():
-            # Eingepasst (auch Kachel beim Bildwechsel) zaehlt center nicht: nicht anfassen,
-            # sonst ginge der Ausschnitt fuers naechste Vollbild verloren.
+            # When fitted (also the tile while switching images) center doesn't count: don't touch
+            # it, otherwise the visible area for the next full image would be lost.
             return
         s = self._scale()
         cx, cy = self.center.x(), self.center.y()
@@ -216,10 +216,10 @@ class ZoomView(QWidget):
         self.zoom_changed.emit(text)
         self.zoom_state.emit(self.is_zoomed(), self.factor())
         if self._drag_from is None:
-            # Hand-Cursor sofort, damit man sieht, dass sich der Ausschnitt ziehen laesst
+            # hand cursor right away, so you see the visible area can be dragged
             self.setCursor(Qt.CursorShape.OpenHandCursor if self.is_zoomed() else Qt.CursorShape.ArrowCursor)
 
-    # --- Zeichnen ----------------------------------------------------------
+    # --- Painting ----------------------------------------------------------
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -232,15 +232,15 @@ class ZoomView(QWidget):
         visible = rect.intersected(QRectF(self.rect()))
         if visible.isEmpty():
             return
-        # Ausschnitt in Pixeln des geladenen Bildes (kann kleiner als das Original sein)
+        # visible area in pixels of the loaded image (may be smaller than the original)
         s = self._scale() * self._full_size[0] / self._pixmap.width()
         source = QRectF((visible.left() - rect.left()) / s, (visible.top() - rect.top()) / s,
                         visible.width() / s, visible.height() / s)
-        # Ab 100 % harte Pixel, damit Schaerfe beurteilbar bleibt; darunter glatt
+        # from 100 % hard pixels so sharpness can be judged; smooth below that
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, self.factor() < 1.0)
         painter.drawPixmap(visible, self._pixmap, source)
         if self.frame_color is not None:
-            # aussen ums Bild, wo Platz ist; am Fensterrand innen auf der Bildkante
+            # outside around the image where there is room; at the window edge inside on the image edge
             half = self.FRAME_W / 2
             frame = visible.adjusted(-half, -half, half, half).intersected(
                 QRectF(self.rect()).adjusted(half, half, -half, -half))
@@ -260,12 +260,12 @@ class ZoomView(QWidget):
         self._clamp()
         self._announce()
 
-    # --- Maus --------------------------------------------------------------
+    # --- Mouse -------------------------------------------------------------
 
     def mousePressEvent(self, event):
         if event.button() != Qt.MouseButton.LeftButton:
             return super().mousePressEvent(event)
-        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:   # Cmd auf dem Mac
+        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:   # Cmd on the Mac
             target = max(1.0, self.factor() * 2) if self.is_zoomed() else 1.0
             self.center_on(event.position(), target)
         elif self.is_zoomed():
@@ -289,7 +289,7 @@ class ZoomView(QWidget):
 
     def wheelEvent(self, event):
         delta = event.angleDelta()
-        amount = delta.y() or delta.x()   # Qt macht aus Alt+Rad teils ein horizontales Rad
+        amount = delta.y() or delta.x()   # Qt sometimes turns Alt+wheel into a horizontal wheel
         if event.modifiers() & Qt.KeyboardModifier.AltModifier:
             if amount:
                 self.step(1 if amount > 0 else -1, event.position())
@@ -303,18 +303,18 @@ class ZoomView(QWidget):
         super().wheelEvent(event)
 
     def cursor_anchor(self):
-        """Mausposition, falls sie ueber dem Widget ist; sonst None (= Mitte)."""
+        """Mouse position if it is over the widget; otherwise None (= center)."""
         pos = self.mapFromGlobal(self.cursor().pos())
         return QPointF(pos) if self.rect().contains(pos) else None
 
 
 class InfoPanel(QTextBrowser):
-    """EXIF/IPTC des angezeigten Bildes, rechts neben dem Bild. Text ist markierbar."""
+    """EXIF/IPTC of the image shown, to the right of the image. Text is selectable."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOpenLinks(False)
-        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # Pfeiltasten bleiben beim Blaettern
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # arrow keys keep moving between images
         self.setMinimumWidth(260)
         self.setStyleSheet('QTextBrowser { background: #1b1b1b; color: #ddd; border: none; padding: 8px; }')
 
@@ -333,12 +333,12 @@ class InfoPanel(QTextBrowser):
 
 class Viewer(QDialog):
     """
-    Grossansicht. Pfeiltasten blaettern, Option/Alt+Pfeile verschieben; die uebrigen Kuerzel haengt das Hauptfenster als QShortcut an.
-    Rechts das Info-Panel mit EXIF/IPTC.
+    Preview. Arrow keys move between images, Option/Alt+arrows pan; the main window attaches
+    the remaining shortcuts as QShortcut. On the right the info panel with EXIF/IPTC.
     """
     navigate = Signal(int)
     info_toggled = Signal(bool)
-    caption_toggled = Signal(bool)   # Beschriftungs-Panel ein/aus; das Hauptfenster haengt es ein
+    caption_toggled = Signal(bool)   # caption panel on/off; the main window moves it in
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -348,15 +348,15 @@ class Viewer(QDialog):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self.zoom = ZoomView()
-        # Fokus aufs Bild, sonst bekaeme ihn das erste Feld des Panels und Ziffern
-        # landeten dort statt als Sterne
+        # Focus on the image, otherwise the panel's first field would get it and digits
+        # would end up there instead of as stars
         self.zoom.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.info = QLabel()
         self.info.setWordWrap(True)
         self.info.setContentsMargins(12, 6, 12, 10)
         self.info_panel = InfoPanel()
-        # Platz fuer das Beschriftungs-Panel des Hauptfensters (wird hierher umgehaengt).
-        # Scrollbar statt Quetschen: das Panel ist oft hoeher als die Grossansicht
+        # room for the main window's caption panel (moved here).
+        # a scroll bar instead of squeezing: the panel is often taller than the preview
         self.caption_slot = VerticalScrollArea(min_width=420)
         self.caption_slot.setStyleSheet('background: palette(window); color: palette(window-text);')
         self.caption_slot.hide()
@@ -376,8 +376,8 @@ class Viewer(QDialog):
         self.labels = ()
 
     def _zoom_bar(self):
-        """Einpassen | Slider 50-400 % | Anzeige. Nimmt keinen Tastaturfokus, damit
-        Pfeiltasten weiter blaettern statt den Slider zu bewegen."""
+        """Fit | slider 50-400 % | display. Takes no keyboard focus, so the arrow keys
+        keep moving between images instead of moving the slider."""
         bar = QHBoxLayout()
         bar.setContentsMargins(12, 4, 12, 0)
         self.fit_button = QPushButton(_('Einpassen'))
@@ -397,7 +397,7 @@ class Viewer(QDialog):
         self.slider.valueChanged.connect(self._slider_moved)
         self.zoom_label = QLabel()
         self.zoom_label.setMinimumWidth(150)
-        # Aktuelle Stufe abgesetzt von der Skalenbeschriftung "400 %" daneben
+        # current level set off from the scale label "400 %" next to it
         self.zoom_label.setStyleSheet('font-weight: bold; padding-left: 16px;')
         self.zoom.zoom_changed.connect(self.zoom_label.setText)
         self.zoom.zoom_state.connect(self._sync_slider)
@@ -451,11 +451,11 @@ class Viewer(QDialog):
         self._render_info()
 
     def _render_info(self):
-        """Unten: Datei, Sterne, Farbe (ggf. Beschreibung), ganz unten Kamera, Objektiv, Belichtung."""
+        """Bottom: file, stars, color (caption if needed), at the very bottom camera, lens, exposure."""
         line = getattr(self, '_info_line', '')
         exposure = details_module.summary(self._raw_details) if self._raw_details else ''
-        # Die Zeile steht immer da, auch solange die Details noch gelesen werden: sonst wuerde
-        # die Leiste beim ersten Anzeigen eines Bildes hoeher und das Bild sprang
+        # The line is always there, even while the details are still being read: otherwise the
+        # bar grew the first time an image was shown and the image jumped
         line += f'<br><span style="color: #9a9a9a">{html.escape(exposure) or "&nbsp;"}</span>'
         self.info.setText(line)
 
@@ -471,7 +471,7 @@ class Viewer(QDialog):
     def _slider_moved(self, value):
         if getattr(self, '_syncing', False):
             return
-        # Zoomt um die Fenstermitte
+        # zooms around the window center
         self.zoom.zoom_to(value / 100)
 
     def _sync_slider(self, zoomed, factor):
@@ -481,7 +481,7 @@ class Viewer(QDialog):
         self.fit_button.setEnabled(zoomed)
 
     def show_item(self, item, image=None, provisional=True):
-        """image ist zunaechst die Kachel (provisional), set_image() liefert das Vollbild nach."""
+        """image is the tile at first (provisional), set_image() delivers the full image later."""
         changed = item.key != self.key
         self.key = item.key
         stars = '★' * item.meta.rating + '☆' * (5 - item.meta.rating)
@@ -489,7 +489,7 @@ class Viewer(QDialog):
         color = ' · ' + _('Farbklasse {number}').format(number=item.meta.color_class) if item.meta.color_class else ''
         label = f' ({item.meta.label})' if item.meta.label else ''
         self._info_line = f'<b>{item.name}</b> ({item.kind}) {tag} {stars}{color}{label}'
-        # Die Beschreibung steht im Info-Panel; unten nur, wenn das Panel aus ist
+        # the caption is in the info panel; at the bottom only if the panel is off
         if not self.info_button.isChecked() and item.meta.caption:
             self._info_line += f'<br>{html.escape(item.meta.caption)}'
         self._item = item
@@ -499,7 +499,7 @@ class Viewer(QDialog):
             self._raw_details = None
             self.zoom.set_image(image, provisional=provisional)
         self._render_info()
-        # Auch ohne Wechsel neu zeichnen: Sterne, Farbklasse, Beschriftung koennen sich geaendert haben
+        # repaint even without a change: stars, color class, caption may have changed
         self._render_details()
 
     def set_image(self, key, image):
@@ -513,7 +513,7 @@ class Viewer(QDialog):
         if key in (Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down) \
                 and modifiers & Qt.KeyboardModifier.AltModifier:
             step = PAN_STEP_FAST if modifiers & Qt.KeyboardModifier.ShiftModifier else PAN_STEP
-            # Pfeil nach rechts zeigt mehr von rechts: Bild nach links schieben
+            # arrow right shows more of the right side: move the image left
             dx = {Qt.Key.Key_Left: step, Qt.Key.Key_Right: -step}.get(key, 0)
             dy = {Qt.Key.Key_Up: step, Qt.Key.Key_Down: -step}.get(key, 0)
             self.zoom.pan(dx, dy)

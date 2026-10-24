@@ -1,8 +1,8 @@
 """
-Gemerkte Stichwoerter fuer Vorschlaege im Tag-Feld, ohne Qt.
+Remembered keywords for suggestions in the tag field, without Qt.
 
-Gesammelt wird, was gespeichert wird und was in geoeffneten Bildern und Templates
-steht; neueste zuerst, als JSON im Cache-Verzeichnis.
+Collected from what is saved and from what is in opened images and templates;
+newest first, as JSON in the cache directory.
 """
 import json
 import logging
@@ -25,7 +25,7 @@ class KeywordHistory:
                 self.words = []
 
     def add(self, keywords, recent=True):
-        """recent=False: nur ergaenzen, ohne die Reihenfolge zu aendern (beim Einlesen)."""
+        """recent=False: only add, without changing the order (when reading images)."""
         known = {w.casefold() for w in self.words}
         new = []
         for word in keywords:
@@ -51,7 +51,7 @@ class KeywordHistory:
             logger.warning('Stichwoerter nicht gespeichert: %s', e)
 
     def suggestions(self, prefix, exclude=(), limit=12):
-        """Woerter, die mit prefix beginnen (oder es enthalten), ohne die schon eingetragenen."""
+        """Words starting with prefix (or containing it), without those already entered."""
         prefix = prefix.strip().casefold()
         if len(prefix) < 2:
             return []
@@ -63,7 +63,7 @@ class KeywordHistory:
 
 
 def current_token(text, cursor):
-    """(Anfang, angefangenes Wort) des Tags unter dem Cursor; Tags durch Komma/Zeilenumbruch getrennt."""
+    """(start, partial word) of the tag under the cursor; tags separated by comma/newline."""
     before = text[:cursor]
     start = max(before.rfind(','), before.rfind('\n')) + 1
     token = before[start:]

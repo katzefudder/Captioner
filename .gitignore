@@ -4,10 +4,10 @@ __pycache__/
 *.egg-info/
 .eggs/
 
-# Poetry-Venv (poetry.toml: in-project = true)
+# Poetry venv (poetry.toml: in-project = true)
 .venv/
 
-# Tests und Werkzeuge
+# tests and tools
 .pytest_cache/
 .coverage
 .coverage.*
@@ -15,30 +15,30 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-# PyInstaller und Installer (make bundle / make installer)
-# Captioner.spec ist Quelltext und bleibt eingecheckt.
+# PyInstaller and installers (make bundle / make installer)
+# Captioner.spec is source code and stays checked in.
 build/
 dist/
 *.dmg
 *.pkg
 
-# ExifTool, von make heruntergeladen (make clean entfernt es)
+# ExifTool, downloaded by make (make clean removes it)
 vendor/
 
-# Icon-Zwischenstand von iconutil (die erzeugten Icons sind eingecheckt)
+# intermediate icon state of iconutil (the generated icons are checked in)
 *.iconset/
 
 # macOS
 .DS_Store
 ._*
 
-# Editoren
+# editors
 .idea/
 .vscode/
 *.swp
 *~
 
-# Lokale Claude-Code-Einstellungen
+# local Claude Code settings
 .claude/settings.local.json
 .claude/*.lock
 

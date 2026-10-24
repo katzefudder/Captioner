@@ -1,4 +1,4 @@
-"""Fenster "Ueber Captioner": Logo, Version, Link zur Website."""
+"""The "About Captioner" window: logo, version, link to the website."""
 import html
 
 from PySide6.QtCore import Qt
@@ -32,7 +32,7 @@ class AboutDialog(QDialog):
         text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(text)
 
-        # Ziel mit Kampagnen-Parametern, sichtbar nur die kurze Adresse
+        # target with campaign parameters, only the short address is visible
         self.link = QLabel(f'<a href="{html.escape(WEBSITE_LINK)}">{WEBSITE.split("://", 1)[1]}</a>')
         self.link.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.link.setOpenExternalLinks(True)

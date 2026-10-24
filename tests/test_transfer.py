@@ -1,4 +1,4 @@
-"""Kopieren zwischen Ordnern: Gruppen, Konflikte, Umbenennen, keine halben Dateien."""
+"""Copying between folders: groups, conflicts, renaming, no half files."""
 import pytest
 
 from captioner import transfer
@@ -46,7 +46,7 @@ def test_conflict_needs_a_decision(tmp_path):
 
 def test_rename_keeps_the_pair_together(tmp_path):
     group = transfer.group_files(files(tmp_path / 'a', 'DSC_0001.NEF', 'DSC_0001.JPG', 'DSC_0001.xmp'))[0]
-    files(tmp_path / 'b', 'DSC_0001.NEF', 'DSC_0001-2.xmp')  # -2 ist schon teilweise belegt
+    files(tmp_path / 'b', 'DSC_0001.NEF', 'DSC_0001-2.xmp')  # -2 is already partly taken
     copied = transfer.copy_group(group, tmp_path / 'b', transfer.RENAME)
     assert [p.name for p in copied] == ['DSC_0001-3.NEF', 'DSC_0001-3.JPG', 'DSC_0001-3.xmp']
     assert (tmp_path / 'b' / 'DSC_0001.NEF').read_bytes() == b'xDSC_0001.NEF'

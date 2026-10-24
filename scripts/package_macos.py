@@ -1,17 +1,17 @@
 """
-Installer fuer macOS (Apple Silicon) aus dist/Captioner.app.
+Installers for macOS (Apple silicon) from dist/Captioner.app.
 
-    python scripts/package_macos.py verify      App pruefen: arm64, Signatur, Info.plist
-    python scripts/package_macos.py dmg         Disk-Image mit App und Verknuepfung auf /Applications
-    python scripts/package_macos.py pkg         Installer (.pkg) nach /Applications, nur arm64
-    python scripts/package_macos.py notarize    DMG und PKG bei Apple notarisieren und stapeln
+    python scripts/package_macos.py verify      check the app: arm64, signature, Info.plist
+    python scripts/package_macos.py dmg         disk image with the app and a link to /Applications
+    python scripts/package_macos.py pkg         installer (.pkg) to /Applications, arm64 only
+    python scripts/package_macos.py notarize    notarize DMG and PKG with Apple and staple them
 
-Umgebungsvariablen:
-    CODESIGN_IDENTITY   "Developer ID Application: …"  signiert das DMG
-    INSTALLER_IDENTITY  "Developer ID Installer: …"    signiert das PKG
-    NOTARY_PROFILE      Name aus `xcrun notarytool store-credentials`
-Ohne Identitaeten entstehen unsignierte Pakete: auf dem eigenen Mac nutzbar, auf
-fremden Macs blockt Gatekeeper sie (siehe readme.md, "Installer").
+Environment variables:
+    CODESIGN_IDENTITY   "Developer ID Application: …"  signs the DMG
+    INSTALLER_IDENTITY  "Developer ID Installer: …"    signs the PKG
+    NOTARY_PROFILE      name from `xcrun notarytool store-credentials`
+Without identities the packages are unsigned: usable on your own Mac, Gatekeeper blocks
+them on other Macs (see readme.md, "Installer").
 """
 import os
 import plistlib
@@ -60,8 +60,9 @@ def verify():
     foreign = [line for line in machos if 'arm64' not in line or 'x86_64' in line]
     if foreign:
         problems.append(f'{len(foreign)} Binaries nicht reines arm64, z. B. {foreign[0]}')
-    if not any(APP.rglob('Captioner-Anleitung.pdf')):
-        problems.append('Anleitung (PDF) fehlt im Bundle')
+    for manual in ('Captioner-Anleitung.pdf', 'Captioner-Manual.pdf'):
+        if not any(APP.rglob(manual)):
+            problems.append(f'{manual} fehlt im Bundle')
     for key in ('CFBundleShortVersionString', 'LSMinimumSystemVersion', 'CFBundleIconFile'):
         if not plist.get(key) or plist.get(key) == '0.0.0':
             problems.append(f'Info.plist: {key} fehlt')
@@ -87,10 +88,11 @@ def dmg():
     with tempfile.TemporaryDirectory() as tmp:
         staging = Path(tmp) / 'Captioner'
         staging.mkdir()
-        # ditto erhaelt Symlinks, Rechte und Signatur-Attribute der App
+        # ditto keeps symlinks, permissions and the app's signature attributes
         run('ditto', APP, staging / 'Captioner.app')
         (staging / 'Programme').symlink_to('/Applications')
         shutil.copy2(ROOT / 'docs' / 'Captioner-Anleitung.pdf', staging / 'Anleitung.pdf')
+        shutil.copy2(ROOT / 'docs' / 'Captioner-Manual.pdf', staging / 'Manual.pdf')
         if target.exists():
             target.unlink()
         run('hdiutil', 'create', '-volname', 'Captioner', '-srcfolder', staging,
@@ -146,8 +148,8 @@ def pkg():
         root = tmp / 'root'
         root.mkdir()
         run('ditto', APP, root / 'Captioner.app')
-        # Ohne das "relocatet" der Installer ein Update dorthin, wo zufaellig schon
-        # eine Captioner.app liegt (z. B. dist/ auf dem Build-Rechner), statt nach /Applications
+        # Without this the installer "relocates" an update to wherever a Captioner.app happens to
+        # be (e.g. dist/ on the build machine) instead of /Applications
         component_plist = tmp / 'component.plist'
         run('pkgbuild', '--analyze', '--root', root, component_plist)
         with open(component_plist, 'rb') as handle:

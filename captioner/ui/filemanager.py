@@ -1,4 +1,4 @@
-"""Finder/Explorer: Datei zeigen und in den Papierkorb legen."""
+"""Finder/Explorer: show a file and move it to the trash."""
 import sys
 from pathlib import Path
 
@@ -9,7 +9,7 @@ from ..i18n import _
 
 
 def _ok(result):
-    """PySide liefert je nach Ueberladung (bool, ...) oder nur bool."""
+    """Depending on the overload PySide returns (bool, ...) or just bool."""
     return bool(result[0] if isinstance(result, tuple) else result)
 
 
@@ -22,12 +22,12 @@ def reveal_label():
 
 
 def reveal(path):
-    """Ordner oeffnen und die Datei darin markieren (anderswo nur den Ordner oeffnen)."""
+    """Open the folder and select the file in it (elsewhere just open the folder)."""
     path = Path(path)
     if sys.platform == 'darwin':
         return _ok(QProcess.startDetached('open', ['-R', str(path)]))
     if sys.platform == 'win32':
-        # explorer will "/select," und den Pfad in einem Argument, mit Anfuehrungszeichen
+        # explorer wants "/select," and the path in one argument, with quotes
         process = QProcess()
         process.setProgram('explorer.exe')
         process.setNativeArguments(f'/select,"{path}"')
@@ -36,5 +36,5 @@ def reveal(path):
 
 
 def move_to_trash(path):
-    """In den Papierkorb (wiederherstellbar), nie endgueltig loeschen. False bei Fehler."""
+    """To the trash (restorable), never delete permanently. False on error."""
     return _ok(QFile.moveToTrash(str(path)))

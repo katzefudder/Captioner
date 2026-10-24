@@ -1,4 +1,4 @@
-"""EXIF/IPTC fuer das Info-Panel der Grossansicht."""
+"""EXIF/IPTC for the info panel of the preview."""
 import os
 
 import pytest
@@ -8,7 +8,7 @@ from captioner.exiftool import ExifTool, find_exiftool
 from captioner.scanner import Metadata
 from conftest import make_jpeg, requires_exiftool
 
-# So liefert ExifTool die Werte einer Z9 (aus einem echten NEF abgelesen)
+# this is how ExifTool returns the values of a Z9 (read from a real NEF)
 Z9 = {
     'SubSecDateTimeOriginal': '2026:03:01 17:17:55.40+02:00', 'Make': 'NIKON CORPORATION',
     'Model': 'NIKON Z 9', 'SerialNumber': '6003553', 'ShutterCount': 244295,
@@ -29,14 +29,14 @@ def test_sections_format_camera_values():
     result = as_dict(details.sections(Z9, Metadata()))
     camera = result['Aufnahme']
     assert camera['Aufgenommen'] == '01.03.2026 17:17:55,40'
-    assert camera['Kamera'] == 'NIKON Z 9'            # Hersteller nicht doppelt
+    assert camera['Kamera'] == 'NIKON Z 9'            # manufacturer not twice
     assert camera['Blende'] == 'f/3.2'
     assert camera['Belichtungszeit'] == '1/1600 s'
-    assert camera['Brennweite'] == '100.0 mm'          # KB-Wert nur, wenn er abweicht
+    assert camera['Brennweite'] == '100.0 mm'          # 35 mm equivalent only if it differs
     assert camera['Fokus'] == 'AF-C · 3D-tracking'
     assert camera['Auflösung'] == '8280 × 5520 (45,7 MP)'
     assert camera['Auslösungen'] == '244295'
-    assert 'Belichtungskorrektur' not in camera        # 0 wird nicht angezeigt
+    assert 'Belichtungskorrektur' not in camera        # 0 is not shown
 
 
 def test_caption_fields_come_from_the_app_not_the_file():
@@ -60,7 +60,7 @@ def test_summary_line_under_the_image():
 def test_files_and_empty_sections():
     sections = details.sections({'_files': Z9['_files']}, Metadata())
     titles = [title for title, _ in sections]
-    assert 'Aufnahme' not in titles                    # leere Abschnitte fallen weg
+    assert 'Aufnahme' not in titles                    # empty sections are dropped
     files = dict(sections)['Dateien']
     assert files[0] == ('Datei', 'DSC_5912.NEF · 33,1 MB')
 
@@ -84,7 +84,7 @@ def test_read_prefers_sidecar_for_iptc_and_raw_for_camera(tmp_path):
         raw = details.read(tool, item)
     finally:
         tool.close()
-    # Kamera aus der RAW-Datei; die ist hier leer, also keine Kamera-Werte aus dem JPG
+    # camera from the RAW file; it is empty here, so no camera values from the JPG
     assert 'Model' not in raw
     assert raw['Creator'] == 'Aus dem Sidecar'
     assert raw['By-line'] == 'Aus dem JPG'
@@ -123,12 +123,12 @@ def test_info_panel_in_viewer(tmp_path):
             QTest.qWait(20)
         text = w.viewer.info_panel.toPlainText()
         assert 'NIKON Z 9' in text and 'f/3.2' in text and '1/1600 s' in text and '3200' in text
-        # ganz unten unter dem Bild: Kamera und Belichtung in einer Zeile, mit Dateiname
+        # at the very bottom below the image: camera and exposure in one line, with file name
         assert 'NIKON Z 9 · 1/1600 s · f/3.2 · ISO 3200 · a.jpg' in w.viewer.info.text()
 
         w.set_rating(4)
         w.viewer.show_item(w.filtered[0])
-        assert '★★★★☆' in w.viewer.info_panel.toPlainText()   # live, ohne neu zu lesen
+        assert '★★★★☆' in w.viewer.info_panel.toPlainText()   # live, without reading again
 
         w.viewer.info_button.click()
         assert not w.viewer.info_panel.isVisible() and w.settings.viewer_info_panel is False

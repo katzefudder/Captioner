@@ -1,11 +1,11 @@
 """
-EXIF/IPTC-Werte fuer das Info-Panel der Grossansicht.
+EXIF/IPTC values for the info panel of the preview.
 
-Kamera-Werte kommen aus der Hauptdatei (bei RAW+JPG aus der RAW-Datei),
-weitere IPTC/XMP-Felder (Fotograf, Copyright, ...) aus Sidecar > eingebettet >
-Hauptdatei. Die Beschriftungsfelder selbst (Titel, Beschreibung, Tags, Ort,
-Bewertung) kommen aus dem aktuellen Stand in der App (item.meta), damit sie
-auch direkt nach dem Speichern stimmen, bevor die Datei geschrieben ist.
+Camera values come from the main file (for RAW+JPG from the RAW file), further
+IPTC/XMP fields (photographer, copyright, ...) from sidecar > embedded > main file.
+The caption fields themselves (headline, caption, tags, location, rating) come from
+the current state in the app (item.meta), so they are right immediately after saving,
+before the file has been written.
 """
 import os
 import re
@@ -30,7 +30,7 @@ IPTC_TAGS = [
 
 
 def read(tool, item: Item):
-    """Rohwerte (formatiert wie ExifTool sie ausgibt) fuer ein Item."""
+    """Raw values (formatted as ExifTool prints them) for an item."""
     main = item.raw or item.primary
     others = [p for p in item.embedded if p != main]
     if item.sidecar and item.sidecar.exists():
@@ -41,7 +41,7 @@ def read(tool, item: Item):
     main_record = by_path.get(os.path.normcase(str(main)), {})
 
     merged = {key: main_record[key] for key in CAMERA_TAGS if key in main_record}
-    # IPTC/XMP: Sidecar zuletzt, gewinnt also
+    # IPTC/XMP: sidecar last, so it wins
     for path in [main] + others:
         record = by_path.get(os.path.normcase(str(path)), {})
         for key in IPTC_TAGS:
@@ -104,9 +104,9 @@ def camera_name(make, model):
 
 def summary(raw):
     """
-    Eine Zeile unter dem Bild: Kamera, Objektiv, Brennweite, Belichtung, Dateien, z. B.
+    One line below the image: camera, lens, focal length, exposure, files, e.g.
     "NIKON Z 9 · NIKKOR Z 70-200mm f/2.8 VR S · 200 mm · 1/500 s · f/2.8 · ISO 64 · DSC_0001.NEF, DSC_0001.JPG".
-    Fehlende Werte fallen weg.
+    Missing values are left out.
     """
     raw = raw or {}
     focal = re.sub(r'\.0\b', '', _first(raw, 'FocalLength'))
@@ -118,7 +118,7 @@ def summary(raw):
 
 
 def sections(raw, meta: Metadata, labels=()):
-    """[(Titel, [(Feld, Wert), ...]), ...] - nur Felder mit Inhalt."""
+    """[(title, [(field, value), ...]), ...] - only fields with content."""
     raw = raw or {}
 
     focal = _first(raw, 'FocalLength')
@@ -160,7 +160,7 @@ def sections(raw, meta: Metadata, labels=()):
         (_('Tags'), ', '.join(meta.keywords)),
         (_('Stadt'), meta.city),
         (_('Ort'), meta.sublocation),
-        # Ort und Rechte aus den Metadaten des Bildes: nach dem Speichern sofort aktuell
+        # location and rights from the image's metadata: up to date right after saving
         (_('Bundesland'), meta.state or _first(raw, 'Province-State', 'State')),
         (_('Land'), meta.country or _first(raw, 'Country-PrimaryLocationName', 'Country')),
         (_('Ländercode'), meta.country_code or _first(raw, 'Country-PrimaryLocationCode', 'CountryCode')),

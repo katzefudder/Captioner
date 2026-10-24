@@ -1,11 +1,10 @@
 """
-Roster bearbeiten: lokale Roster-Dateien im Code-Replacement-Format.
+Edit rosters: local roster files in code replacement format.
 
-* Tabs sind farbig hinterlegt (das haeufigste Problem: Leerzeichen statt Tab), Abschnitts-
-  koepfe und Codes hervorgehoben, ignorierte und widerspruechliche Zeilen rot.
-* Gespeichert wird in Kodierung und Zeilenenden der Datei (roster.write_file).
-* URL-Quellen werden nur angezeigt (letzte geladene Fassung); zurueckschreiben
-  laesst sich dorthin nicht.
+* Tabs have a colored background (the most common problem: spaces instead of a tab),
+  section headers and codes are highlighted, ignored and contradictory lines red.
+* Saved in the file's encoding and line endings (roster.write_file).
+* URL sources are only shown (last loaded version); they can't be written back.
 """
 from pathlib import Path
 
@@ -23,12 +22,12 @@ ENCODING_NAMES = {'utf-8': 'UTF-8', 'utf-8-sig': N_('UTF-8 mit BOM'), 'utf-16': 
 
 
 def encoding_name(encoding):
-    """Anzeigename einer Kodierung, uebersetzt (ENCODING_NAMES ist nur markiert)."""
+    """Display name of an encoding, translated (ENCODING_NAMES is only marked)."""
     return _(ENCODING_NAMES[encoding]) if encoding in ENCODING_NAMES else encoding
 
 
 class LineNumbers(QWidget):
-    """Zeilennummern links neben dem Text; Problemzeilen rot."""
+    """Line numbers to the left of the text; problem lines red."""
 
     def __init__(self, editor):
         super().__init__(editor)
@@ -42,7 +41,7 @@ class LineNumbers(QWidget):
 
 
 class NumberedTextEdit(QPlainTextEdit):
-    """QPlainTextEdit mit Zeilennummern (Qt-Beispiel "Code Editor")."""
+    """QPlainTextEdit with line numbers (Qt example "Code Editor")."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -55,12 +54,12 @@ class NumberedTextEdit(QPlainTextEdit):
         self._highlight_current_line()
 
     def number_color(self):
-        """Zeilennummern: Textfarbe, leicht zum Hintergrund gemischt (Platzhalterfarbe war zu blass)."""
+        """Line numbers: text color, slightly mixed towards the background (placeholder color was too pale)."""
         text, base = self.palette().text().color(), self.palette().alternateBase().color()
         return QColor(*(round(t * 0.75 + b * 0.25) for t, b in zip(text.getRgb()[:3], base.getRgb()[:3])))
 
     def set_point_size(self, size):
-        """Schriftgroesse; Tab-Abstand und Breite der Zeilennummern wachsen mit."""
+        """Font size; tab stop and width of the line numbers grow with it."""
         font = self.font()
         font.setPointSize(size)
         self.setFont(font)
@@ -69,13 +68,13 @@ class NumberedTextEdit(QPlainTextEdit):
         self._place_numbers()
 
     def current_line_color(self):
-        """Systemfarbe, sehr blass: passt zu hell/dunkel, rote Problemzeilen bleiben erkennbar."""
+        """System color, very pale: fits light/dark, red problem lines stay recognizable."""
         color = QColor(self.palette().highlight().color())
         color.setAlpha(60)
         return color
 
     def _highlight_current_line(self):
-        """Zeile mit dem Cursor ueber die ganze Breite hinterlegen, die Nummer links mit."""
+        """Highlight the line with the cursor across the full width, including its number on the left."""
         selection = QTextEdit.ExtraSelection()
         selection.format.setBackground(self.current_line_color())
         selection.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
@@ -173,20 +172,20 @@ class RosterHighlighter(QSyntaxHighlighter):
 
 
 class RosterEditorDialog(QDialog):
-    saved = Signal(str)   # Pfad der gespeicherten Datei
+    saved = Signal(str)   # path of the saved file
 
     MIN_FONT, MAX_FONT = 9, 28
 
     def __init__(self, sources, cached_text=None, parent=None, font_size=0):
         """
-        sources: Settings.roster_sources; cached_text(url) liefert die geladene Fassung einer URL.
-        font_size: Schriftgroesse in Punkt (Settings.roster_font_size), 0 = Systemvorgabe.
+        sources: Settings.roster_sources; cached_text(url) returns the loaded version of a URL.
+        font_size: font size in points (Settings.roster_font_size), 0 = system default.
         """
         super().__init__(parent)
         self.setWindowTitle(_('Roster bearbeiten'))
         self.resize(900, 760)
         self.cached_text = cached_text or (lambda url: None)
-        self.file = None          # roster.RosterFile der geoeffneten lokalen Datei
+        self.file = None          # roster.RosterFile of the open local file
         self.source = None
         layout = QVBoxLayout(self)
 
@@ -280,7 +279,7 @@ class RosterEditorDialog(QDialog):
         if apply:
             self.text.set_point_size(size)
 
-    # --- Laden ----------------------------------------------------------------
+    # --- Loading --------------------------------------------------------------
 
     def _source_chosen(self, index):
         source = self.sources.itemData(index)
@@ -322,7 +321,7 @@ class RosterEditorDialog(QDialog):
         self.text.document().setModified(False)
         self._check()
 
-    # --- Pruefen --------------------------------------------------------------
+    # --- Checking -------------------------------------------------------------
 
     def _schedule_check(self):
         self._check_timer.start()
@@ -369,7 +368,7 @@ class RosterEditorDialog(QDialog):
         if not term:
             return
         if not self.text.find(term):
-            # am Ende: von vorn
+            # at the end: start over
             cursor = self.text.textCursor()
             cursor.movePosition(QTextCursor.MoveOperation.Start)
             self.text.setTextCursor(cursor)
@@ -378,7 +377,7 @@ class RosterEditorDialog(QDialog):
                 return
         self.find.setStyleSheet('')
 
-    # --- Speichern ------------------------------------------------------------
+    # --- Saving ---------------------------------------------------------------
 
     def save(self):
         if self.file is None or self.text.isReadOnly():
@@ -427,7 +426,7 @@ class RosterEditorDialog(QDialog):
             encoding=encoding_name(self.file.encoding), name=Path(self.file.path).name)
         self._check()
 
-    # --- Schliessen -----------------------------------------------------------
+    # --- Closing --------------------------------------------------------------
 
     def _confirm_discard(self):
         if not self.text.document().isModified() or self.text.isReadOnly():
@@ -439,7 +438,7 @@ class RosterEditorDialog(QDialog):
             return self.save()
         return answer == QMessageBox.StandardButton.Discard
 
-    # Esc, "Schliessen" und das Fenster-X laufen alle ueber reject()
+    # Esc, "Close" and the window's X all go through reject()
     def reject(self):
         if self._confirm_discard():
             super().reject()

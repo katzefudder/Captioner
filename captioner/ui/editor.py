@@ -1,8 +1,8 @@
 """
-Beschriftungs-Panel: Template, Titel, Beschreibung mit Code-Replacement, Tags, Ort.
+Caption panel: template, headline, caption with code replacement, tags, location.
 
-Die Beschreibung zeigt live, was aus den Codes wird; unbekannte Codes sind rot
-und blockieren das Speichern (ADR 0001, Punkt 5).
+The caption shows live what the codes turn into; unknown codes are red and block
+saving (ADR 0001, item 5).
 """
 import dataclasses
 import html
@@ -25,7 +25,7 @@ from ..templates import parse_headline, unique
 
 
 def template_folder_label():
-    """Menuepunkt mit dem Dateimanager des Systems."""
+    """Menu item with the system's file manager."""
     if sys.platform == 'darwin':
         return _('Template-Ordner im Finder öffnen')
     if sys.platform == 'win32':
@@ -33,19 +33,19 @@ def template_folder_label():
     return _('Template-Ordner öffnen')
 
 
-# Markiert Ersetzungen auf dem Weg in die Vorschau (Zeichen aus dem privaten Bereich, nie im Text)
+# marks replacements on their way into the preview (characters from the private use area, never in the text)
 MARK_START, MARK_END = '\ue000', '\ue001'
 
 
 def shortcut_text(command):
-    """Erstes Kuerzel eines Befehls in der Schreibweise der Plattform (auf dem Mac mit ⌘), '–' ohne."""
+    """First shortcut of a command in the platform's notation (with ⌘ on the Mac), '–' without one."""
     keys = binding_keys(command)
     return QKeySequence(keys[0]).toString(QKeySequence.SequenceFormat.NativeText) if keys else '–'
 
 
 class WrappingLineEdit(QPlainTextEdit):
-    """Einzeiliger Text, in der Anzeige umgebrochen. Enter speichert, nie ein Zeilenumbruch."""
-    submit = Signal()  # Enter: speichern, beim Bild bleiben
+    """Single-line text, wrapped for display. Enter saves, never a line break."""
+    submit = Signal()  # Enter: save, stay on the image
 
     def __init__(self, lines=None, parent=None):
         super().__init__(parent)
@@ -64,7 +64,7 @@ class WrappingLineEdit(QPlainTextEdit):
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            # Mit Modifier gehoert die Taste den Kuerzeln (z. B. Cmd/Strg+Enter)
+            # with a modifier the key belongs to the shortcuts (e.g. Cmd/Ctrl+Enter)
             if event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier:
                 event.ignore()
             else:
@@ -74,7 +74,7 @@ class WrappingLineEdit(QPlainTextEdit):
 
 
 class TagTextEdit(WrappingLineEdit):
-    """Tag-Feld: schlaegt gemerkte Stichwoerter zum angefangenen Tag vor."""
+    """Tag field: suggests remembered keywords for the tag being typed."""
 
     def __init__(self, lines=None, parent=None):
         super().__init__(lines=lines, parent=parent)
@@ -124,9 +124,9 @@ class TagTextEdit(WrappingLineEdit):
 
 class VerticalScrollArea(QScrollArea):
     """
-    Scrollt nur senkrecht und ist mindestens so breit, wie der Inhalt braucht (plus Scrollbar).
-    QScrollArea meldet sonst eine winzige Mindestbreite: bei schmalem Fenster ragte der Inhalt
-    rechts heraus (Roster-Knopf, Feldraender weg), je nach Stil/Schrift unterschiedlich weit.
+    Scrolls only vertically and is at least as wide as the content needs (plus scroll bar).
+    QScrollArea otherwise reports a tiny minimum width: with a narrow window the content stuck
+    out on the right (roster button, field edges gone), by different amounts per style/font.
     """
 
     def __init__(self, min_width=0, parent=None):
@@ -137,8 +137,8 @@ class VerticalScrollArea(QScrollArea):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     def setWidget(self, widget):
-        # Kein Event-Filter am Inhalt: das Panel wandert zwischen Hauptfenster und Grossansicht,
-        # ein Filter der alten Flaeche brachte Python beim Abbau zum Absturz (macOS-Action)
+        # No event filter on the content: the panel moves between main window and preview,
+        # a filter of the old area crashed Python on teardown (macOS action)
         super().setWidget(widget)
         self.updateGeometry()
 
@@ -153,7 +153,7 @@ class VerticalScrollArea(QScrollArea):
 
 
 class CodeTextEdit(WrappingLineEdit):
-    """Beschreibung: umbrechender Einzeiler mit Autovervollstaendigung nach '#'."""
+    """Caption: wrapping single-line field with autocompletion after '#'."""
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -170,7 +170,7 @@ class CodeTextEdit(WrappingLineEdit):
         self.spelling = spelling.SpellHighlighter(self.document(), spelling.checker(), self.delimiter)
 
     def contextMenuEvent(self, event):
-        """Rechtsklick auf ein unterstrichenes Wort: Vorschlaege, lernen, ignorieren."""
+        """Right-click on an underlined word: suggestions, learn, ignore."""
         menu = self.createStandardContextMenu(event.pos())
         cursor = self.cursorForPosition(event.pos())
         block = cursor.block()
@@ -245,21 +245,21 @@ class CodeTextEdit(WrappingLineEdit):
 
 
 class CaptionEditor(QWidget):
-    save_requested = Signal(dict, int)    # Felder, danach: +1 naechstes, -1 vorheriges, 0 bleiben
-    navigate_requested = Signal(int)      # ohne Speichern zum naechsten/vorherigen Bild
-    snapshot_take_requested = Signal()    # Knopf "Kopieren", wie snapshot_take
-    snapshot_paste_requested = Signal()   # Knopf "Einfügen", wie snapshot_paste
+    save_requested = Signal(dict, int)    # fields, then: +1 next, -1 previous, 0 stay
+    navigate_requested = Signal(int)      # to the next/previous image without saving
+    snapshot_take_requested = Signal()    # "Copy" button, like snapshot_take
+    snapshot_paste_requested = Signal()   # "Paste" button, like snapshot_paste
     apply_template_requested = Signal()
     template_changed = Signal(object)
-    edit_template_requested = Signal(object)   # None = neues Template
-    copy_template_requested = Signal(object)   # neues Template mit den Werten dieses
-    template_from_photo_requested = Signal()   # neues Template aus der Beschriftung des Bildes
-    open_template_folder_requested = Signal()  # Konfigurationsordner der Templates im Dateimanager
+    edit_template_requested = Signal(object)   # None = new template
+    copy_template_requested = Signal(object)   # new template with the values of this one
+    template_from_photo_requested = Signal()   # new template from the image's caption
+    open_template_folder_requested = Signal()  # configuration folder of the templates in the file manager
     open_template_requested = Signal()
     save_template_as_requested = Signal()
     remove_template_requested = Signal(object)
     reload_roster_requested = Signal()
-    place_chosen = Signal(object)         # geo.Place aus Karte oder Vorschlag: merken
+    place_chosen = Signal(object)         # geo.Place from the map or a suggestion: remember it
     add_roster_file_requested = Signal()
     edit_roster_requested = Signal()
 
@@ -272,9 +272,9 @@ class CaptionEditor(QWidget):
         self._build()
 
     def _build(self):
-        # Scrollbar statt gequetscht: reicht die Hoehe nicht (kleines Fenster, Grossansicht),
-        # behalten die Felder ihre Mindesthoehe, sonst rutschte die Vorschau ins Beschreibungsfeld.
-        # Bytezaehler und Knoepfe stehen fest darunter (footer), immer erreichbar
+        # A scroll bar instead of squeezing: if the height isn't enough (small window, preview),
+        # the fields keep their minimum height, otherwise the preview slid into the caption field.
+        # Byte counter and buttons stay fixed below (footer), always reachable
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         self.scroll = VerticalScrollArea(min_width=380)
@@ -287,12 +287,12 @@ class CaptionEditor(QWidget):
                                   layout.contentsMargins().bottom())
         outer.addLayout(footer)
 
-        # Template: Auswahl, ein sichtbarer Knopf (Bearbeiten), der Rest im Menue "⋯"
+        # template: selection, one visible button (Edit), the rest in the "⋯" menu
         template_row = QHBoxLayout()
         self.template_box = QComboBox()
         self.template_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        # Nicht so breit wie der laengste Name: sonst ragt das Panel (Grossansicht, schmales Fenster)
-        # rechts aus der Scrollflaeche und nimmt Roster-Knopf und Feldraender mit
+        # Not as wide as the longest name: otherwise the panel (preview, narrow window) sticks
+        # out of the scroll area on the right and takes the roster button and field edges with it
         self.template_box.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.template_box.setMinimumContentsLength(12)
         self.template_box.currentIndexChanged.connect(self._template_selected)
@@ -327,7 +327,7 @@ class CaptionEditor(QWidget):
         self.apply_button.setToolTip(_('Titel, Ort und Tags des Templates in alle ausgewählten Bilder schreiben; '
                                        'Beschreibungen bleiben erhalten, außer bei „Inhalte überschreiben“'))
         self.apply_button.clicked.connect(self.apply_template_requested)
-        # Mit Haken setzt Anwenden alles auf das Template zurueck (auch die Beschreibung)
+        # checked, applying resets everything to the template (the caption too)
         self.overwrite_box = QCheckBox(_('Inhalte überschreiben'))
         self.overwrite_box.setChecked(True)
         self.overwrite_box.setToolTip(_('Beim Anwenden Titel, Ort und Tags genau auf die Werte des Templates setzen '
@@ -338,11 +338,11 @@ class CaptionEditor(QWidget):
         layout.addLayout(apply_row)
 
         form = QFormLayout()
-        # macOS laesst Felder sonst auf Mindestbreite (Titel, Stadt, Ort waren abgeschnitten)
+        # macOS otherwise keeps fields at minimum width (headline, city, location were cut off)
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         self.headline = QLineEdit()
         self.headline.setPlaceholderText('DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg')
-        # Teams fuer die Code-Vorschlaege, wenn das Template keine vorgibt
+        # teams for the code suggestions if the template doesn't define any
         self.headline.textChanged.connect(self._update_completions)
         self.headline_hint = QLabel('<small>' + html.escape(
             _('Format „<Anlass> - <Heim> gegen <Gast>“, sonst erkennt die Personenerkennung das Spiel nicht'),
@@ -362,7 +362,7 @@ class CaptionEditor(QWidget):
         self.preview.setWordWrap(True)
         self.preview.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.preview.setTextFormat(Qt.TextFormat.RichText)
-        # Tags wie die Beschreibung umgebrochen, aber niedriger
+        # tags wrapped like the caption, but lower
         self.keywords = TagTextEdit(lines=3)
         self.keywords.setPlaceholderText(_('Tags, kommagetrennt'))
         self.keywords.textChanged.connect(self._update_preview)
@@ -382,18 +382,18 @@ class CaptionEditor(QWidget):
         city_row.addWidget(self.map_button)
         self.gps_hint = QLabel()
         self.gps_hint.setStyleSheet('color: gray;')
-        # Was das Template an Ort/Urheber/Rechten in jedes Bild schreibt
+        # what the template writes into every image for location/creator/rights
         self.rights_hint = QLabel()
         self.rights_hint.setWordWrap(True)
         self.rights_hint.setStyleSheet('color: gray;')
-        # Festes Datum im Template, das nicht zum Bild passt (vorbereitet und vergessen zu leeren?)
+        # fixed date in the template that doesn't match the image (prepared and forgot to clear it?)
         self.date_hint = QLabel()
         self.date_hint.setWordWrap(True)
         self.date_hint.hide()
 
         def column(*widgets):
-            # Feld mit seinen Hinweisen darunter; ausgeblendete Hinweise kosten keinen Platz
-            # (als eigene Formularzeilen hinterliessen sie Luecken)
+            # Field with its hints below; hidden hints take no space
+            # (as separate form rows they left gaps)
             box = QVBoxLayout()
             box.setContentsMargins(0, 0, 0, 0)
             box.setSpacing(3)
@@ -412,7 +412,7 @@ class CaptionEditor(QWidget):
         self.limits = QLabel()
         self.limits.setWordWrap(True)
 
-        # Beschriftung von Bild zu Bild, wie die Kuerzel snapshot_take/snapshot_paste
+        # caption from image to image, like the shortcuts snapshot_take/snapshot_paste
         snapshot_buttons = QHBoxLayout()
         snapshot_buttons.addWidget(self.limits, 1)
         self.snapshot_take_button = QPushButton(_('Kopieren'))
@@ -440,7 +440,7 @@ class CaptionEditor(QWidget):
         layout.addWidget(self.shortcut_hint)
         self.update_shortcut_texts()
 
-        # Roster: eine Zeile Status (Quellen im Tooltip, Probleme sichtbar), Befehle im Menue
+        # roster: one status line (sources in the tooltip, problems visible), commands in the menu
         self.roster_status = QLabel()
         self.roster_status.setWordWrap(True)
         self.roster_menu = QMenu(self)
@@ -462,7 +462,7 @@ class CaptionEditor(QWidget):
 
         self.set_enabled(False)
 
-    # --- Zustand von aussen ---------------------------------------------------
+    # --- State from outside ---------------------------------------------------
 
     def set_enabled(self, enabled):
         for widget in (self.headline, self.caption, self.keywords, self.city, self.sublocation,
@@ -472,12 +472,12 @@ class CaptionEditor(QWidget):
         self.snapshot_paste_button.setEnabled(enabled and self.has_snapshot)
 
     def set_has_snapshot(self, present):
-        """Einfuegen erst, wenn etwas kopiert wurde."""
+        """Paste only once something has been copied."""
         self.has_snapshot = present
         self.snapshot_paste_button.setEnabled(present and self.snapshot_take_button.isEnabled())
 
     def set_place_book(self, book):
-        """Gemerkte Orte: Vorschlaege fuer Stadt und Koordinaten fuer den GPS-Hinweis."""
+        """Remembered places: suggestions for the city and coordinates for the GPS note."""
         self.place_book = book
         completer = place_completer(book, self)
         completer.activated.connect(self._known_place_chosen)
@@ -508,29 +508,29 @@ class CaptionEditor(QWidget):
         self.roster = roster
         self.delimiter = delimiter
         self.caption.delimiter = delimiter
-        # Namen aus dem Roster sind keine Tippfehler; Codes ebenfalls nicht
+        # names from the roster are not typos; codes neither
         self.caption.spelling.set_delimiter(delimiter)
         self.caption.spelling.set_known_words(
             [e.replacement for e in roster.entries.values()] + list(roster.teams) if roster else [])
-        # Codes im Feld: bekannte gruen, unbekannte rot hinterlegt
+        # codes in the field: known ones green, unknown ones red background
         self.caption.spelling.set_lookup(roster.lookup if roster else None)
         self._update_completions()
         self._update_preview()
 
     def set_spellcheck(self, language):
-        """'auto' (macOS waehlt), 'de', 'en' oder 'off'."""
+        """'auto' (macOS chooses), 'de', 'en' or 'off'."""
         highlighter = self.caption.spelling
         highlighter.enabled = highlighter.spell_checker is not None and language != 'off'
         highlighter.language = language if language in ('de', 'en') else None
         highlighter.rehighlight()
 
     def set_roster_status(self, summary, details=(), problems=()):
-        """Zusammenfassung (HTML) und Probleme sichtbar, Quellen und Stand im Tooltip."""
+        """Summary (HTML) and problems visible, sources and state in the tooltip."""
         self.roster_status.setText('<br>'.join([summary, *problems]))
         self.roster_status.setToolTip('<br>'.join(details))
 
     def set_templates(self, templates, active_path=''):
-        """Templates werden ueber ihren Dateipfad identifiziert, Namen koennen doppelt sein."""
+        """Templates are identified by their file path, names can be duplicated."""
         self.templates = templates
         self.template_box.blockSignals(True)
         self.template_box.clear()
@@ -552,7 +552,7 @@ class CaptionEditor(QWidget):
     def _template_selected(self, index):
         self.template = self.template_box.itemData(index)
         path = self.template.path if self.template else ''
-        # Datei nur im Tooltip (frueher eine eigene Zeile darunter)
+        # file only in the tooltip (used to be a separate line below)
         self.template_box.setToolTip(path)
         for widget in (self.copy_action, self.save_as_action, self.remove_action, self.edit_template_button):
             widget.setEnabled(self.template is not None)
@@ -575,7 +575,7 @@ class CaptionEditor(QWidget):
         self.caption.set_completions(first + rest)
 
     def show_items(self, items, raw_lookup=None, carry_over_headline=None):
-        """Felder aus dem ersten ausgewaehlten Item fuellen."""
+        """Fill the fields from the first selected item."""
         self.set_enabled(bool(items))
         if not items:
             self.selection_info.setText(_('Keine Auswahl'))
@@ -589,19 +589,19 @@ class CaptionEditor(QWidget):
             f'<b>{html.escape(item.name)}</b>' if count == 1
             else _('<b>{count} Bilder ausgewählt</b> – Speichern schreibt in alle').format(count=count))
         meta = item.meta
-        # Ohne festen Titel im Template: der zuletzt gespeicherte, damit man ihn nicht je Bild tippt
+        # without a fixed headline in the template: the one saved last, so it isn't typed per image
         headline = meta.headline or (self.template.headline if self.template else '') or carry_over_headline or ''
         city = meta.city or (self.template.city if self.template else '')
         sublocation = meta.sublocation or (self.template.sublocation if self.template else '')
         keywords = meta.keywords or (self.template.keywords if self.template else [])
         raw = raw_lookup(item) if raw_lookup else None
         if raw is None:
-            # unbeschriftet: leer, nie die Beschreibung des vorigen Bildes
+            # uncaptioned: empty, never the caption of the previous image
             raw = self._strip_suffix(meta.caption, item) if meta.caption else ''
         self.headline.setText(headline)
         self.city.setText(city)
         self.sublocation.setText(sublocation)
-        # Lange Titel vom Anfang zeigen, nicht ans Ende gescrollt ("L 2 - EC Bad …")
+        # show long headlines from the start, not scrolled to the end ("L 2 - EC Bad …")
         for field in (self.headline, self.city, self.sublocation):
             field.setCursorPosition(0)
         self.keywords.setText(', '.join(self._without_persons(keywords, meta.caption)))
@@ -611,7 +611,7 @@ class CaptionEditor(QWidget):
         self._update_preview()
 
     def _replacement_color(self):
-        """Gruener Hintergrund fuer Ersetzungen, auf hellem und dunklem Grund lesbar."""
+        """Green background for replacements, readable on light and dark backgrounds."""
         dark = self.palette().window().color().lightness() < 128
         return '#24502e' if dark else '#cdeccf'
 
@@ -625,12 +625,12 @@ class CaptionEditor(QWidget):
         return caption
 
     def _without_persons(self, keywords, caption):
-        """Personen-Tags werden beim Speichern aus der Beschreibung neu erzeugt."""
+        """Person tags are recreated from the caption when saving."""
         persons = set(codes.persons_in(caption, self.roster))
         return [k for k in keywords if k not in persons]
 
     def update_shortcut_texts(self):
-        """Kuerzel in Tooltips und Hinweis; neu nach "Tastenkürzel anpassen"."""
+        """Shortcuts in tooltips and the hint; refreshed after "Customize keyboard shortcuts"."""
         self.snapshot_take_button.setToolTip(_('Beschriftung dieses Bildes kopieren ({keys})').format(
             keys=shortcut_text('snapshot_take')))
         self.snapshot_paste_button.setToolTip(_('Kopierte Beschriftung in die Auswahl einfügen und speichern ({keys})').format(
@@ -641,26 +641,26 @@ class CaptionEditor(QWidget):
             shortcuts=shortcut_text('shortcuts')))
 
     def focus_caption(self):
-        """Beschreibung markiert, damit Tippen sie ersetzt."""
+        """Caption selected, so typing replaces it."""
         self.caption.setFocus()
         cursor = self.caption.textCursor()
         cursor.select(QTextCursor.SelectionType.Document)
         self.caption.setTextCursor(cursor)
 
-    # --- Vorschau und Speichern -----------------------------------------------
+    # --- Preview and saving ---------------------------------------------------
 
     def resolve(self):
         return codes.resolve(self.caption.toPlainText(), self.roster, self.delimiter)
 
     def resolve_headline(self):
-        """Codes auch im Titel, z. B. 'DEL 2 - #bn# gegen #kh#' mit Team-Codes im Roster."""
+        """Codes in the headline too, e.g. 'DEL 2 - #bn# gegen #kh#' with team codes in the roster."""
         return codes.resolve(self.headline.text().strip(), self.roster, self.delimiter)
 
     def set_keyword_history(self, history):
         self.keywords.history = history
 
     def tags(self):
-        # Eingefuegter Text kann Zeilenumbrueche enthalten; sie trennen wie Kommas
+        # pasted text may contain line breaks; they separate like commas
         return [t.strip() for t in re.split(r'[,\n]', self.keywords.text()) if t.strip()]
 
     def _update_preview(self):
@@ -689,7 +689,7 @@ class CaptionEditor(QWidget):
             return text
 
         text = compose(resolution.text)
-        # Ersetzungen in der Vorschau gruen hinterlegt: sieht man, was aus dem Roster kam
+        # replacements highlighted green in the preview: you see what came from the roster
         marked = codes.resolve(raw, self.roster, self.delimiter,
                                wrap=lambda replacement: f'{MARK_START}{replacement}{MARK_END}')
         shown = html.escape(compose(marked.text))
@@ -731,11 +731,11 @@ class CaptionEditor(QWidget):
                     fixed=mismatch[0], taken=mismatch[1])) + '</small>')
         self.date_hint.setVisible(bool(mismatch))
 
-    # Im Kurztext zuerst, was man am ehesten pruefen will
+    # in the short text first what you most likely want to check
     RIGHTS_SUMMARY = ('creator', 'copyright')
 
     def _update_rights_hint(self):
-        """Eine Zeile mit Fotograf und Copyright, der Rest als Zahl; alles im Tooltip."""
+        """One line with photographer and copyright, the rest as a count; everything in the tooltip."""
         values = self.template.fixed_values() if self.template else {}
         shown = [f'{_(metadata.LABELS[n])} {values[n]}' if n != 'copyright' else values[n]
                  for n in self.RIGHTS_SUMMARY if n in values]
@@ -765,7 +765,7 @@ class CaptionEditor(QWidget):
             self.gps_hint.setText(_('GPS der Kamera bleibt erhalten'))
 
     def current_fields(self):
-        """Was gerade im Panel steht; die Beschreibung als Rohtext mit Codes."""
+        """What is in the panel right now; the caption as raw text with codes."""
         return {
             'raw_caption': self.caption.toPlainText(),
             'headline': self.headline.text().strip(),
@@ -775,7 +775,7 @@ class CaptionEditor(QWidget):
         }
 
     def submit(self, step):
-        """Speichern; step +1/-1 springt danach weiter, 0 bleibt. False, wenn blockiert."""
+        """Save; step +1/-1 moves on afterwards, 0 stays. False if blocked."""
         if not self.save_button.isEnabled():
             return False
         resolution = self.resolve()

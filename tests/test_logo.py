@@ -1,4 +1,4 @@
-"""Logo und Icons (make icons) sind vorhanden und in der App gesetzt."""
+"""Logo and icons (make icons) exist and are set in the app."""
 import os
 
 import pytest
@@ -18,7 +18,7 @@ def test_svg_is_valid_and_font_independent(app):
     from PySide6.QtSvg import QSvgRenderer
     svg = (RESOURCES / 'logo.svg').read_text(encoding='utf-8')
     assert QSvgRenderer(str(RESOURCES / 'logo.svg')).isValid()
-    assert '<text' not in svg  # ".dng" ist ein Pfad, sieht ohne die Schrift gleich aus
+    assert '<text' not in svg  # ".dng" is a path, looks the same without the font
 
 
 def test_generated_icons_exist(app):

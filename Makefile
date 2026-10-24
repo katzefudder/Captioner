@@ -1,6 +1,6 @@
-# ExifTool wird in die App gebuendelt (ADR 0001, Punkt 1). Version und Pruefsumme
-# fest, damit ein Build reproduzierbar ist. Neue Version: von exiftool.org/ver.txt,
-# Pruefsumme aus exiftool.org/checksums.txt.
+# ExifTool is bundled into the app (ADR 0001, item 1). Version and checksum are
+# fixed so a build is reproducible. New version: from exiftool.org/ver.txt,
+# checksum from exiftool.org/checksums.txt.
 EXIFTOOL_VERSION ?= 13.59
 EXIFTOOL_SHA256 ?= 668ea3acececb7235fbd0f4900e72d5f12c9b07e5c778fd36cb1e9b5828fd65a
 EXIFTOOL_URL = https://sourceforge.net/projects/exiftool/files/Image-ExifTool-$(EXIFTOOL_VERSION).tar.gz/download
@@ -19,20 +19,23 @@ run:
 test:
 	$(POETRY) run python -m pytest
 
-# Alle Icons aus captioner/resources/logo.svg neu erzeugen (Ergebnis ist eingecheckt)
+# Regenerate all icons from captioner/resources/logo.svg (the result is checked in)
 icons:
 	$(POETRY) run python scripts/make_icons.py
 
-# Anleitung: docs/manual/anleitung.html (+ .css) -> docs/Captioner-Anleitung.pdf (eingecheckt),
-# braucht WeasyPrint (brew install weasyprint). Screenshots erzeugt manual-screenshots (ExifTool noetig).
+# Manuals: docs/manual/anleitung.html (German) and manual.html (English), shared anleitung.css
+# -> docs/Captioner-Anleitung.pdf and docs/Captioner-Manual.pdf (checked in). Needs WeasyPrint
+# (brew install weasyprint). manual-screenshots creates img/ and img/en/ (needs ExifTool).
 manual:
 	cd docs/manual && weasyprint anleitung.html ../Captioner-Anleitung.pdf
+	cd docs/manual && weasyprint manual.html ../Captioner-Manual.pdf
 
 manual-screenshots:
-	$(POETRY) run python scripts/manual_screenshots.py
+	$(POETRY) run python scripts/manual_screenshots.py de
+	$(POETRY) run python scripts/manual_screenshots.py en
 
-# Uebersetzungen: Texte herausziehen, Kataloge (.po) aktualisieren, kompilieren (.mo).
-# Die .po-Dateien von Hand (oder mit Poedit) uebersetzen; .po und .mo sind eingecheckt.
+# Translations: extract the texts, update the catalogues (.po), compile them (.mo).
+# Translate the .po files by hand (or with Poedit); .po and .mo are checked in.
 LOCALES = captioner/locale
 translations:
 	$(POETRY) run pybabel extract -F babel.cfg -k _ -k N_ -k ngettext:1,2 --no-location \
@@ -51,9 +54,9 @@ $(EXIFTOOL_DIR)/exiftool:
 	cp -R vendor/Image-ExifTool-$(EXIFTOOL_VERSION)/lib $(EXIFTOOL_DIR)/
 	rm -rf vendor/exiftool.tar.gz vendor/Image-ExifTool-$(EXIFTOOL_VERSION)
 
-# macOS-App (arm64) unter dist/Captioner.app, Einstellungen in Captioner.spec.
-# Mit CODESIGN_IDENTITY="Developer ID Application: …" signiert (Hardened Runtime),
-# sonst ad-hoc.
+# macOS app (arm64) in dist/Captioner.app, settings in Captioner.spec.
+# Signed with CODESIGN_IDENTITY="Developer ID Application: …" (hardened runtime),
+# otherwise ad-hoc.
 bundle: $(EXIFTOOL_DIR)/exiftool
 	$(POETRY) run pyinstaller --noconfirm Captioner.spec
 	$(POETRY) run python scripts/package_macos.py verify
@@ -61,7 +64,7 @@ bundle: $(EXIFTOOL_DIR)/exiftool
 verify:
 	$(POETRY) run python scripts/package_macos.py verify
 
-# Installer, siehe readme.md "Installer". INSTALLER_IDENTITY signiert das PKG.
+# Installers, see readme.md "Installer". INSTALLER_IDENTITY signs the PKG.
 dmg: bundle
 	$(POETRY) run python scripts/package_macos.py dmg
 
@@ -72,7 +75,7 @@ installer: bundle
 	$(POETRY) run python scripts/package_macos.py dmg
 	$(POETRY) run python scripts/package_macos.py pkg
 
-# Braucht Developer-ID-Signatur und NOTARY_PROFILE (xcrun notarytool store-credentials)
+# Needs a Developer ID signature and NOTARY_PROFILE (xcrun notarytool store-credentials)
 notarize:
 	$(POETRY) run python scripts/package_macos.py notarize
 

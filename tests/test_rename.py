@@ -1,4 +1,4 @@
-"""Bilder nach Schema umbenennen: rename (ohne Qt) und MainWindow.rename_folder (offscreen)."""
+"""Rename images by a scheme: rename (without Qt) and MainWindow.rename_folder (offscreen)."""
 import datetime
 import os
 from pathlib import Path
@@ -20,7 +20,7 @@ def folder_with_images(path):
 
 def test_number_is_appended_to_the_name():
     assert rename.stem('20261023_MEM_EPC', 1) == '20261023_MEM_EPC_001'
-    assert rename.stem('20261023_EPC_MEM_', 2) == '20261023_EPC_MEM_002'      # Trenner nicht doppelt
+    assert rename.stem('20261023_EPC_MEM_', 2) == '20261023_EPC_MEM_002'      # separator not doubled
     assert rename.width(999) == 3 and rename.width(1000) == 4
     assert rename.stem('20261023_MEM_EPC', 7, rename.width(1200)) == '20261023_MEM_EPC_0007'
 
@@ -52,7 +52,7 @@ def test_renaming_twice_swaps_names_without_clashing(tmp_path):
     items = folder_with_images(tmp_path)
     rename.apply(rename.plan(items, '20261023_MEM_EPC'))
     items = scanner.scan(tmp_path)
-    items.reverse()      # andere Reihenfolge: 001 <-> 003
+    items.reverse()      # different order: 001 <-> 003
     moves = rename.plan(items, '20261023_MEM_EPC')
     assert rename.conflicts(moves) == []
     rename.apply(moves)
@@ -79,7 +79,7 @@ def test_failure_renames_everything_back(tmp_path, monkeypatch):
 
     def flaky(source, target):
         calls.append(source)
-        if len(calls) == 7:        # mitten im zweiten Schritt
+        if len(calls) == 7:        # in the middle of the second step
             raise PermissionError('gesperrt')
         real(source, target)
 
@@ -89,7 +89,7 @@ def test_failure_renames_everything_back(tmp_path, monkeypatch):
     assert sorted(p.name for p in tmp_path.iterdir()) == before
 
 
-# --- Hauptfenster ------------------------------------------------------------------
+# --- Main window -------------------------------------------------------------------
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 
@@ -126,7 +126,7 @@ def test_menu_renames_folder_and_keeps_rating(window, tmp_path):
     assert scanned(tab)
     pair = next(i for i in window.filtered if i.raw)
     window.select_only(pair)
-    window.set_rating(4)                                  # Sidecar, noch im Writer
+    window.set_rating(4)                                  # sidecar, still in the writer
     window.raw_captions.set(pair, '#x1# jubelt')
     file_menu = window.menuBar().actions()[0].menu()
     assert any(a.text() == 'Bilder umbenennen …' for a in file_menu.actions())

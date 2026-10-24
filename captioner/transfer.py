@@ -1,15 +1,14 @@
 """
-Bilder zwischen Ordnern kopieren (Drag & Drop zwischen Tabs), ohne Qt.
+Copy images between folders (drag & drop between tabs), without Qt.
 
-* Eine Gruppe sind alle Dateien eines Bildes: RAW, JPG/DNG und Sidecar mit gleichem
-  Basisnamen. Sie werden immer zusammen kopiert und zusammen umbenannt, damit das
-  Paar und das Sidecar zusammenpassen.
-* Kopiert wird nie direkt auf den Zielnamen: erst in ".<name>.captioner-part", Groesse
-  pruefen, dann os.replace. Ein Abbruch hinterlaesst nie eine halbe Datei unter dem
-  echten Namen.
-* Die Quelle wird nie veraendert (immer kopieren, nie verschieben).
-* Konflikte (Zielname existiert schon) entscheidet der Aufrufer pro Gruppe:
-  SKIP, RENAME (DSC_0001-2.NEF + -2.JPG + -2.xmp) oder REPLACE.
+* A group is all files of one image: RAW, JPG/DNG and sidecar with the same base name.
+  They are always copied and renamed together so that the pair and the sidecar stay
+  matched.
+* Never copied straight to the target name: first to ".<name>.captioner-part", check the
+  size, then os.replace. An abort never leaves a half file under the real name.
+* The source is never changed (always copy, never move).
+* The caller decides conflicts (target name already exists) per group:
+  SKIP, RENAME (DSC_0001-2.NEF + -2.JPG + -2.xmp) or REPLACE.
 """
 import os
 import shutil
@@ -30,11 +29,11 @@ class TransferError(RuntimeError):
 @dataclass
 class Group:
     stem: str
-    files: list = field(default_factory=list)   # Quellpfade
+    files: list = field(default_factory=list)   # source paths
 
     @property
     def name(self):
-        """Fuer Meldungen: die erste Datei (RAW vor JPG, siehe group_files)."""
+        """For messages: the first file (RAW before JPG, see group_files)."""
         return self.files[0].name if self.files else self.stem
 
     def targets(self, folder, stem=None):
@@ -46,7 +45,7 @@ class Group:
 
 
 def group_files(paths):
-    """Quelldateien nach Bild gruppieren (Ordner + Basisname, ohne Gross-/Kleinschreibung)."""
+    """Group source files by image (folder + base name, case-insensitive)."""
     groups = {}
     for path in paths:
         path = Path(path)
@@ -57,7 +56,7 @@ def group_files(paths):
         if path not in group.files:
             group.files.append(path)
     for group in groups.values():
-        # RAW zuerst, Sidecar zuletzt: nur fuer stabile Reihenfolge und Meldungen
+        # RAW first, sidecar last: only for a stable order and messages
         group.files.sort(key=lambda p: (p.suffix.lower() == '.xmp', p.suffix.lower() in ('.jpg', '.jpeg'), p.name))
     return list(groups.values())
 
@@ -74,7 +73,7 @@ def _same_dir(a, b):
 
 
 def free_stem(group, folder):
-    """Erster Basisname stem-2, stem-3, ..., unter dem keine Datei der Gruppe existiert."""
+    """First base name stem-2, stem-3, ... under which no file of the group exists."""
     n = 2
     while True:
         stem = f'{group.stem}-{n}'
@@ -101,8 +100,8 @@ def copy_file(source, target):
 
 def copy_group(group, folder, decision=None):
     """
-    Kopiert eine Gruppe. decision gilt nur bei Konflikten (SKIP, RENAME, REPLACE).
-    Rueckgabe: kopierte Zielpfade (leer bei SKIP).
+    Copies a group. decision only applies to conflicts (SKIP, RENAME, REPLACE).
+    Returns the copied target paths (empty for SKIP).
     """
     folder = Path(folder)
     stem = group.stem

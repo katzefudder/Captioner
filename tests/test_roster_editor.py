@@ -1,4 +1,4 @@
-"""Roster-Editor (offscreen): Laden, Pruefen, Speichern in der Kodierung der Datei."""
+"""Roster editor (offscreen): loading, checking, saving in the file's encoding."""
 import os
 
 import pytest
@@ -26,28 +26,28 @@ def roster_file(tmp_path):
 
 def test_edit_check_and_save(app, roster_file):
     dialog = RosterEditorDialog(['https://example.org/roster.txt', str(roster_file)])
-    assert dialog.source == str(roster_file)          # lokale Datei zuerst, URL nur lesbar
+    assert dialog.source == str(roster_file)          # local file first, URL read-only
     assert not dialog.text.isReadOnly()
     assert '2 Codes, 1 Team' in dialog.status.text() and 'Windows-1252' in dialog.status.text()
 
     dialog.text.appendPlainText('bn31 -31- Dean Döge (EC Bad Nauheim)')
     dialog._check()
     assert dialog.problems.count() == 1 and 'kein Tab' in dialog.problems.item(0).text()
-    assert dialog.highlighter.problem_lines == {6}  # Datei endet mit Umbruch, angehaengt = Zeile 6
+    assert dialog.highlighter.problem_lines == {6}  # file ends with a newline, appended = line 6
 
     dialog.text.setPlainText(dialog.text.toPlainText().replace('bn31 -31-', 'bn31\t-31-'))
     saved = []
     dialog.saved.connect(saved.append)
     assert dialog.save()
     assert saved == [str(roster_file)]
-    # appendPlainText setzt hinter die abschliessende Leerzeile eine neue Zeile
+    # appendPlainText puts a new line after the final empty line
     assert roster_file.read_bytes() == (TEXT + '\r\nbn31\t-31- Dean Döge (EC Bad Nauheim)').encode('cp1252')
     assert not dialog.text.document().isModified()
 
 
 def test_character_missing_in_encoding_offers_utf8(app, roster_file, monkeypatch):
     dialog = RosterEditorDialog([str(roster_file)])
-    dialog.text.appendPlainText('bn7\t-7- Łukasz Nowak (EC Bad Nauheim)')   # Ł gibt es in cp1252 nicht
+    dialog.text.appendPlainText('bn7\t-7- Łukasz Nowak (EC Bad Nauheim)')   # Ł doesn't exist in cp1252
     monkeypatch.setattr(QtWidgets.QMessageBox, 'question', lambda *a, **k: QtWidgets.QMessageBox.StandardButton.Yes)
     assert dialog.save()
     assert roster_file.read_bytes().decode('utf-8').endswith('Łukasz Nowak (EC Bad Nauheim)')
@@ -87,8 +87,8 @@ def test_line_numbers(app, roster_file):
     dialog.text.appendPlainText('kaputt ohne tab')
     dialog._check()
     assert dialog.text.problem_lines == {6}
-    gutter.grab()   # zeichnet ohne Fehler
-    dialog.text.document().setModified(False)  # sonst fragt Schliessen nach dem Speichern
+    gutter.grab()   # paints without errors
+    dialog.text.document().setModified(False)  # otherwise closing asks about saving
     dialog.close()
 
 
@@ -109,10 +109,10 @@ def test_font_size_slider_and_line_number_contrast(app, roster_file):
     narrow = dialog.text.line_number_width()
     dialog.font_size.setValue(20)
     assert dialog.text.font().pointSize() == 20 and dialog.font_size_label.text() == '20 pt'
-    assert dialog.text.line_number_width() > narrow       # Nummern wachsen mit
+    assert dialog.text.line_number_width() > narrow       # numbers grow with it
     assert dialog.text.tabStopDistance() == dialog.text.fontMetrics().horizontalAdvance(' ') * 10
 
-    # Zeilennummern naeher an der Textfarbe als an der Hintergrundfarbe
+    # line numbers closer to the text color than to the background color
     def distance(a, b):
         return sum(abs(x - y) for x, y in zip(a.getRgb()[:3], b.getRgb()[:3]))
     palette = dialog.text.palette()

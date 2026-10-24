@@ -1,13 +1,12 @@
 """
-Kleine OpenStreetMap-Karte als QWidget, ohne WebEngine/QtLocation (die zoegen
-QtQuick/QML bzw. ~100 MB Chromium ins Bundle).
+Small OpenStreetMap map as a QWidget, without WebEngine/QtLocation (those would pull
+QtQuick/QML or ~100 MB of Chromium into the bundle).
 
-* Kacheln von tile.openstreetmap.org ueber QNetworkAccessManager, mit
-  QNetworkDiskCache im Cache-Verzeichnis (PreferCache: bekannte Ausschnitte
-  gehen auch offline).
-* Ziehen verschiebt, Mausrad/+/- zoomt, ein Klick ohne Ziehen setzt die Markierung.
-* online_changed(False), sobald eine Kachel weder aus dem Netz noch aus dem
-  Cache kommt und noch keine einzige geladen wurde.
+* Tiles from tile.openstreetmap.org via QNetworkAccessManager, with a QNetworkDiskCache
+  in the cache directory (PreferCache: known areas work offline too).
+* Dragging pans, scroll wheel/+/- zoom, a click without dragging sets the marker.
+* online_changed(False) as soon as a tile comes neither from the network nor from the
+  cache and not a single one has been loaded yet.
 """
 import json
 import time
@@ -21,9 +20,9 @@ from .. import config, geo, i18n
 from ..i18n import _
 
 CACHE_BYTES = 300 * 1024 * 1024
-DEFAULT_CENTER = (51.1, 10.4)  # Deutschland
+DEFAULT_CENTER = (51.1, 10.4)  # Germany
 DEFAULT_ZOOM = 6
-CLICK_TOLERANCE = 4  # px, darueber ist es ein Ziehen
+CLICK_TOLERANCE = 4  # px, beyond that it is a drag
 
 
 def network_manager(parent):
@@ -38,7 +37,7 @@ def network_manager(parent):
 def _request(url, prefer_cache=False):
     request = QNetworkRequest(QUrl(url))
     request.setHeader(QNetworkRequest.KnownHeaders.UserAgentHeader, geo.USER_AGENT)
-    request.setRawHeader(b'Accept-Language', i18n.language().encode())  # Ortsnamen in der App-Sprache
+    request.setRawHeader(b'Accept-Language', i18n.language().encode())  # place names in the app language
     request.setTransferTimeout(15000)
     if prefer_cache:
         request.setAttribute(QNetworkRequest.Attribute.CacheLoadControlAttribute,
@@ -47,10 +46,10 @@ def _request(url, prefer_cache=False):
 
 
 class MapView(QWidget):
-    clicked = Signal(float, float)   # Breite, Laenge
+    clicked = Signal(float, float)   # latitude, longitude
     online_changed = Signal(bool)
 
-    tile_url = staticmethod(geo.tile_url)  # in Tests ersetzbar
+    tile_url = staticmethod(geo.tile_url)  # replaceable in tests
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -60,7 +59,7 @@ class MapView(QWidget):
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.network = network_manager(self)
         self.zoom = DEFAULT_ZOOM
-        self.center = geo.to_pixels(*DEFAULT_CENTER, self.zoom)  # Weltpixel
+        self.center = geo.to_pixels(*DEFAULT_CENTER, self.zoom)  # world pixels
         self.marker = None   # (lat, lon)
         self.tiles = {}      # (z, x, y) -> QPixmap
         self.pending = {}    # (z, x, y) -> QNetworkReply
@@ -79,7 +78,7 @@ class MapView(QWidget):
             setattr(self, 'zoom_in_button' if step > 0 else 'zoom_out_button', button)
         self._place_buttons()
 
-    # --- Steuerung ------------------------------------------------------------
+    # --- Control --------------------------------------------------------------
 
     def set_view(self, lat, lon, zoom=None):
         if zoom is not None:
@@ -99,7 +98,7 @@ class MapView(QWidget):
         if new_zoom == self.zoom:
             return
         anchor = anchor or QPointF(self.width() / 2, self.height() / 2)
-        # der Punkt unter dem Anker bleibt stehen
+        # the point under the anchor stays put
         world = self._to_world(anchor)
         factor = 2 ** (new_zoom - self.zoom)
         offset = (anchor.x() - self.width() / 2, anchor.y() - self.height() / 2)
@@ -109,10 +108,10 @@ class MapView(QWidget):
 
     def retry(self):
         self.failed.clear()
-        self.online = True  # damit ein erneuter Fehlschlag wieder online_changed(False) sendet
+        self.online = True  # so that another failure sends online_changed(False) again
         self.update()
 
-    # --- Koordinaten ----------------------------------------------------------
+    # --- Coordinates ----------------------------------------------------------
 
     def _to_world(self, point):
         return (self.center[0] + point.x() - self.width() / 2,
@@ -122,7 +121,7 @@ class MapView(QWidget):
         x, y = geo.to_pixels(lat, lon, self.zoom)
         return QPointF(x - self.center[0] + self.width() / 2, y - self.center[1] + self.height() / 2)
 
-    # --- Kacheln --------------------------------------------------------------
+    # --- Tiles ----------------------------------------------------------------
 
     def _tile(self, z, x, y):
         key = (z, x, y)
@@ -156,7 +155,7 @@ class MapView(QWidget):
             self.online = online
             self.online_changed.emit(online)
 
-    # --- Zeichnen -------------------------------------------------------------
+    # --- Painting -------------------------------------------------------------
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -203,7 +202,7 @@ class MapView(QWidget):
         self.zoom_in_button.move(8, 8)
         self.zoom_out_button.move(8, 40)
 
-    # --- Maus und Tasten ------------------------------------------------------
+    # --- Mouse and keys -------------------------------------------------------
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -259,9 +258,9 @@ class MapView(QWidget):
 
 
 class Geocoder(QObject):
-    """Nominatim-Suche und -Rueckwaertssuche, hoechstens eine Anfrage pro Sekunde."""
-    found = Signal(list)            # [geo.Place] fuer search()
-    resolved = Signal(object)       # geo.Place oder None fuer reverse()
+    """Nominatim search and reverse search, at most one request per second."""
+    found = Signal(list)            # [geo.Place] for search()
+    resolved = Signal(object)       # geo.Place or None for reverse()
     failed = Signal(str)
 
     MIN_INTERVAL = 1.0
@@ -270,7 +269,7 @@ class Geocoder(QObject):
         super().__init__(parent)
         self.network = QNetworkAccessManager(self)
         self._last = 0.0
-        self._queued = None   # (url, handler); nur die neueste wartende Anfrage zaehlt
+        self._queued = None   # (url, handler); only the newest waiting request counts
         self._timer = QTimer(self, singleShot=True)
         self._timer.timeout.connect(self._send_queued)
         self._reply = None

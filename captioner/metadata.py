@@ -1,15 +1,14 @@
 """
-Metadaten lesen und schreiben (ADR 0001, Punkt 4).
+Read and write metadata (ADR 0001, item 4).
 
-* Proprietaere RAWs werden nie veraendert; alles geht ins XMP-Sidecar
-  <basis>.xmp. Ein vorhandenes Sidecar (auch "DSC_0001.XMP" aus einem
-  Workflow-Tool fuer die Auswahl von Fotos)
-  wird fortgeschrieben, nicht ersetzt; Entwicklungseinstellungen darin bleiben.
-* JPG/DNG/TIFF bekommen die Metadaten eingebettet: IPTC-IIM + XMP + EXIF.
-  Geschrieben wird in eine neue Datei, die erst nach Pruefung der Bilddaten-
-  Pruefsumme das Original ersetzt.
+* Proprietary RAWs are never changed; everything goes into the XMP sidecar
+  <base>.xmp. An existing sidecar (also "DSC_0001.XMP" from a photo culling
+  workflow tool) is updated, not replaced; develop settings in it are kept.
+* JPG/DNG/TIFF get the metadata embedded: IPTC-IIM + XMP + EXIF. It is written to
+  a new file that only replaces the original after the image data checksum has
+  been verified.
 
-Feldnamen entsprechen der IPTC-Map in app/indexer/lib/indexer.py.
+Field names match the IPTC map in app/indexer/lib/indexer.py.
 """
 import os
 import re
@@ -20,7 +19,7 @@ from .files import replace_file
 from .i18n import _, N_
 from .scanner import Item, Metadata, RAW_EXTENSIONS
 
-# IPTC-IIM-Grenzen in Bytes
+# IPTC-IIM limits in bytes
 LIMITS = {
     'headline': 256,
     'caption': 2000,
@@ -39,8 +38,8 @@ LIMITS = {
     'instructions': 256,
 }
 
-# Ort und Rechte: Metadata-Feld -> (XMP, IPTC, EXIF) zum Schreiben; gelesen wird ueber
-# die Tag-Namen ohne Gruppe (READ_TAGS), erster nicht leerer gewinnt
+# Location and rights: Metadata field -> (XMP, IPTC, EXIF) for writing; reading goes
+# by tag names without group (READ_TAGS), the first non-empty one wins
 RIGHTS_TAGS = {
     'state': ('XMP-photoshop:State', 'IPTC:Province-State', None),
     'country': ('XMP-photoshop:Country', 'IPTC:Country-PrimaryLocationName', None),
@@ -56,8 +55,8 @@ RIGHTS_TAGS = {
     'category': ('XMP-photoshop:Category', 'IPTC:Category', None),
     'instructions': ('XMP-photoshop:Instructions', 'IPTC:SpecialInstructions', None),
 }
-# IPTC-IIM Category erlaubt nur 3 Zeichen ("SPO"). Laengeres ("Sport") steht nur im XMP,
-# statt abgeschnitten ("Spo") im IIM
+# IPTC-IIM Category allows only 3 characters ("SPO"). Anything longer ("Sport") is only
+# in the XMP instead of being cut off ("Spo") in the IIM
 IPTC_CATEGORY_LIMIT = 3
 RIGHTS_READ = {
     'state': ('State', 'Province-State'),
@@ -97,7 +96,7 @@ class WriteError(RuntimeError):
 
 
 def single_line(text):
-    """Bildunterschriften sind einzeilig."""
+    """Captions are single-line."""
     return re.sub(r'\s+', ' ', text or '').strip()
 
 
@@ -115,7 +114,7 @@ def validate(meta: Metadata):
     check(_('Ort'), meta.sublocation, LIMITS['sublocation'])
     for name, label in LABELS.items():
         if name in LIMITS:
-            check(_(label), _rights_value(meta, name), LIMITS[name])  # so, wie es ins Bild geht
+            check(_(label), _rights_value(meta, name), LIMITS[name])  # as it goes into the image
     for keyword in meta.keywords:
         check(_('Tag "{keyword}"').format(keyword=keyword), keyword, LIMITS['keyword'])
     return problems
@@ -128,7 +127,7 @@ def truncate_bytes(text, limit):
     return encoded[:limit].decode('utf-8', 'ignore').rstrip()
 
 
-# --- Lesen -------------------------------------------------------------------
+# --- Reading -----------------------------------------------------------------
 
 def _as_list(value):
     if value is None or value == '':
@@ -162,7 +161,7 @@ def meta_from_record(record):
 
 
 def _text(record, tags):
-    """Erster nicht leerer Wert; Listen (dc:creator) mit '; ' verbunden."""
+    """First non-empty value; lists (dc:creator) joined with '; '."""
     for tag in tags:
         value = record.get(tag)
         if isinstance(value, list):
@@ -173,7 +172,7 @@ def _text(record, tags):
 
 
 def _gps(record):
-    """(Breite, Laenge) mit Vorzeichen (-n liefert die Composite-Werte), sonst None."""
+    """(latitude, longitude) with sign (-n returns the composite values), otherwise None."""
     lat, lon = record.get('GPSLatitude'), record.get('GPSLongitude')
     if isinstance(lat, (int, float)) and isinstance(lon, (int, float)) and not (lat == 0 and lon == 0):
         return float(lat), float(lon)
@@ -189,7 +188,7 @@ def _int(value, low, high):
 
 
 def read_items(tool, items, chunk_size=200):
-    """Liest Aufnahmezeit, Ausrichtung und Beschriftung fuer alle Items."""
+    """Reads capture time, orientation and caption for all items."""
     for start in range(0, len(items), chunk_size):
         chunk = items[start:start + chunk_size]
         paths = []
@@ -219,7 +218,7 @@ def apply_records(item: Item, by_path):
     except (TypeError, ValueError):
         item.orientation = 1
 
-    # Vorrang: Sidecar > eingebettet > XMP in der RAW-Datei (Kamera-Bewertung)
+    # precedence: sidecar > embedded > XMP in the RAW file (camera rating)
     candidates = [record_for(item.sidecar)] + [record_for(p) for p in item.embedded] + [record_for(item.raw)]
     for record in candidates:
         if record:
@@ -228,13 +227,13 @@ def apply_records(item: Item, by_path):
                     or meta.color_class or meta.tagged):
                 item.meta = meta
                 break
-    # GPS aus irgendeiner der Dateien, Sidecar zuerst: Kamera-GPS in der RAW zaehlt
-    # auch, wenn die Beschriftung aus dem Sidecar kommt
+    # GPS from any of the files, sidecar first: camera GPS in the RAW counts
+    # even when the caption comes from the sidecar
     gps = next((g for g in (_gps(r) for r in candidates if r) if g), None)
     if gps:
         item.meta.latitude, item.meta.longitude = gps
-    # Ebenso Ort und Rechte, z. B. Fotograf/Copyright, die die Kamera in RAW/JPG schreibt:
-    # sonst wuerde das naechste Speichern sie im Sidecar/JPG leeren
+    # Same for location and rights, e.g. photographer/copyright written by the camera into
+    # RAW/JPG: otherwise the next save would clear them in the sidecar/JPG
     for name, tags in RIGHTS_READ.items():
         if not getattr(item.meta, name):
             value = next((v for v in (_text(r, tags) for r in candidates if r) if v), '')
@@ -242,7 +241,7 @@ def apply_records(item: Item, by_path):
     item.meta_loaded = True
 
 
-# --- Schreiben ---------------------------------------------------------------
+# --- Writing -----------------------------------------------------------------
 
 def _xmp_args(meta: Metadata):
     args = [
@@ -260,20 +259,20 @@ def _xmp_args(meta: Metadata):
     if meta.gps_changed and meta.latitude is not None and meta.longitude is not None:
         args += [f'-XMP-exif:GPSLatitude={meta.latitude:.7f}', f'-XMP-exif:GPSLongitude={meta.longitude:.7f}']
     elif meta.gps_changed:
-        # Rueckgaengig: von Captioner gesetztes GPS wieder entfernen
+        # undo: remove GPS set by Captioner again
         args += ['-XMP-exif:GPSLatitude=', '-XMP-exif:GPSLongitude=']
     for name, (xmp, _, _) in RIGHTS_TAGS.items():
         args.append(f'-{xmp}={_rights_value(meta, name)}')
     if meta.copyright:
-        args.append('-XMP-xmpRights:Marked=True')  # Lightroom: "Copyright-Status: Geschützt"
+        args.append('-XMP-xmpRights:Marked=True')  # Lightroom: "Copyright Status: Copyrighted"
     return args
 
 
 def _rights_value(meta, name):
     """
-    Einzeilig: Template-Dateien und fremde Bilder koennen Umbrueche enthalten (Adresse,
-    Kontoverbindung), Argumente an ExifTool duerfen keine. Die Hinweise sind im Template
-    mehrzeilig; ihre Zeilen bleiben mit " · " erkennbar getrennt.
+    Single-line: template files and foreign images may contain line breaks (address,
+    bank details), arguments to ExifTool must not. The instructions are multi-line in
+    the template; their lines stay recognizably separated by " · ".
     """
     value = getattr(meta, name)
     if name == 'instructions':
@@ -296,7 +295,7 @@ def _embedded_args(meta: Metadata):
     for name, (_, iptc, exif) in RIGHTS_TAGS.items():
         value = _rights_value(meta, name)
         if name == 'category':
-            # zu lang: IIM leeren statt abschneiden, das XMP traegt den vollen Wert
+            # too long: clear the IIM instead of truncating, the XMP carries the full value
             fits = len(value.encode('utf-8')) <= IPTC_CATEGORY_LIMIT
             args.append(f'-{iptc}={value if fits else ""}')
         elif iptc:
@@ -365,8 +364,8 @@ def write_embedded(tool, path: Path, meta: Metadata):
 
 def write_item(tool, item: Item, meta: Metadata, sidecars_only=False):
     """
-    Schreibt die Metadaten in alle Dateien des Items. Gibt die geschriebenen
-    Pfade zurueck. sidecars_only: Schreibschutz-Modus fuer die Karte.
+    Writes the metadata into all files of the item. Returns the written paths.
+    sidecars_only: write-protection mode for the card.
     """
     problems = validate(meta)
     if problems:

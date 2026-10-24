@@ -1,10 +1,10 @@
-# PyInstaller-Spec fuer Windows (x64, onedir). Aufruf ueber `python scripts/package_windows.py bundle`.
+# PyInstaller spec for Windows (x64, onedir). Run via `python scripts/package_windows.py bundle`.
 #
-# Umgebungsvariablen (optional):
-#   CAPTIONER_VERSION  Versionsnummer statt der aus pyproject.toml (setzt der Release-Workflow).
+# Environment variables (optional):
+#   CAPTIONER_VERSION  version number instead of the one from pyproject.toml (set by the release workflow).
 #
-# Ergebnis: dist/Captioner/Captioner.exe mit ExifTool unter _internal/exiftool/ (exiftool.exe
-# + exiftool_files/ mit eigenem Perl). Den Installer baut Inno Setup aus packaging/captioner.iss.
+# Result: dist/Captioner/Captioner.exe with ExifTool under _internal/exiftool/ (exiftool.exe
+# + exiftool_files/ with its own Perl). Inno Setup builds the installer from packaging/captioner.iss.
 import os
 import re
 import tomllib
@@ -17,7 +17,7 @@ ROOT = Path(SPECPATH)
 VERSION = os.environ.get('CAPTIONER_VERSION') or \
     tomllib.loads((ROOT / 'pyproject.toml').read_text())['project']['version']
 
-# captioner.version() liest im Bundle captioner/VERSION (Windows hat keine Info.plist)
+# captioner.version() reads captioner/VERSION in the bundle (Windows has no Info.plist)
 version_file = ROOT / 'build' / 'windows' / 'VERSION'
 version_file.parent.mkdir(parents=True, exist_ok=True)
 version_file.write_text(VERSION, encoding='utf-8')
@@ -46,16 +46,17 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[('vendor/exiftool-windows', 'exiftool'), ('captioner/resources', 'captioner/resources'),
-           ('captioner/locale', 'captioner/locale'),   # Uebersetzungen (gettext, siehe captioner/i18n.py)
-           ('LICENSE', '.'), ('licenses', 'licenses'), ('docs/Captioner-Anleitung.pdf', 'docs'),   # GPL und Lizenzen der gebuendelten Teile
+           ('captioner/locale', 'captioner/locale'),   # translations (gettext, see captioner/i18n.py)
+           ('LICENSE', '.'), ('licenses', 'licenses'), ('docs/Captioner-Anleitung.pdf', 'docs'),
+           ('docs/Captioner-Manual.pdf', 'docs'),   # GPL and licenses of the bundled parts
            (str(version_file), 'captioner')],
     excludes=['PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets', 'PySide6.QtWebEngineQuick',
               'PySide6.Qt3DCore', 'PySide6.QtQuick', 'PySide6.QtQml', 'PySide6.QtPdf', 'tkinter'],
     noarchive=False,
 )
 
-# Wie auf macOS: PDF-Bildformat und Bildschirmtastatur ziehen QtQuick/QtQml/QtPdf nach,
-# die die App nicht nutzt (Captioner.spec, UNUSED).
+# As on macOS: the PDF image format and the on-screen keyboard pull in QtQuick/QtQml/QtPdf,
+# which the app doesn't use (Captioner.spec, UNUSED).
 UNUSED = ('qpdf.dll', 'qtvirtualkeyboardplugin.dll', 'Qt6Quick', 'Qt6Qml', 'Qt6VirtualKeyboard', 'Qt6Pdf')
 a.binaries = [entry for entry in a.binaries if not any(name.lower() in entry[0].lower() for name in UNUSED)]
 a.datas = [entry for entry in a.datas if not any(name.lower() in entry[0].lower() for name in UNUSED)]

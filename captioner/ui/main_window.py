@@ -1,4 +1,4 @@
-"""Hauptfenster: Ordner in Tabs, Filter, paginierte Galerie, Beschriftung, Drag nach Lightroom."""
+"""Main window: folders in tabs, filters, gallery, captioning, drag to Lightroom."""
 import contextlib
 import dataclasses
 import html
@@ -46,7 +46,7 @@ RATING_FILTERS = [(N_('Alle Sterne'), None), (N_('★ und mehr'), 1), (N_('★�
 
 
 class RawCaptionStore:
-    """Rohtext mit Codes pro Datei, damit man ihn spaeter weiterbearbeiten kann (ADR 0001, Punkt 5)."""
+    """Raw text with codes per file, so it can be edited again later (ADR 0001, item 5)."""
 
     def __init__(self, path: Path):
         self.path = path
@@ -59,7 +59,7 @@ class RawCaptionStore:
         return self.data.get(str(item.primary))
 
     def set(self, item, raw):
-        """raw=None entfernt den Eintrag (Rueckgaengig)."""
+        """raw=None removes the entry (undo)."""
         if raw is None:
             self.data.pop(str(item.primary), None)
         else:
@@ -67,7 +67,7 @@ class RawCaptionStore:
         self._save()
 
     def move(self, paths):
-        """Nach dem Umbenennen: {alter Pfad: neuer Pfad} der Hauptdateien."""
+        """After renaming: {old path: new path} of the main files."""
         for old, new in paths.items():
             if str(old) in self.data:
                 self.data[str(new)] = self.data.pop(str(old))
@@ -82,9 +82,9 @@ class RawCaptionStore:
 
 class OpenRequests(QObject):
     """
-    macOS: Ordner aus dem Finder (aufs Dock-Symbol gezogen, "Oeffnen mit") kommen als
-    QFileOpenEvent an der Application an, je Ordner eins, beim Start auch vor dem
-    Fenster. Sie werden kurz gesammelt und dann gemeinsam uebergeben.
+    macOS: folders from Finder (dropped on the Dock icon, "Open With") arrive as
+    QFileOpenEvent at the application, one per folder, at start-up even before the
+    window. They are collected briefly and then handed over together.
     """
     DELAY_MS = 250
 
@@ -107,7 +107,7 @@ class OpenRequests(QObject):
         return False
 
     def add(self, paths):
-        """Ordner aus einem weiteren Start (Windows, ui/instance.py), gesammelt wie FileOpen."""
+        """Folders from a further start (Windows, ui/instance.py), collected like FileOpen."""
         self.paths.extend(paths)
         self.timer.start()
 
@@ -124,16 +124,16 @@ class OpenRequests(QObject):
 
 
 def camera_key(model, serial):
-    """Kamera als Text fuer QComboBox-Daten (Tupel vergleicht Qt nicht zuverlaessig)."""
+    """Camera as text for QComboBox data (Qt doesn't compare tuples reliably)."""
     return f'{model}\x1f{serial}'
 
 
 def _tab_attribute(name):
-    """Zustand des aktiven Tabs, damit Bewertung, Editor, Viewer usw. unveraendert bleiben."""
+    """State of the active tab, so rating, editor, viewer etc. stay unchanged."""
     return property(lambda self: getattr(self.tab, name), lambda self, value: setattr(self.tab, name, value))
 
 
-# Fenstertitel; Markenzeile, in jeder Sprache gleich (nicht uebersetzt)
+# window title; brand line, the same in every language (not translated)
 WINDOW_TITLE = 'Captioner {version} - The Photo Captioning Tool for Professionals'
 
 
@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
     def __init__(self, settings: config.Settings, folder=None):
         super().__init__()
         self.settings = settings
-        keymap.apply(settings.shortcuts)   # eigene Kuerzel, bevor Menues und Panel sie anzeigen
+        keymap.apply(settings.shortcuts)   # custom shortcuts, before menus and panel show them
         self.setWindowTitle(WINDOW_TITLE.format(version=version()))
         self.resize(1500, 950)
 
@@ -168,8 +168,8 @@ class MainWindow(QMainWindow):
         self.places = geo.PlaceBook(settings.places)
         self.keyword_history = keywords.KeywordHistory(config.cache_dir() / 'keywords.json')
 
-        self.edited_keys = set()   # ueber alle Tabs; Keys sind Pfade
-        self.last_headline = ''    # fuer Bilder ohne Titel, wenn das Template keinen vorgibt
+        self.edited_keys = set()   # across all tabs; keys are paths
+        self.last_headline = ''    # for images without a headline if the template doesn't define one
         self.roster_worker = None
         self.copy_worker = None
         self._drag_items = []
@@ -182,7 +182,7 @@ class MainWindow(QMainWindow):
         self.refresh_templates(settings.last_template)
         self.load_roster()
         self._restore_tabs()
-        # Ein Ordner (str/Path) oder eine Liste, z. B. von der Kommandozeile
+        # one folder (str/Path) or a list, e.g. from the command line
         folders = [folder] if isinstance(folder, (str, Path)) else list(folder or [])
         if folders:
             self.open_folders(folders)
@@ -190,17 +190,17 @@ class MainWindow(QMainWindow):
         self._remember_tabs()
         self._setup_update_check()
 
-    # --- Aufbau ---------------------------------------------------------------
+    # --- Building ---------------------------------------------------------------
 
     def _build_menus(self):
         """
-        Menueleiste; auf macOS oben am Bildschirm, "Ueber", "Einstellungen" und "Beenden"
-        wandern dort ins App-Menue "Captioner". Menuepunkte zu Befehlen mit Keymap-Kuerzel
-        (Tab schliessen, Template, F1) bekommen kein eigenes Kuerzel: zwei gleiche Kuerzel loest
-        Qt nicht aus, und Cmd+W gehoert in der Grossansicht dieser.
+        Menu bar; on macOS at the top of the screen, "About", "Settings" and "Quit" move
+        into the "Captioner" app menu there. Menu items for commands with a keymap shortcut
+        (close tab, template, F1) get no shortcut of their own: Qt doesn't trigger two
+        identical shortcuts, and in the preview Cmd+W belongs to the preview.
         """
         bar = self.menuBar()
-        self._menu_actions = {}   # Befehl der Keymap (Kontext menu) -> Menuepunkt mit dessen Kuerzeln
+        self._menu_actions = {}   # keymap command (context menu) -> menu item with its shortcuts
 
         def action(menu, text, handler, command=None, role=None):
             item = QAction(text, self)
@@ -213,7 +213,7 @@ class MainWindow(QMainWindow):
             return item
 
         role = QAction.MenuRole
-        # macOS: "Ablage" wie im Finder, Windows: "Datei"
+        # macOS: "Ablage" as in Finder, Windows: "Datei"
         file_menu = bar.addMenu(_('Ablage') if sys.platform == 'darwin' else _('Datei'))
         action(file_menu, _('Ordner öffnen …'), self.choose_folder, 'open_folder')
         action(file_menu, _('Ordner in neuem Tab öffnen …'), lambda: self.choose_folder(new_tab=True), 'open_folder_tab')
@@ -229,11 +229,11 @@ class MainWindow(QMainWindow):
         self._apply_menu_shortcuts()
 
         edit_menu = bar.addMenu(_('Bearbeiten'))
-        # Kuerzel Cmd+Z/Cmd+Shift+Z kommen aus der Keymap (im Textfeld gilt dessen Rueckgaengig)
+        # shortcuts Cmd+Z/Cmd+Shift+Z come from the keymap (in a text field its own undo applies)
         self.undo_action = action(edit_menu, _('Rückgängig'), self.undo)
         self.redo_action = action(edit_menu, _('Wiederholen'), self.redo)
         edit_menu.addSeparator()
-        action(edit_menu, _('Suchen und Ersetzen …'), self.find_replace)   # Kuerzel aus der Keymap
+        action(edit_menu, _('Suchen und Ersetzen …'), self.find_replace)   # shortcut from the keymap
         self._update_undo_actions()
 
         template_menu = bar.addMenu(_('Template'))
@@ -278,7 +278,7 @@ class MainWindow(QMainWindow):
         self.update_button.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl(self.update_button.toolTip())))
         self.statusBar().addPermanentWidget(self.update_button)
-        # Nur die gebuendelte App fragt von selbst, hoechstens einmal am Tag
+        # only the bundled app checks by itself, at most once a day
         if (self.settings.check_updates and getattr(sys, 'frozen', False)
                 and updates.due(self.settings.last_update_check)):
             QTimer.singleShot(3000, self.check_updates)
@@ -346,7 +346,7 @@ class MainWindow(QMainWindow):
         self.tag_filter.currentIndexChanged.connect(lambda: self.apply_filter())
         self.uncaptioned_filter.toggled.connect(lambda: self.apply_filter())
 
-        # Zweite Zeile: Suche, Kamera, Uhrzeit
+        # second row: search, camera, time
         search_row = QHBoxLayout()
         self.search = QLineEdit()
         self.search.setPlaceholderText(_('Suchen: Dateiname, Titel, Beschreibung, Tags'))
@@ -375,7 +375,7 @@ class MainWindow(QMainWindow):
         search_row.addWidget(self.time_to)
         self._fill_camera_filter()
 
-        # Reiter oben ueber die ganze Fensterbreite, Galerien darunter links
+        # tabs at the top across the full window width, galleries below on the left
         self.tabs = FolderTabs(self)
         self.tabs.bar.files_dropped.connect(lambda index: self.copy_dragged_to(self.tabs.widget(index)))
         self.tabs.tabCloseRequested.connect(self.close_tab)
@@ -429,7 +429,7 @@ class MainWindow(QMainWindow):
         outer.addWidget(self.main_splitter, 1)
         self.setCentralWidget(central)
 
-        # Groesse der Vorschaubilder, fuer alle Tabs; gemerkt wird beim Loslassen
+        # size of the thumbnails, for all tabs; remembered when the slider is released
         self.thumbnail_slider = QSlider(Qt.Orientation.Horizontal)
         self.thumbnail_slider.setRange(MIN_TILE_W, MAX_TILE_W)
         self.thumbnail_slider.setValue(max(MIN_TILE_W, min(MAX_TILE_W, self.settings.thumbnail_size)))
@@ -459,7 +459,7 @@ class MainWindow(QMainWindow):
                                           Qt.ItemDataRole.DecorationRole)
         self.color_filter.blockSignals(False)
 
-    # --- Tastenkuerzel (keymap.py) ----------------------------------------------
+    # --- Keyboard shortcuts (keymap.py) ------------------------------------------
 
     def _install_shortcuts(self):
         g = {
@@ -510,13 +510,13 @@ class MainWindow(QMainWindow):
             'editor_apply_template': self.apply_template,
         }
         widget_ctx = Qt.ShortcutContext.WidgetWithChildrenShortcut
-        # Galerie-Kuerzel gelten in jedem Tab (Fokus in einer der Galerien oder auf den Reitern)
+        # gallery shortcuts apply in every tab (focus in one of the galleries or on the tabs)
         self._bind(g, self.tabs.stack, widget_ctx)
         self._bind(w, self, Qt.ShortcutContext.WindowShortcut)
         self._bind(e, self.editor, widget_ctx)
 
     def _bind(self, handlers, widget, context):
-        """QShortcuts nach der wirksamen Keymap; gemerkt, damit _rebind_shortcuts sie neu anlegen kann."""
+        """QShortcuts from the effective keymap; remembered so _rebind_shortcuts can recreate them."""
         self._bindings = getattr(self, '_bindings', [])
         self._bindings.append((handlers, widget, context))
         self._create_shortcuts(handlers, widget, context)
@@ -532,9 +532,9 @@ class MainWindow(QMainWindow):
 
     def _editor_shortcut_context(self):
         """
-        Panel-Kuerzel (Cmd+N speichern und weiter, ...): im Hauptfenster nur mit Fokus im Panel,
-        dort belegt die Galerie dieselben Tasten. In der Grossansicht im ganzen Fenster, auch
-        wenn das Bild den Fokus hat; deren eigene Kuerzel ueberschneiden sich nicht (Test).
+        Panel shortcuts (Cmd+N save and next, ...): in the main window only with focus in the
+        panel, where the gallery uses the same keys. In the preview in the whole window, also
+        when the image has the focus; its own shortcuts don't overlap (test).
         """
         if self._editor_in_viewer():
             return Qt.ShortcutContext.WindowShortcut
@@ -551,7 +551,7 @@ class MainWindow(QMainWindow):
             item.setShortcuts([QKeySequence(key) for key in keymap.keys(command)])
 
     def _rebind_shortcuts(self):
-        """Nach dem Anpassen: alle Kuerzel neu, ohne Neustart (auch die der Grossansicht)."""
+        """After customizing: recreate all shortcuts without a restart (the preview's too)."""
         for shortcut in self._shortcuts:
             shortcut.setEnabled(False)
             shortcut.setParent(None)
@@ -566,7 +566,7 @@ class MainWindow(QMainWindow):
         ShortcutsDialog(self).exec()
 
     def open_manual(self):
-        """Die mitgelieferte Anleitung im PDF-Programm des Systems (Vorschau, Edge, ...)."""
+        """The bundled manual in the UI language, in the system's PDF viewer (Preview, Edge, ...)."""
         path = manual_path()
         if not path.exists() or not QDesktopServices.openUrl(QUrl.fromLocalFile(str(path))):
             QMessageBox.information(self, _('Anleitung'), _('Die Anleitung wurde nicht gefunden: {path}').format(path=path))
@@ -580,7 +580,7 @@ class MainWindow(QMainWindow):
         keymap.apply(self.settings.shortcuts)
         self._rebind_shortcuts()
 
-    # --- Tabs und Ordner ---------------------------------------------------------
+    # --- Tabs and folders --------------------------------------------------------
 
     @property
     def tab(self) -> FolderTab:
@@ -594,9 +594,9 @@ class MainWindow(QMainWindow):
         tab.view.mime_factory = self.build_drag_mime
         tab.view.selectionModel().selectionChanged.connect(self._on_selection_changed)
         tab.view.files_dropped.connect(lambda t=tab: self.copy_dragged_to(t))
-        # Doppelklick auf eine Kachel: Grossansicht wie mit der Leertaste (erster Klick macht sie aktuell)
+        # double-click on a tile: preview as with the space bar (the first click makes it current)
         tab.view.doubleClicked.connect(lambda index: self.open_viewer())
-        # Doppelklick in die leere Galerie ohne Ordner: wie Cmd+O
+        # double-click into the empty gallery without a folder: like Cmd+O
         tab.view.context_menu_requested.connect(self.show_gallery_menu)
         tab.view.background_double_clicked.connect(lambda t=tab: t.folder or self.choose_folder())
         tab.view.visible_changed.connect(lambda t=tab: self._request_thumbnails(t))
@@ -614,14 +614,14 @@ class MainWindow(QMainWindow):
         return None
 
     def choose_folder(self, new_tab=False):
-        """Finder-Dialog mit Mehrfachauswahl (Cmd-/Shift-Klick); jeder Ordner ein Tab."""
+        """Finder dialog with multiple selection (Cmd/Shift-click); every folder becomes a tab."""
         start = self.folder or self.settings.last_folder or str(Path.home())
         folders = folderdialog.choose_folders(self, _('Ordner öffnen – mehrere mit ⌘-Klick'), start)
         if folders:
             self.open_folders(folders, new_tab=new_tab)
 
     def open_paths(self, paths):
-        """Vom Finder: Ordner werden Tabs, bei Bilddateien wird ihr Ordner geoeffnet."""
+        """From Finder: folders become tabs, for image files their folder is opened."""
         folders = []
         for path in map(Path, paths):
             folder = path if path.is_dir() else path.parent if path.suffix.lower() in scanner.IMAGE_EXTENSIONS else None
@@ -633,13 +633,13 @@ class MainWindow(QMainWindow):
         self.raise_()
         self.activateWindow()
 
-    # Mehr Tabs auf einmal nur nach Rueckfrage (z. B. versehentlich ~/Pictures gewaehlt)
+    # more tabs at once only after asking (e.g. ~/Pictures chosen by accident)
     MANY_FOLDERS = 8
 
     def open_folders(self, folders, new_tab=False):
         """
-        Jeder Ordner ein Tab. Ein Ordner ohne eigene Bilder (Karte, DCIM) oeffnet seine
-        Unterordner mit Bildern, ausser "Unterordner mit einlesen" ist an.
+        Every folder a tab. A folder without images of its own (card, DCIM) opens its
+        subfolders with images, unless "Include subfolders" is on.
         """
         expanded = []
         for folder in folders:
@@ -661,7 +661,7 @@ class MainWindow(QMainWindow):
         return tabs
 
     def _restore_tabs(self):
-        """Tabs vom letzten Mal; Ordner, die fehlen (Karte nicht eingesteckt), fallen weg."""
+        """Tabs from last time; folders that are missing (card not inserted) are dropped."""
         self._restoring = True
         folders = [f for f in self.settings.open_tabs if isinstance(f, str) and Path(f).is_dir()]
         for folder in folders:
@@ -680,7 +680,7 @@ class MainWindow(QMainWindow):
             self.settings.save()
 
     def open_folder(self, folder, new_tab=False):
-        """In einem neuen Tab; ein leerer aktueller Tab wird benutzt. Schon offen: dorthin wechseln."""
+        """In a new tab; an empty current tab is reused. Already open: switch to it."""
         folder = str(folder)
         existing = self.tab_for_folder(folder)
         if existing is not None:
@@ -720,7 +720,7 @@ class MainWindow(QMainWindow):
             self._show_selection_in_editor()
 
     def _scanning_tab(self):
-        """Tab des Scans, der das Signal gesendet hat; None, wenn er veraltet ist."""
+        """Tab of the scan that sent the signal; None if it is outdated."""
         worker = self.sender()
         tab = getattr(worker, 'tab', None)
         if tab is None or tab.scan_worker is not worker or self.tabs.indexOf(tab) < 0:
@@ -741,7 +741,7 @@ class MainWindow(QMainWindow):
         if tab is None:
             return
         tab.model.refresh([item.key for item in chunk])
-        # Stichwoerter der Bilder fuer Vorschlaege merken (ohne die Reihenfolge zu aendern)
+        # remember the images' keywords for suggestions (without changing the order)
         self.keyword_history.add([k for item in chunk for k in item.meta.keywords], recent=False)
         loaded = sum(1 for item in tab.all_items if item.meta_loaded)
         self._set_tab_status(tab, _('{folder} – Metadaten {loaded}/{total} …').format(
@@ -776,7 +776,7 @@ class MainWindow(QMainWindow):
     def _on_tab_changed(self, index):
         if not hasattr(self, 'editor') or index < 0:
             return
-        # Filter gelten fuer alle Tabs; beim Wechsel fuer den neuen anwenden
+        # filters apply to all tabs; apply them to the new one when switching
         self.folder_label.setText(self.tab.status_text)
         self._fill_camera_filter()
         self.apply_filter()
@@ -797,11 +797,11 @@ class MainWindow(QMainWindow):
         self._remember_tabs()
 
     def close_tabs(self, indices):
-        """Mehrere Tabs schliessen (Kontextmenue am Reiter); ueber die Widgets, Indizes verschieben sich."""
+        """Close several tabs (tab context menu); via the widgets, since indices shift."""
         for tab in [self.tabs.widget(index) for index in indices]:
             self.close_tab(self.tabs.indexOf(tab))
 
-    # --- Filter, Auswahl -------------------------------------------------------
+    # --- Filter, selection ------------------------------------------------------
 
     def _passes(self, item):
         rating = self.rating_filter.currentData()
@@ -823,7 +823,7 @@ class MainWindow(QMainWindow):
         if self.time_filter.isChecked():
             taken = scanner.time_of_day(item)
             start, end = self.time_from.time().toString('HH:mm'), self.time_to.time().toString('HH:mm')
-            # ueber Mitternacht (22:00-01:00) mit oder statt und
+            # across midnight (22:00-01:00) with or instead of and
             inside = start <= taken <= end if start <= end else (taken >= start or taken <= end)
             if not taken or not inside:
                 return False
@@ -835,7 +835,7 @@ class MainWindow(QMainWindow):
         for edit in (self.time_from, self.time_to):
             edit.setEnabled(on)
         if on:
-            # Vorschlag: Zeitraum der Bilder im Tab
+            # suggestion: time span of the images in the tab
             times = sorted(t for t in (scanner.time_of_day(i) for i in self.all_items) if t)
             if times:
                 self.time_from.setTime(QTime.fromString(times[0], 'HH:mm'))
@@ -843,7 +843,7 @@ class MainWindow(QMainWindow):
         self.apply_filter()
 
     def _fill_camera_filter(self):
-        """Kameras des aktiven Tabs; die Auswahl bleibt, solange es die Kamera noch gibt."""
+        """Cameras of the active tab; the choice stays as long as the camera still exists."""
         current = self.camera_filter.currentData()
         self.camera_filter.blockSignals(True)
         self.camera_filter.clear()
@@ -853,7 +853,7 @@ class MainWindow(QMainWindow):
             self.camera_filter.addItem(label, camera_key(model, serial))
         index = self.camera_filter.findData(current) if current is not None else 0
         self.camera_filter.setCurrentIndex(max(0, index))
-        self.camera_filter.setVisible(self.camera_filter.count() > 2)  # bei einer Kamera nichts zu waehlen
+        self.camera_filter.setVisible(self.camera_filter.count() > 2)  # nothing to choose with a single camera
         self.camera_filter.blockSignals(False)
 
     def apply_filter(self):
@@ -861,7 +861,7 @@ class MainWindow(QMainWindow):
         self.show_gallery()
 
     def _update_empty_text(self):
-        """Hinweis unter dem Logo, solange die Galerie leer ist."""
+        """Notice below the logo while the gallery is empty."""
         if not self.folder:
             keys = QKeySequence(QKeySequence.StandardKey.Open).toString(QKeySequence.SequenceFormat.NativeText)
             text = 'Captioner\n' + _('Ordner öffnen ({keys}) oder einen Ordner hierher ziehen').format(keys=keys)
@@ -875,13 +875,13 @@ class MainWindow(QMainWindow):
         self.view.viewport().update()
 
     def show_gallery(self, focus_key=None):
-        """Alle gefilterten Bilder zeigen und die Auswahl (selected_keys) in die Galerie uebernehmen."""
+        """Show all filtered images and carry the selection (selected_keys) into the gallery."""
         self._update_empty_text()
         current = self.view.currentIndex().data(ItemRole) if self.view.currentIndex().isValid() else None
         self._syncing_selection = True
         if self.model.set_items(self.filtered) and not focus_key and current is not None:
-            focus_key = current.key  # nach dem Neuaufbau beim Bild unter dem Cursor bleiben
-        # zusammenhaengende Zeilen als ein Bereich: Alles auswaehlen bei tausenden Bildern
+            focus_key = current.key  # after the rebuild stay on the image under the cursor
+        # contiguous rows as one range: select all with thousands of images
         selection, start = QItemSelection(), None
         for row, item in enumerate([*self.model.items, None]):
             chosen = item is not None and item.key in self.selected_keys
@@ -901,7 +901,7 @@ class MainWindow(QMainWindow):
         self._show_selection_in_editor()
 
     def _request_thumbnails(self, tab):
-        """Kacheln fuer den sichtbaren Bereich, dazu je einen Bildschirm davor und danach."""
+        """Tiles for the visible area, plus one screen before and after it."""
         if tab is not self.tab:
             return
         rows = tab.view.visible_rows()
@@ -911,15 +911,15 @@ class MainWindow(QMainWindow):
         margin = last - first + 1
         visible = tab.model.items[first:last + 1]
         around = tab.model.items[last + 1:last + 1 + margin] + tab.model.items[max(0, first - margin):first]
-        self.loader.request(visible + around)  # sichtbare zuerst
+        self.loader.request(visible + around)  # visible ones first
 
     def set_thumbnail_size(self, width):
-        """Kachelbreite in allen Tabs (Regler); gespeichert erst beim Loslassen."""
+        """Tile width in all tabs (slider); saved only when released."""
         self.settings.thumbnail_size = width
         for tab in self.all_tabs():
             tab.view.set_tile_width(width)
         if not self.thumbnail_slider.isSliderDown():
-            self._remember_thumbnail_size()  # Tastatur/Klick neben den Griff
+            self._remember_thumbnail_size()  # keyboard/click next to the handle
 
     def _remember_thumbnail_size(self):
         self.settings.save()
@@ -945,7 +945,7 @@ class MainWindow(QMainWindow):
         return [item for item in self.filtered if item.key in self.selected_keys]
 
     def _focused_first(self, items):
-        """Das Item unter dem Cursor zuerst, damit der Editor es zeigt."""
+        """The item under the cursor first, so the editor shows it."""
         index = self.view.currentIndex()
         current = index.data(ItemRole) if index.isValid() else None
         if current in items:
@@ -970,13 +970,13 @@ class MainWindow(QMainWindow):
         self.show_gallery()
 
     def toggle_tag_view(self, tagged):
-        """F3/F4: nur getaggte bzw. nicht getaggte; nochmal druecken zeigt wieder alle."""
+        """F3/F4: tagged or untagged only; pressing again shows all."""
         current = self.tag_filter.currentData()
         target = None if current is tagged else tagged
         self.tag_filter.setCurrentIndex(self.tag_filter.findData(target))
 
     def jump_to(self, position):
-        """Home/End: zum ersten bzw. letzten Bild scrollen, Auswahl bleibt."""
+        """Home/End: scroll to the first or last image, the selection stays."""
         if not self.filtered:
             return
         item = self.filtered[position]
@@ -990,7 +990,7 @@ class MainWindow(QMainWindow):
             self.select_only(item)
 
     def step_selection(self, step):
-        """Zum naechsten/vorherigen Bild nach der Auswahl, ohne zu speichern."""
+        """To the next/previous image after the selection, without saving."""
         items = [item for item in self._selected_items() if item in self.filtered]
         if not items:
             return
@@ -1005,11 +1005,11 @@ class MainWindow(QMainWindow):
     def select_only(self, item):
         self.selected_keys = {item.key}
         self.show_gallery(focus_key=item.key)
-        # Beim Beschriften in der Grossansicht (Cmd+N/B) zeigt sie das neue Bild
+        # when captioning in the preview (Cmd+N/B) it shows the new image
         if self.viewer is not None and self.viewer.isVisible() and self.viewer.key != item.key:
             self._show_in_viewer(item)
 
-    # --- Bewertung und Beschriftung ---------------------------------------------
+    # --- Rating and captioning -------------------------------------------------
 
     def _enqueue(self, item, meta):
         recording = getattr(self, '_recording', None)
@@ -1024,7 +1024,7 @@ class MainWindow(QMainWindow):
 
     @contextlib.contextmanager
     def _undoable(self, label):
-        """Alle Aenderungen darin sind ein Schritt fuer Rueckgaengig (verschachtelt: der aeussere)."""
+        """All changes inside are one undo step (nested: the outer one)."""
         outer = getattr(self, '_recording', None) is None
         if outer:
             self._recording = {}
@@ -1084,7 +1084,7 @@ class MainWindow(QMainWindow):
         self._update_status()
 
     def color_class_of(self, item):
-        """Farbklasse; fehlt sie (z. B. nur Lightroom-Label), aus dem Label abgeleitet."""
+        """Color class; if missing (e.g. only a Lightroom label), derived from the label."""
         if item.meta.color_class:
             return item.meta.color_class
         if item.meta.label in self.settings.labels:
@@ -1092,7 +1092,7 @@ class MainWindow(QMainWindow):
         return 0
 
     def set_color_class(self, n):
-        """Farbklasse 1-8, 0 entfernt. Dazu das Lightroom-Label."""
+        """Color class 1-8, 0 removes it. Plus the Lightroom label."""
         label = self.settings.labels[n - 1] if 0 < n <= len(self.settings.labels) else ''
         items = self._selected_items()
         with self._undoable(N_('Farbklasse')):
@@ -1102,7 +1102,7 @@ class MainWindow(QMainWindow):
         self._update_status()
 
     def set_tag(self, value):
-        """True/False setzt, None schaltet um (alle an, ausser alle sind schon an)."""
+        """True/False sets, None toggles (all on, unless all are on already)."""
         items = self._selected_items()
         if not items:
             return
@@ -1118,8 +1118,8 @@ class MainWindow(QMainWindow):
 
     def take_snapshot(self):
         """
-        Beschriftung kopieren: was im Panel steht (das Bild unter dem Cursor), auch
-        ungespeicherte Aenderungen. Die Beschreibung als Rohtext mit Codes.
+        Copy caption: what is in the panel (the image under the cursor), including unsaved
+        changes. The caption as raw text with codes.
         """
         items = self._focused_first(self._selected_items())
         if not items:
@@ -1134,8 +1134,8 @@ class MainWindow(QMainWindow):
 
     def _paste_snapshot(self):
         """
-        In alle ausgewaehlten Bilder einfuegen und speichern. Gerechnet wird wie beim
-        Speichern, je Bild: Codes aufloesen, Anhang mit dessen Datum, Personen-Tags, GPS.
+        Paste into all selected images and save. Computed per image as when saving:
+        resolve codes, suffix with its date, person tags, GPS.
         """
         snapshot = getattr(self, 'snapshot', None)
         items = self._selected_items()
@@ -1155,8 +1155,8 @@ class MainWindow(QMainWindow):
                                               len(items)).format(count=len(items)), 5000)
 
     def find_replace(self):
-        """Suchen und Ersetzen in der Auswahl, ohne Auswahl in allen angezeigten Bildern."""
-        # Gerechnet wird mit dem Stand der Bilder: erst fertig schreiben
+        """Find and replace in the selection, without a selection in all shown images."""
+        # computed with the images' current state: finish writing first
         if self.writer.pending_count() and not self._wait_for_writer(_('Suchen und Ersetzen')):
             return
         selected = self._selected_items()
@@ -1190,7 +1190,7 @@ class MainWindow(QMainWindow):
                                               len(changes)).format(count=len(changes)), 5000)
 
     def save_and_close(self):
-        """Wie "Save Changes and Close Dialog": speichern, zurueck in die Galerie bzw. aufs Bild."""
+        """Like "Save Changes and Close Dialog": save, back to the gallery or the image."""
         if self.editor.submit(0):
             if self._editor_in_viewer():
                 self.viewer.zoom.setFocus()
@@ -1254,7 +1254,7 @@ class MainWindow(QMainWindow):
             return
         target = max(positions) + 1 if step > 0 else min(positions) - 1
         if 0 <= target < len(self.filtered):
-            # in der Grossansicht mit Fokus auf dem Bild bleibt er dort (Cmd+N ohne Panel-Fokus)
+            # in the preview with focus on the image it stays there (Cmd+N without panel focus)
             on_image = self.viewer is not None and self.viewer.isVisible() and self.viewer.zoom.hasFocus()
             self.select_only(self.filtered[target])
             if not on_image:
@@ -1270,17 +1270,17 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, _('Kein Template'), _('Bitte zuerst ein Spiel-Template auswählen oder anlegen.'))
             return
         items = self._selected_items()
-        # "Inhalte überschreiben": nur noch, was im Template steht; Beschreibung leer
+        # "Overwrite content": only what is in the template; caption empty
         overwrite = self.editor.overwrite_box.isChecked()
         if overwrite:
-            # sonst schluege das Panel den zuletzt gespeicherten Titel wieder vor
+            # otherwise the panel would suggest the headline saved last again
             self.last_headline = template.headline
         for item in items:
             if overwrite:
                 headline, caption = template.headline, ''
                 self.raw_captions.set(item, None)
             else:
-                # Ohne Heim/Gast gibt das Template keinen Titel vor: der des Bildes bleibt
+                # without home/away the template defines no headline: the image's stays
                 headline = template.headline or item.meta.headline
                 caption = template.compose_caption(item.meta.caption, item.taken_at, headline=headline,
                                                    **template.field_values(item.meta)) \
@@ -1300,7 +1300,7 @@ class MainWindow(QMainWindow):
             return
         item = tab.by_key[key]
         item.error = None if ok else message
-        self.loader.invalidate_details(key)  # Dateigroesse und Werte neu lesen
+        self.loader.invalidate_details(key)  # read file size and values again
         if not ok:
             self.statusBar().showMessage(_('Fehler: {message}').format(message=message), 15000)
         tab.model.refresh([key])
@@ -1329,13 +1329,12 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, _('Schreiben dauert an'), _('Es werden noch Metadaten geschrieben. Bitte kurz warten.'))
         return ok
 
-    # --- Drag nach Lightroom ---------------------------------------------------
+    # --- Drag to Lightroom -----------------------------------------------------
 
     def build_drag_mime(self):
         """
-        Erst alles schreiben, dann ziehen. Lightroom darf nie eine halb
-        geschriebene Datei sehen, und eine beschriftete RAW-Datei ohne Sidecar
-        geht nicht durch (ADR 0001, Punkt 7).
+        Write everything first, then drag. Lightroom must never see a half-written file,
+        and a captioned RAW file without a sidecar doesn't go through (ADR 0001, item 7).
         """
         items = self._selected_items()
         if not items:
@@ -1367,7 +1366,7 @@ class MainWindow(QMainWindow):
                                 _('Diese Bilder werden nicht gezogen, ihre Metadaten sind nicht sicher gespeichert:')
                                 + '\n\n'
                                 + '\n'.join(refused[:20]) + ('\n…' if len(refused) > 20 else ''))
-        # Fuer einen Drop auf einen anderen Tab: dort wird mit Sidecar kopiert
+        # for a drop on another tab: copied there with the sidecar
         self._drag_items = accepted
         if not urls:
             return None
@@ -1379,7 +1378,7 @@ class MainWindow(QMainWindow):
         return mime
 
     def dragEnterEvent(self, event):
-        """Von aussen: Ordner (je ein Tab), Template-Dateien (.toml) oder Roster-Dateien (.txt)."""
+        """From outside: folders (one tab each), template files (.toml) or roster files (.txt)."""
         if event.source() is not None:
             return
         paths = [Path(u.toLocalFile()) for u in event.mimeData().urls() if u.isLocalFile()]
@@ -1399,7 +1398,7 @@ class MainWindow(QMainWindow):
             else:
                 self.add_roster_file(str(path))
 
-    # --- Kontextmenue der Galerie ----------------------------------------------------
+    # --- Gallery context menu ------------------------------------------------------
 
     def show_gallery_menu(self, position):
         menu = self.gallery_menu(self)
@@ -1407,7 +1406,7 @@ class MainWindow(QMainWindow):
         menu.deleteLater()
 
     def gallery_menu(self, parent):
-        """Rechtsklick auf Kacheln: wirkt auf die Auswahl, wie die Kuerzel daneben."""
+        """Right-click on tiles: acts on the selection, like the shortcuts shown next to it."""
         items = self._selected_items()
         menu = QMenu(parent)
         if not items:
@@ -1462,7 +1461,7 @@ class MainWindow(QMainWindow):
         entry(menu, filemanager.reveal_label(), self.reveal_current, 'reveal')
         entry(menu, ngettext('Pfad kopieren', 'Pfade kopieren', len(items)), self.copy_paths)
         menu.addSeparator()
-        entry(menu, _('In den Papierkorb legen …'), self.trash_selected, 'trash')   # Anzahl nennt die Rueckfrage
+        entry(menu, _('In den Papierkorb legen …'), self.trash_selected, 'trash')   # the confirmation names the count
         return menu
 
     def _current_item(self):
@@ -1482,14 +1481,14 @@ class MainWindow(QMainWindow):
                                                   len(paths)).format(count=len(paths)), 5000)
 
     def copy_selected_to(self, target):
-        """Wie Ziehen auf den Reiter: erst alles schreiben, dann mit Sidecar kopieren."""
+        """Like dragging onto the tab: write everything first, then copy with the sidecar."""
         if self.build_drag_mime() is not None:
             self.copy_dragged_to(target)
 
     def trash_selected(self):
         """
-        Ausgewaehlte Bilder mit allen Dateien (RAW, JPG, Sidecar) in den Papierkorb, nach
-        Rueckfrage. Wiederherstellen geht im Finder/Explorer, nicht mit Rueckgaengig.
+        Move the selected images with all their files (RAW, JPG, sidecar) to the trash, after
+        asking. Restoring works in Finder/Explorer, not with undo.
         """
         items = self._selected_items()
         tab = self.tab
@@ -1508,7 +1507,7 @@ class MainWindow(QMainWindow):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
         if answer != QMessageBox.StandardButton.Yes:
             return
-        # Nichts mehr in Dateien schreiben, die gleich im Papierkorb liegen
+        # don't write into files that are about to be in the trash
         if self.writer.pending_count() and not self._wait_for_writer(_('Papierkorb')):
             return
         trashed, failed = [], []
@@ -1541,8 +1540,8 @@ class MainWindow(QMainWindow):
 
     def rename_folder(self, prefix=None):
         """
-        Alle Bilder des Ordners in <Name>_NNN umbenennen (Name frei, z. B. 20261023_MEM_EPC), nummeriert
-        nach Aufnahmezeit (Reihenfolge des Scans). prefix ersetzt den Dialog (Tests).
+        Rename all images of the folder to <name>_NNN (free name, e.g. 20261023_MEM_EPC),
+        numbered by capture time (scan order). prefix replaces the dialog (tests).
         """
         tab = self.tab
         title = _('Bilder umbenennen')
@@ -1562,7 +1561,7 @@ class MainWindow(QMainWindow):
             prefix = dialog.prefix()
         self.settings.rename_prefix = prefix
         self.settings.save()
-        # Erst fertig schreiben: der Writer kennt nur die alten Pfade
+        # finish writing first: the writer only knows the old paths
         if self.writer.pending_count() and not self._wait_for_writer(title):
             return
         moves = rename.plan(items, prefix)
@@ -1579,7 +1578,7 @@ class MainWindow(QMainWindow):
                                 + f'\n\n{error}')
             return
         self.raw_captions.move({item.primary: moved[item.primary] for item in items if item.primary in moved})
-        # Rueckgaengig kennt die Bilder unter altem Namen; die Items ersetzt das Neueinlesen
+        # undo knows the images under their old names; the rescan replaces the items
         self.undo_stack.forget(items)
         self._update_undo_actions()
         if self.viewer is not None and self.viewer.isVisible():
@@ -1590,10 +1589,10 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(ngettext('{count} Bild umbenannt', '{count} Bilder umbenannt',
                                               len(items)).format(count=len(items)), 5000)
 
-    # --- Kopieren zwischen Tabs ----------------------------------------------------
+    # --- Copying between tabs ------------------------------------------------------
 
     def copy_dragged_to(self, target):
-        """Die gezogenen Bilder (RAW, JPG, Sidecar) in den Ordner des Ziel-Tabs kopieren."""
+        """Copy the dragged images (RAW, JPG, sidecar) into the target tab's folder."""
         items, self._drag_items = self._drag_items, []
         if target is None or not items:
             return
@@ -1640,10 +1639,10 @@ class MainWindow(QMainWindow):
         if copied and self.tabs.indexOf(target) >= 0:
             self.rescan(target)
 
-    # --- Grossansicht -------------------------------------------------------------
+    # --- Preview ------------------------------------------------------------------
 
     def open_viewer(self):
-        """Grossansicht des Bildes unter dem Cursor; Kuerzel wirken dann auf genau dieses Bild."""
+        """Preview of the image under the cursor; shortcuts then act on exactly this image."""
         index = self.view.currentIndex()
         item = index.data(ItemRole) if index.isValid() else None
         if item is None:
@@ -1682,8 +1681,8 @@ class MainWindow(QMainWindow):
         self.viewer.set_caption_visible(self.settings.viewer_caption_panel)
         self.viewer.zoom.setFocus()
 
-    # Das Beschriftungs-Panel gibt es nur einmal: es wandert in die Grossansicht und zurueck,
-    # samt Inhalt, Kuerzeln (haengen am Panel) und Template-Auswahl.
+    # There is only one caption panel: it moves into the preview and back,
+    # with its content, shortcuts (attached to the panel) and template selection.
 
     def _editor_in_viewer(self):
         return getattr(self, 'viewer', None) is not None and self.viewer.caption_slot.widget() is self.editor
@@ -1696,7 +1695,7 @@ class MainWindow(QMainWindow):
             self.viewer.caption_slot.setWidget(self.editor)
         else:
             had_focus = self.editor.isAncestorOf(QApplication.focusWidget())
-            self.viewer.caption_slot.takeWidget()   # sonst loescht die Scrollflaeche das Panel mit
+            self.viewer.caption_slot.takeWidget()   # otherwise the scroll area deletes the panel too
             self.main_splitter.insertWidget(1, self.editor)
             self.main_splitter.setSizes(getattr(self, '_editor_sizes', [1080, 420]))
             if had_focus:
@@ -1711,7 +1710,7 @@ class MainWindow(QMainWindow):
             self.settings.save()
 
     def _caption_in_viewer(self):
-        """I: Panel einblenden und in die Beschreibung des angezeigten Bildes."""
+        """I: show the panel and go to the caption of the image shown."""
         item = self.by_key.get(self.viewer.key)
         if item is None:
             return
@@ -1723,7 +1722,7 @@ class MainWindow(QMainWindow):
     def _show_in_viewer(self, item):
         self.last_previewed_key = item.key
         self.viewer.show_item(item, self.loader.image(item.key), provisional=True)
-        # Eingepasst reicht die Aufloesung des Bildschirms; die volle kommt fuer 100 % nach
+        # fitted, the screen resolution is enough; the full one follows for 100 %
         screen = self.viewer.screen() or QApplication.primaryScreen()
         size = screen.size() * screen.devicePixelRatio()
         self.loader.display_edge = max(size.width(), size.height())
@@ -1731,7 +1730,7 @@ class MainWindow(QMainWindow):
         self.loader.request_details(item)
 
     def _viewer_neighbours(self, item):
-        """Vorladen beim Blaettern: die naechsten zwei, das vorige."""
+        """Preload while moving between images: the next two, the previous one."""
         if item not in self.filtered:
             return []
         position = self.filtered.index(item)
@@ -1743,7 +1742,7 @@ class MainWindow(QMainWindow):
             self.settings.save()
 
     def _in_viewer(self, action):
-        """Aktion auf das angezeigte Bild anwenden und die Anzeige aktualisieren."""
+        """Apply an action to the image shown and refresh the display."""
         item = self.by_key.get(self.viewer.key)
         if item is None:
             return
@@ -1762,7 +1761,7 @@ class MainWindow(QMainWindow):
             self.select_only(item)
             self._show_in_viewer(item)
 
-    # --- Templates, Roster, Einstellungen ----------------------------------------
+    # --- Templates, roster, settings ---------------------------------------------
 
     def _on_template_changed(self, template):
         self.settings.last_template = template.path if template else ''
@@ -1779,7 +1778,7 @@ class MainWindow(QMainWindow):
 
     def refresh_templates(self, active_path=''):
         templates, errors = self.template_store.list(self.settings.template_files)
-        # Koordinaten aus Template-Dateien (z. B. von einem anderen Rechner) mitlernen
+        # learn coordinates from template files too (e.g. from another computer)
         learned = False
         for template in templates:
             known = self.places.lookup(template.city, template.sublocation)
@@ -1808,10 +1807,10 @@ class MainWindow(QMainWindow):
         if template and template.path:
             if self.template_store.is_internal(template) and \
                     template_files.default_filename(new) != Path(template.path).name:
-                # Umbenannt: neue Datei im Konfigurationsverzeichnis, alte weg
+                # renamed: new file in the configuration directory, old one gone
                 self.template_store.delete(template)
             else:
-                # Bearbeitet: zurueck in dieselbe Datei, auch wenn sie woanders liegt
+                # edited: back into the same file, even if it lives elsewhere
                 new.path = template.path
         try:
             self.template_store.save(new)
@@ -1823,8 +1822,8 @@ class MainWindow(QMainWindow):
 
     def copy_template(self, template):
         """
-        Neues Template mit allen Werten des gewaehlten: als Kopie speichern, dorthin wechseln
-        und zum Bearbeiten oeffnen. Abbrechen nimmt die Kopie wieder weg, das alte bleibt gewaehlt.
+        New template with all values of the selected one: save as a copy, switch to it and
+        open it for editing. Cancel removes the copy again, the old one stays selected.
         """
         copy = dataclasses.replace(template, path='',
                                    name=_('{name} (Kopie)').format(name=template.display_name()))
@@ -1840,8 +1839,8 @@ class MainWindow(QMainWindow):
 
     def template_from_photo(self):
         """
-        Neues Template aus der Beschriftung des Bildes unter dem Cursor (Titel, Ort, Rechte,
-        Zusatz-Tags, Anhang), zum Pruefen gleich im Dialog. Gespeichert wird erst mit OK.
+        New template from the caption of the image under the cursor (headline, location,
+        rights, extra tags, suffix), opened in the dialog for checking. Saved only on OK.
         """
         items = self._focused_first(self._selected_items())
         title = _('Template aus Foto')
@@ -1864,7 +1863,7 @@ class MainWindow(QMainWindow):
                 name=template.display_name(), photo=item.name), 5000)
 
     def open_template_folder(self):
-        """Konfigurationsordner der Templates im Finder/Explorer (dort liegen alle ausser geladenen Dateien)."""
+        """Template configuration folder in Finder/Explorer (holds all except loaded files)."""
         folder = self.template_store.directory
         folder.mkdir(parents=True, exist_ok=True)
         if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder))):
@@ -1906,7 +1905,7 @@ class MainWindow(QMainWindow):
         except OSError as e:
             QMessageBox.warning(self, _('Template nicht gespeichert'), str(e))
             return None
-        # Ab jetzt wird mit der gespeicherten Datei gearbeitet
+        # from now on we work with the saved file
         self._remember_template_file(copy)
         self.refresh_templates(copy.path)
         self.statusBar().showMessage(_('Template gespeichert: {path}').format(path=path), 5000)
@@ -1928,7 +1927,7 @@ class MainWindow(QMainWindow):
                 return
             self.template_store.delete(template)
         else:
-            # Fremde Dateien werden nur aus der Liste genommen, nie geloescht
+            # foreign files are only removed from the list, never deleted
             self.settings.template_files = [p for p in self.settings.template_files if p != template.path]
             self.settings.save()
         self.refresh_templates()
@@ -1967,7 +1966,7 @@ class MainWindow(QMainWindow):
         summary = '<b>%s</b> %s, %s' % (
             _('Roster:'), ngettext('{count} Code', '{count} Codes', len(roster.entries)).format(count=len(roster.entries)),
             ngettext('{count} Team', '{count} Teams', len(roster.teams)).format(count=len(roster.teams)))
-        # Quellen mit Stand im Tooltip; was nicht stimmt, bleibt sichtbar
+        # sources with their state in the tooltip; what is wrong stays visible
         details, problems = [], []
         for status in roster.status:
             stamp = time.strftime('%d.%m. %H:%M', time.localtime(status.fetched_at)) if status.fetched_at else ''
@@ -2005,7 +2004,7 @@ class MainWindow(QMainWindow):
                     self.rescan(tab)
         self.apply_filter()
 
-    # --- Beenden ----------------------------------------------------------------
+    # --- Quitting ---------------------------------------------------------------
 
     def closeEvent(self, event):
         if self.writer.pending_count() and not self._wait_for_writer(_('Beenden')):
@@ -2021,7 +2020,7 @@ class MainWindow(QMainWindow):
         super().closeEvent(event)
 
     def shutdown(self):
-        """Idempotent; auch bei SIGTERM und app.quit() ohne closeEvent."""
+        """Idempotent; also on SIGTERM and app.quit() without closeEvent."""
         if getattr(self, '_shut_down', False):
             return
         self._shut_down = True
@@ -2038,8 +2037,8 @@ class MainWindow(QMainWindow):
 
 def command_line_path(arg):
     """
-    Explorer: "Mit Captioner oeffnen" auf einer Karte uebergibt "E:\\", und Windows liest
-    den Backslash vor dem Anfuehrungszeichen als Escape: an kommt E:". Hier repariert.
+    Explorer: "Open with Captioner" on a card passes "E:\\", and Windows reads the
+    backslash before the quote as an escape: what arrives is E:". Repaired here.
     """
     if sys.platform == 'win32':
         arg = arg.rstrip('"')
@@ -2056,17 +2055,17 @@ def run(argv):
 
     reap_orphans()
     app = QApplication(argv)
-    open_requests = OpenRequests(app)  # vor allem anderen, der Finder schickt sofort
+    open_requests = OpenRequests(app)  # before everything else, Finder sends right away
     settings = config.Settings.load()
-    # Sprache aus den Einstellungen ('' = wie das System), vor dem ersten Text
+    # language from the settings ('' = as the system), before the first text
     lang = i18n.setup(i18n.resolve(getattr(settings, 'language', ''), QLocale.system().uiLanguages()))
-    # Qt-eigene Texte (Schliessen, Abbrechen, Dateidialoge) in derselben Sprache
+    # Qt's own texts (Close, Cancel, file dialogs) in the same language
     translator = QTranslator(app)
     if translator.load(QLocale(lang), 'qtbase', '_', QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
         app.installTranslator(translator)
-    # SIGTERM/Strg+C: sauber beenden, damit Schreibauftraege fertig werden und
-    # ExifTool-Prozesse nicht liegen bleiben. Der Timer gibt Python regelmaessig
-    # die Kontrolle, sonst kaeme der Signal-Handler in Qts Event-Loop nie dran.
+    # SIGTERM/Ctrl+C: quit cleanly so write jobs finish and ExifTool processes
+    # don't stay behind. The timer regularly gives Python control, otherwise
+    # the signal handler would never get a turn in Qt's event loop.
     signal.signal(signal.SIGTERM, lambda *_: app.quit())
     signal.signal(signal.SIGINT, lambda *_: app.quit())
     heartbeat = QTimer()
@@ -2079,8 +2078,8 @@ def run(argv):
     except ExifToolError as e:
         QMessageBox.critical(None, _('ExifTool fehlt'), str(e))
         return 1
-    folders = [arg for arg in map(command_line_path, argv[1:]) if arg]  # make run ohne FOLDER uebergibt ""
-    # Windows: laeuft schon eine App, bekommt sie die Ordner (Explorer startet je Ordner neu)
+    folders = [arg for arg in map(command_line_path, argv[1:]) if arg]  # make run without FOLDER passes ""
+    # Windows: if an app is already running, it gets the folders (Explorer starts one per folder)
     if sys.platform == 'win32' and instance.forward(folders):
         return 0
     from .resources import app_icon

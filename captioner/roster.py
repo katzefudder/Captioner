@@ -1,17 +1,17 @@
 """
-Roster-Dateien (Code-Replacement-Format) laden und zusammenfuehren.
+Load and merge roster files (code replacement format).
 
-Format (UTF-8): eine Zeile pro Code, Code und Ersetzung durch Tab getrennt.
-Zeilen ohne Tab sind Leerzeilen oder Abschnittskoepfe "- <Team> -", die die
-folgenden Codes einem Team zuordnen.
+Format (UTF-8): one line per code, code and replacement separated by a tab.
+Lines without a tab are blank lines or section headers "- <Team> -" that assign
+the following codes to a team.
 
     - Bietigheim Steelers -
 
     bi99	-99- John Doe (Bietigheim Steelers)
 
-Quellen sind URLs oder lokale Dateien. Jede erfolgreich geladene URL wird als
-"letzte gute Version" abgelegt, damit in der Halle ohne Netz weitergearbeitet
-werden kann (ADR 0001, Punkt 5).
+Sources are URLs or local files. Every URL loaded successfully is stored as the
+"last good version", so work can go on in the arena without a network
+(ADR 0001, item 5).
 """
 import hashlib
 import re
@@ -33,7 +33,7 @@ FETCH_TIMEOUT_SECONDS = 10
 class Entry:
     code: str
     replacement: str
-    team: str  # Abschnittskopf, None wenn die Datei keine Abschnitte hat
+    team: str  # section header, None if the file has no sections
     source: str
 
 
@@ -41,7 +41,7 @@ class Entry:
 class SourceStatus:
     source: str
     ok: bool
-    origin: str  # 'datei', 'netz', 'cache', 'letzte gute Version', 'fehlt' (Schluessel; Anzeige mit _())
+    origin: str  # 'datei', 'netz', 'cache', 'letzte gute Version', 'fehlt' (keys; displayed with _())
     message: str = ''
     fetched_at: float = None
 
@@ -49,8 +49,8 @@ class SourceStatus:
 @dataclass
 class Roster:
     entries: dict = field(default_factory=dict)  # code -> Entry
-    conflicts: list = field(default_factory=list)  # (code, Entry, Entry)
-    status: list = field(default_factory=list)  # SourceStatus je Quelle
+    conflicts: list = field(default_factory=list)  # (code, entry, entry)
+    status: list = field(default_factory=list)  # SourceStatus per source
     digest: str = ''
 
     def lookup(self, code):
@@ -73,7 +73,7 @@ class Roster:
 
 
 def parse(text, source=''):
-    """Liest eine Roster-Datei. Gibt eine Liste von Entry zurueck."""
+    """Reads a roster file. Returns a list of Entry."""
     entries = []
     team = None
     for raw_line in text.splitlines():
@@ -92,8 +92,8 @@ def parse(text, source=''):
 
 def decode(data: bytes):
     """
-    Roster-Dateien kommen nicht immer als UTF-8: unter Windows gespeicherte
-    Roster-Dateien sind oft UTF-16 (mit BOM) oder Windows-1252.
+    Roster files don't always come as UTF-8: roster files saved on Windows are often
+    UTF-16 (with BOM) or Windows-1252.
     """
     if data.startswith((b'\xff\xfe', b'\xfe\xff')):
         return data.decode('utf-16')
@@ -103,17 +103,17 @@ def decode(data: bytes):
         return data.decode('cp1252', errors='replace')
 
 
-# --- Bearbeiten (Roster-Editor) ------------------------------------------------
+# --- Editing (roster editor) ----------------------------------------------------
 
 @dataclass
 class RosterFile:
-    """Eine lokale Roster-Datei mit allem, was zum unveraenderten Zurueckschreiben noetig ist."""
+    """A local roster file with everything needed to write it back unchanged."""
     path: Path
     text: str
-    encoding: str        # 'utf-8', 'utf-8-sig' (mit BOM), 'utf-16' (mit BOM), 'cp1252'
-    newline: str         # '\n' oder '\r\n', wie in der Datei
+    encoding: str        # 'utf-8', 'utf-8-sig' (with BOM), 'utf-16' (with BOM), 'cp1252'
+    newline: str         # '\n' or '\r\n', as in the file
     mtime: float
-    lossy: bool = False  # cp1252 mit unbekannten Bytes: Speichern veraendert sie
+    lossy: bool = False  # cp1252 with unknown bytes: saving changes them
 
 
 def read_file(path):
@@ -135,8 +135,8 @@ def read_file(path):
 
 def write_file(roster_file, text, encoding=None):
     """
-    Schreibt in Kodierung und Zeilenenden der Datei (oder encoding), ueber eine
-    Zwischendatei. UnicodeEncodeError, wenn ein Zeichen in der Kodierung fehlt.
+    Writes in the file's encoding and line endings (or encoding), via a temporary
+    file. UnicodeEncodeError if a character is missing from the encoding.
     """
     encoding = encoding or roster_file.encoding
     data = text.replace('\r\n', '\n').replace('\n', roster_file.newline).encode(encoding)
@@ -155,15 +155,15 @@ def write_file(roster_file, text, encoding=None):
 
 @dataclass(frozen=True)
 class Problem:
-    line: int       # 1-basiert
+    line: int       # 1-based
     message: str
-    serious: bool   # wirkt sich aus (Zeile ignoriert, Widerspruch); sonst nur Hinweis
+    serious: bool   # has an effect (line ignored, contradiction); otherwise just a note
 
 
 def check(text):
-    """Zeilen, die parse() ignoriert oder die sich widersprechen, mit Zeilennummer."""
+    """Lines that parse() ignores or that contradict each other, with line number."""
     problems = []
-    seen = {}  # code -> (Zeile, Ersetzung)
+    seen = {}  # code -> (line, replacement)
     for number, line in enumerate(text.split('\n'), 1):
         stripped = line.strip()
         if not stripped:
@@ -191,7 +191,7 @@ def check(text):
 
 
 def raw_url(url):
-    """GitHub-blob-URLs liefern HTML. Umschreiben auf raw.githubusercontent.com."""
+    """GitHub blob URLs return HTML. Rewrite them to raw.githubusercontent.com."""
     match = GITHUB_BLOB_PATTERN.match(url)
     if not match:
         return url
@@ -203,7 +203,7 @@ def is_url(source):
 
 
 class RosterLoader:
-    """Laedt alle Quellen, mit Cache und Rueckfall auf die letzte gute Version."""
+    """Loads all sources, with cache and fallback to the last good version."""
 
     def __init__(self, cache_dir: Path, ttl_minutes=60, fetch=None):
         self.cache_dir = Path(cache_dir) / 'rosters'
@@ -212,7 +212,7 @@ class RosterLoader:
         self._fetch = fetch or _http_get
 
     def cached_text(self, source):
-        """Zuletzt geladene Fassung einer URL-Quelle, oder None."""
+        """Last loaded version of a URL source, or None."""
         cached = self._cache_file(source)
         return cached.read_text(encoding='utf-8') if cached.exists() else None
 
@@ -233,8 +233,8 @@ class RosterLoader:
             return text, SourceStatus(source, True, N_('datei'), fetched_at=path.stat().st_mtime)
 
         cached = self._cache_file(source)
-        # TTL 0 heisst: immer laden. Nicht nur ueber das Alter pruefen, das kann knapp unter 0
-        # liegen (Windows: Dateizeit und time.time() unterschiedlich genau)
+        # TTL 0 means: always load. Don't only check the age, it can be just below 0
+        # (Windows: file time and time.time() have different precision)
         age = time.time() - cached.stat().st_mtime if cached.exists() else None
         if not force and self.ttl_seconds and age is not None and age < self.ttl_seconds:
             return (cached.read_text(encoding='utf-8'),
@@ -266,7 +266,7 @@ class RosterLoader:
             for entry in parse(text, source):
                 existing = roster.entries.get(entry.code)
                 if existing and existing.replacement != entry.replacement:
-                    # Bewusst kein "letzte Quelle gewinnt" (ADR 0001, Punkt 5)
+                    # deliberately no "last source wins" (ADR 0001, item 5)
                     roster.conflicts.append((entry.code, existing, entry))
                     continue
                 roster.entries.setdefault(entry.code, entry)

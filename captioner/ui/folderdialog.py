@@ -1,12 +1,12 @@
 """
-Mehrere Ordner auf einmal waehlen.
+Choose several folders at once.
 
-Qt oeffnet den nativen macOS-Dialog fuer Ordner immer mit Einzelauswahl
-(QCocoaFileDialogHelper erlaubt Mehrfachauswahl nur fuer Dateien). Deshalb auf
-macOS NSOpenPanel direkt ueber die Objective-C-Laufzeit (ctypes, ohne PyObjC):
-derselbe Finder-Dialog, aber mit Cmd-/Shift-Klick fuer mehrere Ordner.
-Sonst (Windows, oder falls die Laufzeit nicht greifbar ist): Qt-eigener Dialog,
-dessen Listen auf Mehrfachauswahl umgestellt werden.
+Qt always opens the native macOS dialog for folders with single selection
+(QCocoaFileDialogHelper only allows multiple selection for files). So on macOS we use
+NSOpenPanel directly via the Objective-C runtime (ctypes, without PyObjC): the same
+Finder dialog, but with Cmd/Shift-click for several folders.
+Otherwise (Windows, or if the runtime is not available): Qt's own dialog, whose lists
+are switched to multiple selection.
 """
 import ctypes
 import ctypes.util
@@ -23,11 +23,11 @@ NS_MODAL_RESPONSE_OK = 1
 
 
 class _ObjC:
-    """Gerade genug Objective-C fuer NSOpenPanel. Jede Nachricht mit exakter Signatur (arm64)."""
+    """Just enough Objective-C for NSOpenPanel. Every message with its exact signature (arm64)."""
 
     def __init__(self):
         self.lib = ctypes.cdll.LoadLibrary(ctypes.util.find_library('objc'))
-        ctypes.cdll.LoadLibrary(ctypes.util.find_library('AppKit'))  # NSOpenPanel registrieren
+        ctypes.cdll.LoadLibrary(ctypes.util.find_library('AppKit'))  # register NSOpenPanel
         self.lib.objc_getClass.restype = ctypes.c_void_p
         self.lib.objc_getClass.argtypes = [ctypes.c_char_p]
         self.lib.sel_registerName.restype = ctypes.c_void_p
@@ -95,7 +95,7 @@ def _choose_qt(parent, title, start):
 
 
 def choose_folders(parent, title, start=''):
-    """Liste gewaehlter Ordner, leer bei Abbruch."""
+    """List of chosen folders, empty on cancel."""
     if sys.platform == 'darwin':
         try:
             return _choose_mac(title, start)

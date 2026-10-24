@@ -1,15 +1,15 @@
 """
-Ordner einlesen: Bilddateien finden, RAW+JPG-Paare und vorhandene Sidecars zuordnen.
+Read a folder: find image files, pair up RAW+JPG and assign existing sidecars.
 
-Ein "Item" ist eine Kachel in der Galerie. Bei RAW+JPG mit gleichem Basisnamen
-sind das beide Dateien (ADR 0001, Punkt 2).
+An "Item" is a tile in the gallery. For RAW+JPG with the same base name that is
+both files (ADR 0001, item 2).
 """
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
 JPEG_EXTENSIONS = {'.jpg', '.jpeg'}
-# Formate, bei denen Metadaten eingebettet werden, nicht im Sidecar (ADR 0001, Punkt 4)
+# formats whose metadata is embedded, not written to a sidecar (ADR 0001, item 4)
 EMBEDDED_EXTENSIONS = JPEG_EXTENSIONS | {'.dng', '.tif', '.tiff'}
 RAW_EXTENSIONS = {'.nef', '.nrw', '.cr2', '.cr3', '.crw', '.arw', '.srf', '.sr2', '.raf',
                   '.orf', '.rw2', '.pef', '.srw', '.3fr', '.iiq', '.rwl', '.erf', '.mrw', '.x3f'}
@@ -23,30 +23,30 @@ class Metadata:
     keywords: list = field(default_factory=list)
     city: str = ''
     sublocation: str = ''
-    state: str = ''              # Bundesland (photoshop:State / IPTC Province-State)
+    state: str = ''              # state/province (photoshop:State / IPTC Province-State)
     country: str = ''            # photoshop:Country / IPTC Country-PrimaryLocationName
     country_code: str = ''       # Iptc4xmpCore:CountryCode / IPTC Country-PrimaryLocationCode ("DEU")
-    # Urheber und Rechte (siehe metadata.RIGHTS_TAGS)
+    # creator and rights (see metadata.RIGHTS_TAGS)
     creator: str = ''            # dc:creator / IPTC By-line / EXIF Artist
-    contact_email: str = ''      # Iptc4xmpCore:CreatorContactInfo/CiEmailWork (Lightroom: Kontakt E-Mail)
+    contact_email: str = ''      # Iptc4xmpCore:CreatorContactInfo/CiEmailWork (Lightroom: contact email)
     authors_position: str = ''   # photoshop:AuthorsPosition / IPTC By-lineTitle
-    credit: str = ''             # photoshop:Credit / IPTC Credit (Bildnachweis, "Credit Line")
+    credit: str = ''             # photoshop:Credit / IPTC Credit ("credit line")
     caption_writer: str = ''     # photoshop:CaptionWriter / IPTC Writer-Editor
     copyright: str = ''          # dc:rights / IPTC CopyrightNotice / EXIF Copyright
-    web_statement: str = ''      # xmpRights:WebStatement (URL zu Nutzungsbedingungen)
+    web_statement: str = ''      # xmpRights:WebStatement (URL of the terms of use)
     source: str = ''             # photoshop:Source / IPTC Source
-    category: str = ''           # photoshop:Category ("Sport"); IPTC Category nur bis 3 Zeichen
-    instructions: str = ''       # photoshop:Instructions / IPTC SpecialInstructions (Kontakt, Konto)
+    category: str = ''           # photoshop:Category ("Sport"); IPTC Category only up to 3 characters
+    instructions: str = ''       # photoshop:Instructions / IPTC SpecialInstructions (contact, bank account)
     rating: int = 0
     label: str = ''
-    # Farbklasse 1-8 (XMP-photomech:ColorClass) und Tag (XMP-photomech:Tagged),
-    # wie sie ein Workflow-Tool fuer die Auswahl von Fotos schreibt. Die Farbklasse wird zusaetzlich als xmp:Label
-    # geschrieben, weil Lightroom nur das Label kennt.
+    # Color class 1-8 (XMP-photomech:ColorClass) and tag (XMP-photomech:Tagged), as a photo
+    # culling workflow tool writes them. The color class is also written as xmp:Label,
+    # because Lightroom only knows the label.
     color_class: int = 0
     tagged: bool = False
-    # GPS mit Vorzeichen (Sued/West negativ), aus Sidecar, eingebettet oder RAW.
-    # gps_changed: von Captioner gesetzt (geo.apply_gps), muss geschrieben werden;
-    # sonst wird GPS nie angefasst, Kamera-GPS bleibt, wie es ist.
+    # GPS with sign (south/west negative), from sidecar, embedded or RAW.
+    # gps_changed: set by Captioner (geo.apply_gps), must be written;
+    # otherwise GPS is never touched, camera GPS stays as it is.
     latitude: float = None
     longitude: float = None
     gps_changed: bool = False
@@ -58,17 +58,17 @@ class Metadata:
 
 @dataclass(eq=False)
 class Item:
-    key: str                  # Verzeichnis + Basisname, kleingeschrieben
-    raw: Path = None          # proprietaere RAW-Datei
-    embedded: list = field(default_factory=list)  # JPG/DNG/TIFF mit gleichem Basisnamen
-    sidecar: Path = None      # vorhandenes <basis>.xmp (Schreibweise wie auf der Platte)
-    taken_at: str = ''        # DateTimeOriginal + SubSec, sortierbar
+    key: str                  # directory + base name, lower case
+    raw: Path = None          # proprietary RAW file
+    embedded: list = field(default_factory=list)  # JPG/DNG/TIFF with the same base name
+    sidecar: Path = None      # existing <base>.xmp (spelled as on disk)
+    taken_at: str = ''        # DateTimeOriginal + SubSec, sortable
     orientation: int = 1
-    camera: str = ''          # Modell, z. B. "NIKON Z 9"
-    serial: str = ''          # Seriennummer: unterscheidet zwei gleiche Bodies
+    camera: str = ''          # model, e.g. "NIKON Z 9"
+    serial: str = ''          # serial number: tells two bodies of the same model apart
     meta: Metadata = field(default_factory=Metadata)
     meta_loaded: bool = False
-    error: str = None         # letzter Schreibfehler
+    error: str = None         # last write error
 
     @property
     def name(self):
@@ -76,7 +76,7 @@ class Item:
 
     @property
     def primary(self) -> Path:
-        """Die Datei, deren Vorschau gezeigt wird: JPG vor RAW, weil schneller."""
+        """The file whose preview is shown: JPG before RAW, because it is faster."""
         for path in self.embedded:
             if path.suffix.lower() in JPEG_EXTENSIONS:
                 return path
@@ -88,7 +88,7 @@ class Item:
 
     @property
     def sidecar_target(self) -> Path:
-        """Wohin das Sidecar geschrieben wird: vorhandene Datei oder <basis>.xmp."""
+        """Where the sidecar is written: existing file or <base>.xmp."""
         if self.sidecar:
             return self.sidecar
         return self.raw.with_suffix('.xmp') if self.raw else None
@@ -140,8 +140,8 @@ def scan(folder, recursive=False):
 
 def camera_labels(items):
     """
-    (Modell, Seriennummer) -> Anzeige. Bei zwei gleichen Modellen mit den letzten
-    Ziffern der Seriennummer, sonst nur das Modell.
+    (model, serial number) -> label. With two bodies of the same model, with the last
+    digits of the serial number, otherwise just the model.
     """
     keys = sorted({(item.camera, item.serial) for item in items if item.camera})
     models = [model for model, _serial in keys]
@@ -155,7 +155,7 @@ def camera_labels(items):
 
 
 def matches_text(item, query):
-    """Alle Woerter der Suche kommen in Dateiname oder Beschriftung vor (ohne Gross/klein)."""
+    """All words of the search occur in the file name or the caption (case-insensitive)."""
     terms = query.casefold().split()
     if not terms:
         return True
@@ -166,12 +166,12 @@ def matches_text(item, query):
 
 
 def time_of_day(item):
-    """'HH:MM' der Aufnahme, '' wenn unbekannt."""
+    """'HH:MM' of the capture, '' if unknown."""
     return item.taken_at[11:16] if len(item.taken_at) >= 16 else ''
 
 
 def has_images(folder):
-    """Liegt direkt in diesem Ordner mindestens eine Bilddatei?"""
+    """Is there at least one image file directly in this folder?"""
     try:
         with os.scandir(folder) as entries:
             return any(not e.name.startswith('.') and e.is_file()
@@ -182,9 +182,9 @@ def has_images(folder):
 
 def image_folders(root, max_depth=3):
     """
-    Ordner mit Bildern unter root: root selbst, wenn es Bilder enthaelt, sonst die
-    Unterordner mit Bildern (z. B. Karte -> DCIM/100NCZ_9, DCIM/101NCZ_9), sortiert.
-    Versteckte Ordner (.Trashes, .Spotlight-V100) werden uebersprungen.
+    Folders with images below root: root itself if it contains images, otherwise the
+    subfolders with images (e.g. card -> DCIM/100NCZ_9, DCIM/101NCZ_9), sorted.
+    Hidden folders (.Trashes, .Spotlight-V100) are skipped.
     """
     root = Path(root)
     if has_images(root):
@@ -211,5 +211,5 @@ def image_folders(root, max_depth=3):
 
 
 def sort_items(items):
-    """Nach Aufnahmezeit inkl. Subsekunden; ohne Zeit ans Ende, dann nach Name."""
+    """By capture time including subseconds; without a time at the end, then by name."""
     items.sort(key=lambda i: (i.taken_at == '', i.taken_at, i.name.lower()))

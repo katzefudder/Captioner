@@ -1,4 +1,4 @@
-# Einstieg fuer PyInstaller, das __main__.py als losgeloestes Skript ausfuehren wuerde
+# Entry point for PyInstaller, which would run __main__.py as a detached script
 from captioner.__main__ import main
 
 main()

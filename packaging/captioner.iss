@@ -1,10 +1,10 @@
-; Inno-Setup-Skript fuer den Windows-Installer. Aufruf ueber
-; `python scripts/package_windows.py installer` (setzt AppVersion und SourceDir per /D).
+; Inno Setup script for the Windows installer. Run via
+; `python scripts/package_windows.py installer` (sets AppVersion and SourceDir via /D).
 ;
-; Installiert dist\Captioner\ nach Programme\Captioner (oder ohne Adminrechte nach
-; %LOCALAPPDATA%\Programs), Startmenue-Eintrag, Explorer-Kontextmenue "Mit Captioner
-; oeffnen" fuer Ordner und Laufwerke (Karte). Mehrere markierte Ordner landen als Tabs
-; in einem Fenster (captioner/ui/instance.py).
+; Installs dist\Captioner\ to Program Files\Captioner (or, without admin rights, to
+; %LOCALAPPDATA%\Programs), a Start menu entry, the Explorer context menu "Open with
+; Captioner" for folders and drives (card). Several selected folders end up as tabs
+; in one window (captioner/ui/instance.py).
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
@@ -17,7 +17,7 @@
 #endif
 
 [Setup]
-; Fest: daran erkennt Windows Updates derselben App
+; fixed: this is how Windows recognizes updates of the same app
 AppId={{F70EF242-EABB-4EBF-B59B-4893F856A2FB}
 AppName=Captioner
 AppVersion={#AppVersion}
@@ -38,7 +38,7 @@ UninstallDisplayIcon={app}\Captioner.exe
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-; Laeuft die App noch, wird sie zum Aktualisieren geschlossen
+; if the app is still running, it is closed for the update
 CloseApplications=yes
 VersionInfoVersion={#AppVersion}
 
@@ -58,21 +58,22 @@ Name: "contextmenu"; Description: "{cm:ContextMenu}"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Lizenzen sichtbar neben der Exe (im Bundle liegen sie zusaetzlich unter _internal)
+; licenses visible next to the exe (in the bundle they are also under _internal)
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 Source: "..\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion
 
 [InstallDelete]
-; Reste einer frueheren Version (z. B. entfernte Qt-Plugins) nicht liegen lassen
+; don't leave remains of an earlier version behind (e.g. removed Qt plugins)
 Type: filesandordirs; Name: "{app}\_internal"
 
 [Icons]
 Name: "{autoprograms}\Captioner"; Filename: "{app}\Captioner.exe"
 Name: "{autoprograms}\Captioner Anleitung"; Filename: "{app}\_internal\docs\Captioner-Anleitung.pdf"
+Name: "{autoprograms}\Captioner Manual"; Filename: "{app}\_internal\docs\Captioner-Manual.pdf"
 Name: "{autodesktop}\Captioner"; Filename: "{app}\Captioner.exe"; Tasks: desktopicon
 
 [Registry]
-; HKA = HKLM bei Installation fuer alle, sonst HKCU
+; HKA = HKLM when installing for all users, otherwise HKCU
 Root: HKA; Subkey: "Software\Classes\Directory\shell\Captioner"; ValueType: string; ValueName: ""; ValueData: "{cm:OpenWith}"; Flags: uninsdeletekey; Tasks: contextmenu
 Root: HKA; Subkey: "Software\Classes\Directory\shell\Captioner"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\Captioner.exe"""; Tasks: contextmenu
 Root: HKA; Subkey: "Software\Classes\Directory\shell\Captioner\command"; ValueType: string; ValueName: ""; ValueData: """{app}\Captioner.exe"" ""%1"""; Tasks: contextmenu

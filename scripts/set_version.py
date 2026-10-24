@@ -1,10 +1,10 @@
 """
-Release-Version in pyproject.toml eintragen, nur in der Arbeitskopie des Builds (Release-Workflow):
-<major>.<minor> aus dem Repo + Laufnummer, z. B. 0.2.41. Danach sehen poetry install, Tests und
-version() (Paket-Metadaten) dieselbe Nummer wie die Specs (CAPTIONER_VERSION). Ins Repo
-zurueckgeschrieben wird nichts.
+Write the release version into pyproject.toml, only in the build's working copy (release
+workflow): <major>.<minor> from the repo + run number, e.g. 0.2.41. Afterwards poetry install,
+tests and version() (package metadata) see the same number as the specs (CAPTIONER_VERSION).
+Nothing is written back to the repo.
 
-    python scripts/set_version.py 0.2.41     # oder ohne Argument: $CAPTIONER_VERSION
+    python scripts/set_version.py 0.2.41     # or without argument: $CAPTIONER_VERSION
 """
 import os
 import re
@@ -15,7 +15,7 @@ PYPROJECT = Path(__file__).resolve().parent.parent / 'pyproject.toml'
 
 
 def set_version(text, version):
-    """Nur die Zeile version = "..." im Abschnitt [project]."""
+    """Only the line version = "..." in the [project] section."""
     match = re.search(r'(?ms)^\[project\]\n(.*?)(?=^\[|\Z)', text)
     if not match:
         raise ValueError('pyproject.toml: Abschnitt [project] fehlt')

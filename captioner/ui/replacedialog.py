@@ -1,7 +1,7 @@
 """
-Suchen und Ersetzen ueber mehrere Bilder: Eingabe, Vorschau je Bild (vorher/nachher),
-einzelne Bilder abwaehlbar. Gerechnet wird in captioner.replace; geschrieben wird erst,
-wenn der Dialog bestaetigt ist (MainWindow.find_replace).
+Find and replace across several images: input, preview per image (before/after),
+individual images can be deselected. Computed in captioner.replace; written only once
+the dialog is confirmed (MainWindow.find_replace).
 """
 import html
 
@@ -27,7 +27,7 @@ class ReplaceDialog(QDialog):
         self.changes = []
 
         form = QFormLayout()
-        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)  # macOS: sonst schmal
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)  # macOS: otherwise narrow
         self.find = QLineEdit()
         self.find.setPlaceholderText(_('Text oder Code, z. B. #bn9# oder Mcpherson'))
         self.replacement = QLineEdit()
@@ -53,12 +53,12 @@ class ReplaceDialog(QDialog):
 
         self.summary = QLabel(scope_text)
         self.summary.setWordWrap(True)
-        # Je Bild eine Zeile: Haekchen mit Dateiname, daneben vorher -> nachher (umbrechend;
-        # in einer Liste mit Item-Widgets schaetzte Qt die Hoehe solcher Texte falsch)
+        # One row per image: checkbox with file name, next to it before -> after (wrapping;
+        # in a list with item widgets Qt estimated the height of such texts wrongly)
         self.list = QScrollArea()
         self.list.setWidgetResizable(True)
         self.list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.rows = []   # QCheckBox je Aenderung, Reihenfolge wie self.changes
+        self.rows = []   # QCheckBox per change, same order as self.changes
         note = QLabel('<small>' + _('In der Beschreibung wird im Text mit Codes gesucht; der Anhang des '
                                   'Templates (Titel, Ort, Datum) wird danach neu gebildet. Personen-Tags '
                                   'passen sich an. Rückgängig mit {undo}.').format(undo=shortcut_text('undo')) + '</small>')
@@ -97,9 +97,9 @@ class ReplaceDialog(QDialog):
         return tuple(name for name, box in self.fields.items() if box.isChecked())
 
     def refresh(self):
-        """Vorschau neu rechnen (nach kurzer Pause beim Tippen)."""
+        """Recompute the preview (after a short pause while typing)."""
         self.changes = self.planner(self.find.text(), self.replacement.text(), self.selected_fields(), self.options())
-        # Jedes Mal neu aufgebaut; setWidget loescht die alte Liste
+        # rebuilt every time; setWidget deletes the old list
         rows = QWidget()
         outer = QVBoxLayout(rows)
         grid = QGridLayout()
@@ -112,7 +112,7 @@ class ReplaceDialog(QDialog):
         for index, change in enumerate(self.changes):
             box = QCheckBox(change.item.name)
             box.setChecked(change.ok)
-            box.setEnabled(change.ok)          # mit unbekanntem Code oder zu lang: gesperrt
+            box.setEnabled(change.ok)          # with unknown code or too long: locked
             box.toggled.connect(self._update_button)
             label = QLabel(self._describe(change))
             label.setWordWrap(True)
@@ -147,7 +147,7 @@ class ReplaceDialog(QDialog):
         if change.problems:
             lines.append('<span style="color:#d64541">' + html.escape('; '.join(change.problems)) + '</span>')
         if not change.diffs:
-            # z. B. nur der Anhang wurde neu gebildet
+            # e.g. only the suffix was rebuilt
             lines.append(f'<b>{html.escape(_("Beschreibung"))}:</b> {html.escape(change.meta.caption)}')
         return '<br>'.join(lines)
 
@@ -157,12 +157,12 @@ class ReplaceDialog(QDialog):
         return shown.replace(MARK_START, f'<span style="background-color:{color}">').replace(MARK_END, '</span>')
 
     def _colors(self):
-        """Hintergrund fuer Fundstelle (rot) und Ersetzung (gruen), hell und dunkel lesbar."""
+        """Background for match (red) and replacement (green), readable on light and dark."""
         dark = self.palette().window().color().lightness() < 128
         return ('#5c2624', '#24502e') if dark else ('#f6cfcd', '#cdeccf')
 
     def chosen(self):
-        """Angehakte, fehlerfreie Aenderungen."""
+        """Checked changes without errors."""
         return [change for change, box in zip(self.changes, self.rows) if change.ok and box.isChecked()]
 
     def _update_button(self, *args):

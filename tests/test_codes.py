@@ -16,7 +16,7 @@ def test_unknown_codes_are_kept_and_reported(roster):
 
 
 def test_uppercase_code_falls_back_to_lowercase_entry(roster):
-    # Caps Lock in der Halle: #BN23# soll trotzdem aufgeloest werden
+    # caps lock in the arena: #BN23# should still be resolved
     assert codes.resolve('#BN23#', roster).text == '-23- Marius Erk (EC Bad Nauheim)'
 
 

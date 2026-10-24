@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Captioner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 00:49+0200\n"
+"POT-Creation-Date: 2026-10-24 12:24+0200\n"
 "PO-Revision-Date: 2026-10-11 11:23+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -115,7 +115,7 @@ msgid "Anleitung"
 msgstr "Manual"
 
 msgid "Anleitung (PDF)"
-msgstr "Manual (German, PDF)"
+msgstr "Manual (PDF)"
 
 #, python-brace-format
 msgid "Antwort von ExifTool nicht lesbar: {error}; {stderr}"
@@ -257,10 +257,10 @@ msgid "Bewertung"
 msgstr "Rating"
 
 msgid "Bilder umbenennen"
-msgstr "Rename Images"
+msgstr "Rename images"
 
 msgid "Bilder umbenennen …"
-msgstr "Rename Images …"
+msgstr "Rename images …"
 
 msgid "Bildnachweis, z. B. Name/Agentur"
 msgstr "Credit line, e.g. name/agency"

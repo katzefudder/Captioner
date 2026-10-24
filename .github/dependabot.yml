@@ -1,11 +1,11 @@
-# Dependabot: woechentlich Updates als Pull Requests. Jeder PR laeuft durch release.yml
-# (Tests und Build auf macOS und Windows), veroeffentlicht wird erst nach dem Merge auf main.
+# Dependabot: weekly updates as pull requests. Every PR runs through release.yml
+# (tests and build on macOS and Windows), publishing only happens after the merge to main.
 #
-# Nicht abgedeckt: ExifTool (Version/Pruefsumme im Makefile und in
-# scripts/package_windows.py) - von Hand nach exiftool.org/ver.txt.
+# Not covered: ExifTool (version/checksum in the Makefile and in
+# scripts/package_windows.py) - update by hand from exiftool.org/ver.txt.
 version: 2
 updates:
-  # Python-Abhaengigkeiten aus pyproject.toml / poetry.lock
+  # Python dependencies from pyproject.toml / poetry.lock
   - package-ecosystem: pip
     directory: /
     schedule:
@@ -16,18 +16,18 @@ updates:
     commit-message:
       prefix: deps
     groups:
-      # Kleine Updates gesammelt in einem PR, damit nicht jede Woche fuenf Builds laufen
+      # small updates collected in one PR, so five builds don't run every week
       kleine-updates:
         update-types: [minor, patch]
         exclude-patterns: [pyside6, shiboken6, pyinstaller]
-      # PySide6 und PyInstaller einzeln: koennen das Mindest-macOS heben bzw. das Bundle
-      # aendern (Claude.md, Paketierung: nach einem Update otool -L / UNUSED pruefen)
+      # PySide6 and PyInstaller separately: they can raise the minimum macOS or change
+      # the bundle (Claude.md, packaging: after an update check otool -L / UNUSED)
     ignore:
-      # Major-Versionen schliesst pyproject.toml ohnehin aus (pyside6 <7 usw.)
+      # pyproject.toml excludes major versions anyway (pyside6 <7 etc.)
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
 
-  # Versionen der Actions in .github/workflows
+  # versions of the actions in .github/workflows
   - package-ecosystem: github-actions
     directory: /
     schedule:

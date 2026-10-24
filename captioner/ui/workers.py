@@ -1,11 +1,11 @@
 """
-Hintergrundarbeit. Die UI wartet nie auf eine Datei (ADR 0001, Punkt 2).
+Background work. The UI never waits for a file (ADR 0001, item 2).
 
-* ScanWorker: Ordner einlesen, Metadaten in Bloecken nachladen
-* ThumbnailLoader: Kacheln im QThreadPool, nur fuer gewuenschte Items
-* MetadataWriter: eine Schreib-Warteschlange; pro Item gewinnt der letzte Stand.
-  flush() blockiert, bis alles geschrieben ist - das braucht der Drag-Start.
-* RosterWorker: Roster laden (Netz) ohne die UI anzuhalten
+* ScanWorker: read a folder, load metadata in chunks
+* ThumbnailLoader: tiles in the QThreadPool, only for wanted items
+* MetadataWriter: one write queue; per item the latest state wins.
+  flush() blocks until everything is written - the drag start needs that.
+* RosterWorker: load rosters (network) without blocking the UI
 """
 import collections
 import logging
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class ScanWorker(QThread):
-    scanned = Signal(list)        # alle Items, nach Dateiname
-    chunk_loaded = Signal(list)   # Items mit frisch gelesenen Metadaten
+    scanned = Signal(list)        # all items, by file name
+    chunk_loaded = Signal(list)   # items with freshly read metadata
     failed = Signal(str)
 
     def __init__(self, pool, folder, recursive):
@@ -36,8 +36,8 @@ class ScanWorker(QThread):
         self._cancel = True
 
     def run(self):
-        # Eigene Instanz statt Pool: jeder Scan laeuft in einem neuen Thread, eine
-        # Pool-Instanz bliebe danach bis zum Programmende liegen
+        # Own instance instead of the pool: every scan runs in a new thread, a pool
+        # instance would stay around until the program ends
         tool = ExifTool(self.pool.executable)
         try:
             items = scanner.scan(self.folder, self.recursive)
@@ -54,10 +54,10 @@ class ScanWorker(QThread):
 
 
 class _Signals(QObject):
-    ready = Signal(str, QImage)       # item.key, Bild
+    ready = Signal(str, QImage)       # item.key, image
     failed = Signal(str, str)
-    details = Signal(str, object)     # item.key, Rohwerte fuer das Info-Panel
-    view = Signal(str, QImage)        # item.key, Bild der Grossansicht (Text 'stage', 'full_size')
+    details = Signal(str, object)     # item.key, raw values for the info panel
+    view = Signal(str, QImage)        # item.key, preview image (text 'stage', 'full_size')
 
 
 class _DetailsTask(QRunnable):
@@ -76,7 +76,7 @@ class _DetailsTask(QRunnable):
 
 
 class _ViewTask(QRunnable):
-    """Grossansicht: Bildschirmaufloesung (edge) oder volle Aufloesung (edge=None)."""
+    """Preview: screen resolution (edge) or full resolution (edge=None)."""
 
     def __init__(self, loader, item, edge):
         super().__init__()
@@ -87,15 +87,15 @@ class _ViewTask(QRunnable):
     def run(self):
         key, stage = self.item.key, 'display' if self.edge else 'full'
         try:
-            # Weitergeblaettert: veraltete Auftraege nicht mehr dekodieren
+            # moved on: don't decode outdated jobs any more
             if not self.loader._view_wanted(key, stage):
                 return
             image, size = previews.render_view(self.loader.pool.get(), self.item, self.edge)
             qimage = QImage(image.tobytes(), image.width, image.height, image.width * 3,
                             QImage.Format.Format_RGB888).copy()
-            # Groesse des Originals: 100 % meinen Pixel des Originals, auch bei der kleineren Stufe
+            # size of the original: 100 % means pixels of the original, even for the smaller stage
             qimage.setText('full_size', f'{size[0]}x{size[1]}')
-            # Draft liefert hoechstens die Originalgroesse: dann ist es schon das volle Bild
+            # draft returns at most the original size: then it already is the full image
             qimage.setText('stage', 'full' if (image.width, image.height) == size else stage)
             self.loader.signals.view.emit(key, qimage)
         except Exception as e:
@@ -105,7 +105,7 @@ class _ViewTask(QRunnable):
 
 
 def full_size(image):
-    """(Breite, Hoehe) des Originals zu einem Bild der Grossansicht; ohne Angabe die eigene."""
+    """(width, height) of the original for a preview image; without the text, its own size."""
     text = image.text('full_size') if image is not None else ''
     if text:
         width, height = text.split('x')
@@ -138,12 +138,12 @@ class _ThumbnailTask(QRunnable):
 
 
 class ThumbnailLoader(QObject):
-    """Kacheln laden und im Speicher halten (LRU)."""
+    """Load tiles and keep them in memory (LRU)."""
     ready = Signal(str)
     full_ready = Signal(str, QImage)
     details_ready = Signal(str, object)
 
-    # Nach Bytes, nicht nach Anzahl: Kacheln sind seit dem Groessen-Regler groesser (previews.TILE_SIZE)
+    # by bytes, not by count: tiles have been larger since the size slider (previews.TILE_SIZE)
     MEMORY_BYTES = 400 * 1024 * 1024
 
     def __init__(self, pool, cache):
@@ -152,10 +152,10 @@ class ThumbnailLoader(QObject):
         self.cache = cache
         self.threads = QThreadPool()
         self.threads.setMaxThreadCount(4)
-        # Threads nicht ablaufen lassen: jeder neue Thread bekaeme einen neuen ExifTool-Prozess
+        # don't let threads expire: every new thread would get a new ExifTool process
         self.threads.setExpiryTimeout(-1)
         self.images = collections.OrderedDict()
-        self.memory = 0  # Bytes in images
+        self.memory = 0  # bytes in images
         self.wanted = set()
         self.pending = set()
         self.signals = _Signals()
@@ -163,15 +163,15 @@ class ThumbnailLoader(QObject):
         self.signals.details.connect(self._on_details)
         self.signals.view.connect(self._on_view)
         self.details = {}
-        # Grossansicht in eigenen Threads: wartet nie hinter dem Erzeugen von Kacheln
+        # preview in its own threads: never waits behind generating tiles
         self.view_threads = QThreadPool()
         self.view_threads.setMaxThreadCount(2)
         self.view_threads.setExpiryTimeout(-1)
-        self.display_edge = 3840       # laengste Bildschirmkante in Pixeln, setzt das Hauptfenster
-        self.view_current = None       # Key des Bildes in der Grossansicht
-        self.view_prefetch = set()     # Nachbarn, deren Bildschirmstufe vorbereitet wird
+        self.display_edge = 3840       # longest screen edge in pixels, set by the main window
+        self.view_current = None       # key of the image in the preview
+        self.view_prefetch = set()     # neighbours whose screen stage is being prepared
         self.view_pending = set()      # (key, stage)
-        self.view_images = collections.OrderedDict()   # key -> QImage (beste vorhandene Stufe)
+        self.view_images = collections.OrderedDict()   # key -> QImage (best available stage)
 
     def image(self, key):
         image = self.images.get(key)
@@ -180,7 +180,7 @@ class ThumbnailLoader(QObject):
         return image
 
     def request(self, items):
-        """Nur diese Items sind gewuenscht; alte, noch wartende Auftraege verfallen."""
+        """Only these items are wanted; old jobs still waiting expire."""
         self.wanted = {item.key for item in items}
         for item in items:
             if item.key in self.images or item.key in self.pending:
@@ -189,7 +189,7 @@ class ThumbnailLoader(QObject):
             self.threads.start(_ThumbnailTask(self, item, previews.TILE_SIZE))
 
     def request_details(self, item):
-        """Kamera- und IPTC-Werte; aus dem Speicher, wenn schon gelesen."""
+        """Camera and IPTC values; from memory if already read."""
         if item.key in self.details:
             self.details_ready.emit(item.key, self.details[item.key])
             return
@@ -203,13 +203,13 @@ class ThumbnailLoader(QObject):
             self.details[key] = data
         self.details_ready.emit(key, data)
 
-    # Grossansicht im Speicher: aktuelles Bild (voll 45 MP ~ 136 MB), Nachbarn und zuletzt gesehene
+    # preview in memory: current image (full 45 MP ~ 136 MB), neighbours and recently viewed
     VIEW_BYTES = 600 * 1024 * 1024
 
     def request_full(self, item, neighbours=()):
         """
-        Grossansicht: zuerst in Bildschirmaufloesung (eingepasst sofort scharf), dann in voller
-        Aufloesung fuer 100 %. Die Nachbarn werden in Bildschirmaufloesung vorbereitet.
+        Preview: first at screen resolution (sharp right away when fitted), then at full
+        resolution for 100 %. The neighbours are prepared at screen resolution.
         """
         self.view_current = item.key
         self.view_prefetch = {n.key for n in neighbours}
@@ -240,11 +240,11 @@ class ThumbnailLoader(QObject):
     def _on_view(self, key, image):
         cached = self.view_images.get(key)
         if cached is not None and cached.text('stage') == 'full' and image.text('stage') != 'full':
-            return  # nie ein volles Bild durch die kleinere Stufe ersetzen
+            return  # never replace a full image with the smaller stage
         self.view_images[key] = image
         self.view_images.move_to_end(key)
         total = sum(kept.sizeInBytes() for kept in self.view_images.values())
-        for other in list(self.view_images):   # aelteste zuerst, das aktuelle nie
+        for other in list(self.view_images):   # oldest first, never the current one
             if total <= self.VIEW_BYTES:
                 break
             if other != self.view_current:
@@ -268,7 +268,7 @@ class ThumbnailLoader(QObject):
         self.ready.emit(key)
 
     def _trim(self):
-        """Aelteste zuerst verwerfen, aber nie gerade gewuenschte (sichtbare) Kacheln."""
+        """Drop the oldest first, but never tiles that are wanted right now (visible)."""
         if self.memory <= self.MEMORY_BYTES:
             return
         for key in list(self.images):
@@ -287,7 +287,7 @@ class ThumbnailLoader(QObject):
 
 
 class MetadataWriter(QThread):
-    written = Signal(str, bool, str)  # item.key, ok, Meldung
+    written = Signal(str, bool, str)  # item.key, ok, message
     idle_changed = Signal(bool)
 
     def __init__(self, pool):
@@ -315,7 +315,7 @@ class MetadataWriter(QThread):
             return len(self._jobs) + (1 if self._busy else 0)
 
     def flush(self, timeout=60):
-        """Wartet, bis alle Schreibauftraege erledigt sind. False bei Zeitueberschreitung."""
+        """Waits until all write jobs are done. False on timeout."""
         with self._cond:
             return self._cond.wait_for(lambda: not self._jobs and self._busy is None, timeout)
 

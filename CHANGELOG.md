@@ -3,6 +3,18 @@
 Je Version `<major>.<minor>` ein Abschnitt. Der Release-Workflow stellt ihn über die
 Release-Notizen auf GitHub (die Laufnummer dahinter, z. B. 0.2.23, zählt die Builds).
 
+## 0.3
+
+### Neu
+
+- **Englische Anleitung** ([docs/Captioner-Manual.pdf](docs/Captioner-Manual.pdf)) mit englischen
+  Screenshots. *Hilfe → Anleitung (PDF)* öffnet die Fassung in der Sprache der Oberfläche; beide
+  liegen im DMG und im Windows-Startmenü.
+
+### Intern
+
+- Kommentare, Docstrings und Commit-Nachrichten auf Englisch.
+
 ## 0.2
 
 ### Neu

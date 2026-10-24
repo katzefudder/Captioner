@@ -1,19 +1,19 @@
 """
-Windows-Version (x64): ExifTool holen, App bauen, pruefen, Installer erzeugen.
+Windows version (x64): fetch ExifTool, build the app, verify it, create the installer.
 
-    python scripts/package_windows.py exiftool    ExifTool fuer Windows nach vendor/exiftool-windows
+    python scripts/package_windows.py exiftool    ExifTool for Windows into vendor/exiftool-windows
     python scripts/package_windows.py bundle      dist/Captioner/ (PyInstaller, Captioner-windows.spec)
-    python scripts/package_windows.py verify      Bundle pruefen: Exe, ExifTool laeuft, Version
+    python scripts/package_windows.py verify      check the bundle: exe, ExifTool runs, version
     python scripts/package_windows.py installer   dist/Captioner-<version>-x64-setup.exe (Inno Setup)
-    python scripts/package_windows.py all         alles der Reihe nach
+    python scripts/package_windows.py all         everything in order
 
-Statt Makefile, weil auf Windows kein make vorausgesetzt wird. Aufruf mit dem Python
-der Poetry-Umgebung (`poetry run python scripts/package_windows.py all`).
+Instead of the Makefile, because make is not assumed on Windows. Run with the Python of
+the Poetry environment (`poetry run python scripts/package_windows.py all`).
 
-Umgebungsvariablen:
-    CAPTIONER_VERSION  Versionsnummer (setzt der Release-Workflow), sonst pyproject.toml
-    ISCC               Pfad zu ISCC.exe, sonst PATH bzw. der Standard-Installationsort
-Unsigniert: Windows SmartScreen warnt beim ersten Start (siehe BACKLOG.md, Code-Signing).
+Environment variables:
+    CAPTIONER_VERSION  version number (set by the release workflow), otherwise pyproject.toml
+    ISCC               path to ISCC.exe, otherwise PATH or the default install location
+Unsigned: Windows SmartScreen warns on first launch (see BACKLOG.md, code signing).
 """
 import hashlib
 import os
@@ -30,7 +30,7 @@ DIST = ROOT / 'dist'
 APP = DIST / 'Captioner'
 EXIFTOOL_DIR = ROOT / 'vendor' / 'exiftool-windows'
 
-# Wie im Makefile: Version und Pruefsumme fest (exiftool.org/checksums.txt)
+# as in the Makefile: version and checksum fixed (exiftool.org/checksums.txt)
 EXIFTOOL_VERSION = '13.59'
 EXIFTOOL_SHA256 = '44b512b25af500724ba579d0a53c8fc5851628b692dd5e5d94ae4a15c2cba9ec'
 EXIFTOOL_URL = f'https://sourceforge.net/projects/exiftool/files/exiftool-{EXIFTOOL_VERSION}_64.zip/download'
@@ -47,7 +47,7 @@ def version():
 
 
 def exiftool():
-    """exiftool.exe + exiftool_files/ (eigenes Perl) aus dem offiziellen Windows-Paket."""
+    """exiftool.exe + exiftool_files/ (own Perl) from the official Windows package."""
     exe = EXIFTOOL_DIR / 'exiftool.exe'
     if exe.exists() and (EXIFTOOL_DIR / 'VERSION').read_text().strip() == EXIFTOOL_VERSION:
         print(f'ExifTool {EXIFTOOL_VERSION} schon da: {exe}')
@@ -56,7 +56,7 @@ def exiftool():
     EXIFTOOL_DIR.parent.mkdir(parents=True, exist_ok=True)
     archive = EXIFTOOL_DIR.parent / f'exiftool-{EXIFTOOL_VERSION}_64.zip'
     print(f'Lade {EXIFTOOL_URL}', flush=True)
-    request = urllib.request.Request(EXIFTOOL_URL, headers={'User-Agent': 'curl/8'})  # SourceForge leitet sonst auf HTML
+    request = urllib.request.Request(EXIFTOOL_URL, headers={'User-Agent': 'curl/8'})  # else SourceForge sends HTML
     with urllib.request.urlopen(request, timeout=120) as response, open(archive, 'wb') as handle:
         shutil.copyfileobj(response, handle)
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
@@ -69,7 +69,7 @@ def exiftool():
             if not info.filename.startswith(top) or info.is_dir():
                 continue
             relative = info.filename[len(top):]
-            # "exiftool(-k).exe" wartet am Ende auf eine Taste; umbenannt nicht mehr
+            # "exiftool(-k).exe" waits for a key at the end; renamed it doesn't
             if relative == 'exiftool(-k).exe':
                 relative = 'exiftool.exe'
             target = EXIFTOOL_DIR / relative
@@ -109,8 +109,9 @@ def verify():
         problems.append(f'captioner/VERSION fehlt oder passt nicht zu {version()}')
     if not (internal / 'LICENSE').exists() or not (internal / 'licenses' / 'LGPL-3.0.txt').exists():
         problems.append('Lizenztexte fehlen im Bundle (LICENSE, licenses/)')
-    if not (internal / 'docs' / 'Captioner-Anleitung.pdf').exists():
-        problems.append('Anleitung (PDF) fehlt im Bundle')
+    for manual in ('Captioner-Anleitung.pdf', 'Captioner-Manual.pdf'):
+        if not (internal / 'docs' / manual).exists():
+            problems.append(f'{manual} fehlt im Bundle')
     if not (internal / 'captioner' / 'locale' / 'en' / 'LC_MESSAGES' / 'captioner.mo').exists():
         problems.append('Englische Uebersetzung fehlt')
     unused = [p.name for p in internal.rglob('*') if p.name.lower().startswith(('qt6quick', 'qt6qml', 'qt6pdf'))]

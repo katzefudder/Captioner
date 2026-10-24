@@ -1,4 +1,4 @@
-/* Druck-Layout der Anleitung (WeasyPrint), A4 */
+/* Print layout of the manuals (WeasyPrint), A4; shared by anleitung.html and manual.html */
 
 @page {
   size: A4;
@@ -31,7 +31,7 @@ html {
   hyphens: auto;
 }
 
-/* Titelseite */
+/* Cover */
 .cover {
   height: 297mm;
   box-sizing: border-box;
@@ -45,7 +45,7 @@ html {
 .cover-sub { font-size: 14pt; color: #5d6573; margin: 4mm 0 26mm; line-height: 1.4; }
 .cover-meta { font-size: 9.5pt; color: #5d6573; }
 
-/* Inhaltsverzeichnis */
+/* Table of contents */
 .toc { page: toc; page-break-after: always; }
 .toc + h2 { margin-top: 0; }
 .toc-title { margin: 0 0 4mm; font-size: 18pt; font-weight: 700; }
@@ -55,7 +55,7 @@ html {
 .toc li a::before { content: counter(chapter) "  "; color: #2f6fd6; font-weight: 600; display: inline-block; width: 8mm; }
 .toc li a::after { content: leader(" ") target-counter(attr(href), page); color: #5d6573; }
 
-/* Kapitel */
+/* Chapters */
 body { counter-reset: h2; }
 h2 {
   string-set: chapter content();
@@ -98,7 +98,7 @@ kbd {
 
 ol.steps li::marker { color: #2f6fd6; font-weight: 600; }
 
-/* Kaesten */
+/* Boxes */
 .note {
   background: #f3f6fb;
   border-left: 2.5pt solid #2f6fd6;
@@ -130,14 +130,14 @@ pre.file {
   page-break-inside: avoid;
 }
 
-/* Begriffslisten */
+/* Definition lists */
 dl.parts { margin: 2mm 0 4mm; }
 dl.parts dt { font-weight: 600; margin-top: 2mm; page-break-after: avoid; }
 dl.parts dd { margin: 0.5mm 0 0 5mm; }
 dl.faq dt { font-weight: 600; margin-top: 4mm; page-break-after: avoid; }
 dl.faq dd { margin: 1mm 0 0 0; }
 
-/* Bilder */
+/* Images */
 figure { margin: 4mm 0 5mm; page-break-inside: avoid; text-align: center; }
 figure img {
   border: 0.5pt solid #c8ced8;
@@ -156,7 +156,7 @@ figcaption { font-size: 8.5pt; color: #5d6573; margin-top: 2mm; text-align: left
 }
 .side > div { flex: 1; margin-left: 6mm; }
 
-/* Tabellen */
+/* Tables */
 table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 9pt; }
 th { text-align: left; font-weight: 600; color: #5d6573; font-size: 8pt;
      text-transform: uppercase; letter-spacing: 0.4pt; border-bottom: 1pt solid #1d2330; padding: 1.5mm 2mm; }

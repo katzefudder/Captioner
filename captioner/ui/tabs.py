@@ -1,6 +1,6 @@
 """
-Ordner-Tabs: je Tab ein Ordner mit eigener Galerie, Auswahl und Scan.
-Ziehen von Bildern auf einen anderen Tab (Reiter oder Galerie) kopiert sie dorthin.
+Folder tabs: one folder per tab with its own gallery, selection and scan.
+Dragging images onto another tab (tab or gallery) copies them there.
 """
 import os
 import sys
@@ -18,15 +18,15 @@ WINDOWS = sys.platform == 'win32'
 
 
 def tab_title(folder):
-    """'100NCZ_9' bzw. 'NIKON Z 9 › 100NCZ_9' fuer Ordner auf einem Wechseldatentraeger."""
+    """'100NCZ_9', or 'NIKON Z 9 › 100NCZ_9' for folders on a removable drive."""
     if not folder:
         return _('Neuer Tab')
     path = Path(folder)
     parts = path.parts
-    if len(parts) > 2 and parts[1] == 'Volumes':  # macOS: /Volumes/<Karte>/...
+    if len(parts) > 2 and parts[1] == 'Volumes':  # macOS: /Volumes/<card>/...
         return f'{parts[2]} › {path.name}' if len(parts) > 3 else parts[2]
     if WINDOWS:
-        # Windows: Karte als E:\DCIM\..., statt des Buchstabens die Laufwerksbezeichnung
+        # Windows: card as E:\DCIM\..., the volume label instead of the drive letter
         path = PureWindowsPath(folder)
         system = os.environ.get('SystemDrive', 'C:').upper()
         if path.drive and path.drive.upper() != system:
@@ -36,12 +36,12 @@ def tab_title(folder):
 
 
 def volume_label(root):
-    """Bezeichnung des Datentraegers ('NIKON Z 9'), '' ohne Bezeichnung."""
+    """Label of the volume ('NIKON Z 9'), '' without a label."""
     return QStorageInfo(root).name()
 
 
 class FolderTab(QWidget):
-    """Zustand eines Ordners; die Logik dazu steckt im Hauptfenster."""
+    """State of one folder; the logic for it lives in the main window."""
 
     def __init__(self, loader, writer, parent=None):
         super().__init__(parent)
@@ -83,9 +83,9 @@ class FolderTab(QWidget):
 
 
 class FolderTabBar(QTabBar):
-    """Reiter nehmen gezogene Bilder an; beim Darueberziehen wechselt der Tab."""
-    files_dropped = Signal(int)   # Index des Ziel-Tabs
-    close_requested = Signal(list)  # Kontextmenue: Indizes der zu schliessenden Tabs
+    """Tabs accept dragged images; hovering over one switches to it."""
+    files_dropped = Signal(int)   # index of the target tab
+    close_requested = Signal(list)  # context menu: indices of the tabs to close
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -98,7 +98,7 @@ class FolderTabBar(QTabBar):
         self.setElideMode(Qt.TextElideMode.ElideMiddle)
 
     def contextMenuEvent(self, event):
-        """Wie Finder/Safari/Explorer: diesen, andere oder alle Tabs schliessen."""
+        """As in Finder/Safari/Explorer: close this tab, the other ones or all."""
         index = self.tabAt(event.pos())
         if index < 0:
             return
@@ -133,9 +133,8 @@ class FolderTabBar(QTabBar):
 
 class FolderTabs(QObject):
     """
-    Reiter und Galerien getrennt, damit die Reiter oben ueber die ganze Fensterbreite
-    laufen koennen (QTabWidget klebt sie an die Galerie). API wie QTabWidget, soweit
-    gebraucht.
+    Tab bar and galleries separate, so the tabs can run across the full window width at
+    the top (QTabWidget glues them to the gallery). API like QTabWidget, as far as needed.
     """
     currentChanged = Signal(int)
     tabCloseRequested = Signal(int)
@@ -205,7 +204,7 @@ class FolderTabs(QObject):
 
 
 class ConflictDialog(QDialog):
-    """'DSC_0001.NEF gibt es schon': ueberspringen, umbenennen oder ersetzen."""
+    """'DSC_0001.NEF already exists': skip, rename or replace."""
 
     def __init__(self, group, folder, remaining, parent=None):
         super().__init__(parent)
@@ -249,8 +248,8 @@ class ConflictDialog(QDialog):
 
 def ask_conflicts(groups, folder, parent):
     """
-    Entscheidung pro Gruppe mit Konflikt, vor dem Kopieren. None bei Abbruch,
-    sonst {id(group): decision}.
+    Decision per group with a conflict, before copying. None on cancel,
+    otherwise {id(group): decision}.
     """
     conflicting = [group for group in groups if group.conflicts(folder)]
     decisions, for_all = {}, None
@@ -269,8 +268,8 @@ def ask_conflicts(groups, folder, parent):
 
 
 class CopyWorker(QThread):
-    progress = Signal(int, int)       # erledigt, gesamt
-    done = Signal(int, int, list)     # kopierte Bilder, uebersprungene, Fehler
+    progress = Signal(int, int)       # done, total
+    done = Signal(int, int, list)     # copied images, skipped ones, errors
 
     def __init__(self, groups, folder, decisions):
         super().__init__()

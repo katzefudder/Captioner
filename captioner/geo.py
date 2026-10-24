@@ -1,17 +1,15 @@
 """
-Orte fuer Stadt/Ort (IPTC City, Sub-location) und GPS, ohne Qt.
+Places for city/location (IPTC City, Sub-location) and GPS, without Qt.
 
-* Place: Stadt, Ort/Halle, Koordinaten.
-* PlaceBook: einmal gewaehlte Orte (Settings.places). Einzige Quelle fuer
-  Koordinaten: Beim Speichern werden sie ueber (Stadt, Ort) nachgeschlagen,
-  auch offline.
-* GPS wird nur in Bilder geschrieben, die noch keins haben, oder deren GPS
-  von einem Ort aus dem PlaceBook stammt (also von Captioner gesetzt wurde).
-  Kamera-GPS bleibt immer unangetastet.
-* Nominatim (Suche, Rueckwaertssuche) und OSM-Kacheln: hier nur URLs und
-  Auswertung; das Netz macht ui/mapview.py. Nutzungsregeln:
-  operations.osmfoundation.org/policies/nominatim und .../tiles
-  (eigener User-Agent, hoechstens 1 Anfrage/s, keine Suche beim Tippen, Kacheln cachen).
+* Place: city, location/arena, coordinates.
+* PlaceBook: places chosen once (Settings.places). The only source of coordinates:
+  when saving they are looked up via (city, location), offline too.
+* GPS is only written into images that don't have any yet, or whose GPS comes from a
+  place in the PlaceBook (i.e. was set by Captioner). Camera GPS always stays untouched.
+* Nominatim (search, reverse search) and OSM tiles: only URLs and parsing here; the
+  networking is in ui/mapview.py. Usage policies:
+  operations.osmfoundation.org/policies/nominatim and .../tiles
+  (own User-Agent, at most 1 request/s, no search while typing, cache tiles).
 """
 import dataclasses
 import math
@@ -24,16 +22,16 @@ from .i18n import N_
 USER_AGENT = 'Captioner (+https://github.com/katzefudder/Captioner)'
 TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 NOMINATIM_URL = 'https://nominatim.openstreetmap.org'
-ATTRIBUTION = N_('© OpenStreetMap-Mitwirkende')  # bei der Anzeige mit _() uebersetzen
+ATTRIBUTION = N_('© OpenStreetMap-Mitwirkende')  # translate with _() when displayed
 TILE_SIZE = 256
 MIN_ZOOM, MAX_ZOOM = 2, 19
 MAX_PLACES = 200
-# Koordinaten gelten als gleich, wenn sie auf ~1 m uebereinstimmen
+# coordinates count as equal if they match to ~1 m
 COORD_TOLERANCE = 1e-5
 
-# Nominatim-Adressfelder, die als Stadt taugen, in dieser Reihenfolge
+# Nominatim address fields that work as a city, in this order
 CITY_KEYS = ('city', 'town', 'village', 'municipality', 'suburb', 'county')
-# Treffer, deren Name ein Ort/eine Halle ist (sonst bleibt "Ort" leer)
+# results whose name is a place/arena (otherwise "location" stays empty)
 VENUE_CLASSES = ('leisure', 'amenity', 'building', 'tourism', 'historic', 'sport')
 
 
@@ -43,8 +41,8 @@ class Place:
     sublocation: str = ''
     latitude: float = None
     longitude: float = None
-    label: str = ''  # Anzeige in Suchergebnissen, wird nicht gespeichert
-    # Von der Adresssuche, fuer Bundesland/Land im Template; nicht im PlaceBook
+    label: str = ''  # shown in search results, not saved
+    # from the address search, for state/country in the template; not in the PlaceBook
     state: str = field(default='', compare=False)
     country: str = field(default='', compare=False)
 
@@ -79,7 +77,7 @@ def valid_coordinates(lat, lon):
 
 
 class PlaceBook:
-    """Zuletzt gewaehlte Orte, neueste zuerst; liest und schreibt eine Liste von Dicts."""
+    """Places chosen last, newest first; reads and writes a list of dicts."""
 
     def __init__(self, entries=()):
         self.places = [Place.from_dict(e) for e in entries if isinstance(e, dict)]
@@ -105,15 +103,15 @@ class PlaceBook:
         del self.places[MAX_PLACES:]
 
     def is_ours(self, lat, lon):
-        """Stammen die Koordinaten von einem gemerkten Ort (also von Captioner)?"""
+        """Do the coordinates come from a remembered place (i.e. from Captioner)?"""
         return any(p.has_coordinates and abs(p.latitude - lat) < COORD_TOLERANCE
                    and abs(p.longitude - lon) < COORD_TOLERANCE for p in self.places)
 
 
 def apply_gps(meta, book):
     """
-    Metadaten mit den Koordinaten des Ortes (Stadt, Ort) aus dem PlaceBook.
-    Vorhandenes GPS wird nur ersetzt, wenn es selbst von einem gemerkten Ort stammt.
+    Metadata with the coordinates of the place (city, location) from the PlaceBook.
+    Existing GPS is only replaced if it comes from a remembered place itself.
     """
     place = book.lookup(meta.city, meta.sublocation)
     if place is None or not place.has_coordinates:
@@ -140,7 +138,7 @@ def reverse_url(lat, lon, zoom=18):
 
 
 def place_from_result(result):
-    """Ein Nominatim-Ergebnis (jsonv2) als Place, oder None."""
+    """A Nominatim result (jsonv2) as a Place, or None."""
     if not isinstance(result, dict) or 'lat' not in result or 'lon' not in result:
         return None
     try:
@@ -163,14 +161,14 @@ def places_from_search(results):
     return [p for p in (place_from_result(r) for r in results) if p]
 
 
-# --- Kacheln (Web-Mercator) -----------------------------------------------------
+# --- Tiles (Web Mercator) -------------------------------------------------------
 
 def world_size(zoom):
     return TILE_SIZE * (2 ** zoom)
 
 
 def to_pixels(lat, lon, zoom):
-    """Breite/Laenge -> Weltpixel (x, y) bei dieser Zoomstufe."""
+    """Latitude/longitude -> world pixels (x, y) at this zoom level."""
     lat = max(-85.05112878, min(85.05112878, lat))
     size = world_size(zoom)
     x = (lon + 180.0) / 360.0 * size

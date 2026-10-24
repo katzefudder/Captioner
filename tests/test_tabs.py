@@ -1,4 +1,4 @@
-"""Ordner in Tabs, Kopieren per Drop auf einen anderen Tab (offscreen)."""
+"""Folders in tabs, copying by dropping onto another tab (offscreen)."""
 import os
 import time
 from pathlib import Path
@@ -70,14 +70,14 @@ def test_tab_titles_on_windows(monkeypatch):
     monkeypatch.setattr(tabs, 'volume_label', lambda root: {'E:\\': 'NIKON Z 9'}.get(root, ''))
     assert tabs.tab_title('E:\\DCIM\\100NCZ_9') == 'NIKON Z 9 › 100NCZ_9'
     assert tabs.tab_title('E:\\') == 'NIKON Z 9'
-    assert tabs.tab_title('F:\\Fotos') == 'F: › Fotos'           # ohne Bezeichnung: Buchstabe
+    assert tabs.tab_title('F:\\Fotos') == 'F: › Fotos'           # without a label: the drive letter
     assert tabs.tab_title('C:\\Users\\flo\\Pictures\\2026') == '2026'
 
 
 def test_each_folder_gets_a_tab_and_keeps_its_own_state(window, cards):
     a, b = cards
     first = window.open_folder(a)
-    assert window.tabs.count() == 1  # leerer Start-Tab wird benutzt
+    assert window.tabs.count() == 1  # the empty start tab is reused
     second = window.open_folder(b)
     assert window.tabs.count() == 2 and window.tab is second
     assert scanned(first) and scanned(second)
@@ -92,7 +92,7 @@ def test_each_folder_gets_a_tab_and_keeps_its_own_state(window, cards):
     window.tabs.setCurrentWidget(first)
     assert [i.name for i in window._selected_items()] == ['DSC_0002.JPG']
 
-    # schon offen: nur wechseln
+    # already open: just switch
     window.tabs.setCurrentWidget(second)
     assert window.open_folder(a) is first and window.tab is first and window.tabs.count() == 2
 
@@ -107,10 +107,10 @@ def test_tab_context_menu_closes_other_and_all_tabs(window, cards):
     a, b = cards
     first = window.open_folder(a)
     window.open_folder(b, new_tab=True)
-    window.tabs.bar.close_requested.emit([1])            # „Andere Tabs schließen“ an Tab 0
+    window.tabs.bar.close_requested.emit([1])            # "Close other tabs" on tab 0
     assert window.tabs.count() == 1 and window.tab is first
     window.open_folder(b, new_tab=True)
-    window.tabs.bar.close_requested.emit([0, 1])         # „Alle Tabs schließen“
+    window.tabs.bar.close_requested.emit([0, 1])         # "Close all tabs"
     assert window.tabs.count() == 1 and window.folder is None
 
 
@@ -120,7 +120,7 @@ def test_double_click_into_empty_gallery_opens_the_folder_dialog(window, cards, 
     window.view.background_double_clicked.emit()
     assert chosen == [False]
     window.open_folder(cards[0])
-    window.view.background_double_clicked.emit()         # Ordner offen: nichts
+    window.view.background_double_clicked.emit()         # folder open: nothing
     assert chosen == [False]
 
 
@@ -131,14 +131,14 @@ def test_drop_on_other_tab_copies_raw_jpeg_and_sidecar(window, cards):
     assert scanned(source) and scanned(target)
     window.tabs.setCurrentWidget(source)
     window.select_only(window.filtered[0])          # DSC_0001 (NEF + JPG)
-    window.set_rating(3)                              # erzeugt das Sidecar
-    assert window.build_drag_mime() is not None      # schreibt vorher alles
+    window.set_rating(3)                              # creates the sidecar
+    assert window.build_drag_mime() is not None      # writes everything first
     window.copy_dragged_to(target)
     assert wait_until(lambda: not window.copy_worker.isRunning())
     assert sorted(p.name for p in b.iterdir()) == ['DSC_0001.JPG', 'DSC_0001.NEF', 'DSC_0001.xmp', 'DSC_0005.JPG']
     assert (b / 'DSC_0001.NEF').read_bytes() == b'raw1'
     assert sorted(p.name for p in a.iterdir()) == ['DSC_0001.JPG', 'DSC_0001.NEF', 'DSC_0001.xmp', 'DSC_0002.JPG']
-    # danach liest der Ziel-Tab neu ein
+    # afterwards the target tab reloads
     assert wait_until(lambda: any(i.name == 'DSC_0001.JPG' for i in target.all_items)) and scanned(target)
     copied = next(i for i in target.all_items if i.name == 'DSC_0001.JPG')
     assert copied.meta.rating == 3
@@ -220,10 +220,10 @@ def drop_folders(window, widget, folders):
 def test_dropping_two_cards_opens_their_image_folders(window, tmp_path):
     cards = two_cards(tmp_path)
     window.show()
-    # auf die Galerie fallen gelassen: die reicht Ordner ans Fenster weiter
+    # dropped on the gallery: it passes folders on to the window
     drop_folders(window, window.view.viewport(), cards)
     folders = [Path(window.tabs.widget(i).folder) for i in range(window.tabs.count())]
-    # je Bildordner ein Tab, kein leerer Tab bleibt stehen, der erste ist aktiv
+    # one tab per image folder, no empty tab stays, the first one is active
     assert [(f.parent.parent.name, f.name) for f in folders] == [
         ('NIKON Z 9', '100NCZ_9'), ('NIKON Z 9', '101NCZ_9'), ('NIKON Z 8', '100NCZ_8')]
     assert window.tab.folder == str(folders[0])
@@ -250,12 +250,12 @@ def test_many_folders_ask_first(window, tmp_path, monkeypatch):
 
 
 def test_folders_from_finder_open_as_tabs(window, cards, app):
-    """Finder/Dock schicken je Ordner ein QFileOpenEvent an die Application."""
+    """Finder/Dock send one QFileOpenEvent per folder to the application."""
     from PySide6.QtGui import QFileOpenEvent
     from captioner.ui.main_window import OpenRequests
     requests = OpenRequests(app)
     try:
-        for folder in cards:  # kommen vor dem Fenster an: werden gepuffert
+        for folder in cards:  # arrive before the window: buffered
             QtWidgets.QApplication.sendEvent(app, QFileOpenEvent(str(folder)))
         assert window.tabs.count() == 1 and window.folder is None
         requests.set_handler(window.open_paths)
@@ -263,7 +263,7 @@ def test_folders_from_finder_open_as_tabs(window, cards, app):
         assert [window.tabs.widget(i).folder for i in range(2)] == [str(f) for f in cards]
         assert window.tabs.tabText(1) == '100NCZ_9'
 
-        # ein Bild statt eines Ordners: dessen Ordner, schon offen -> kein neuer Tab
+        # an image instead of a folder: its folder, already open -> no new tab
         QtWidgets.QApplication.sendEvent(app, QFileOpenEvent(str(cards[1] / 'DSC_0005.JPG')))
         assert wait_until(lambda: window.tab is window.tabs.widget(1), timeout=5)
         assert window.tabs.count() == 2
@@ -278,7 +278,7 @@ def test_open_dialog_takes_several_folders(window, cards, monkeypatch):
     window.choose_folder()
     assert [window.tabs.widget(i).folder for i in range(window.tabs.count())] == [str(f) for f in cards]
     monkeypatch.setattr(folderdialog, 'choose_folders', lambda parent, title, start='': [])
-    window.choose_folder()  # abgebrochen
+    window.choose_folder()  # cancelled
     assert window.tabs.count() == 2
 
 
@@ -308,12 +308,12 @@ def test_tabs_are_restored_after_restart(app, cards, tmp_path):
     first.close()
 
     settings = config.Settings.load()
-    settings.open_tabs.append(str(tmp_path / 'nicht-eingesteckt'))   # Karte fehlt beim Start
+    settings.open_tabs.append(str(tmp_path / 'nicht-eingesteckt'))   # card missing at start-up
     second = MainWindow(settings)
     try:
         assert [second.tabs.widget(i).folder for i in range(second.tabs.count())] == [str(a), str(b)]
         assert second.tab.folder == str(b)
-        assert second.settings.open_tabs == [str(a), str(b)]   # fehlende fallen raus
+        assert second.settings.open_tabs == [str(a), str(b)]   # missing ones are dropped
     finally:
         second.close()
 
@@ -337,14 +337,14 @@ def test_search_camera_and_time_filters(window, tmp_path):
     names = lambda: [i.name for i in window.filtered]
     assert names() == ['a.jpg', 'b.jpg', 'c.jpg']
 
-    assert wait_until(lambda: window.camera_filter.count() > 1)   # gefuellt, wenn der Scan fertig ist
+    assert wait_until(lambda: window.camera_filter.count() > 1)   # filled once the scan is done
     cameras = [window.camera_filter.itemText(i) for i in range(window.camera_filter.count())]
     assert cameras == ['Alle Kameras', 'NIKON Z 9 · …1234', 'NIKON Z 9 · …5678']
     window.camera_filter.setCurrentIndex(2)
     assert names() == ['b.jpg', 'c.jpg']
     window.camera_filter.setCurrentIndex(0)
 
-    window.time_filter.setChecked(True)                 # schlaegt den Zeitraum der Bilder vor
+    window.time_filter.setChecked(True)                 # suggests the time span of the images
     assert window.time_from.time() == QTime(19, 5) and window.time_to.time() == QTime(21, 30)
     window.time_from.setTime(QTime(20, 0))
     assert names() == ['b.jpg', 'c.jpg']

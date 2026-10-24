@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Entitlements fuer die Hardened Runtime (Pflicht fuer die Notarisierung).
-  Python/ctypes legt ausfuehrbaren Speicher an; ohne dieses Recht stuerzt die App
-  mit Hardened Runtime beim Start ab. Mehr braucht die App nicht: kein Netzwerk-
-  Entitlement (gilt nur in der Sandbox), ExifTool laeuft ueber /usr/bin/perl.
+  Entitlements for the hardened runtime (required for notarization).
+  Python/ctypes allocates executable memory; without this entitlement the app crashes
+  on start-up under the hardened runtime. The app needs nothing else: no network
+  entitlement (only applies in the sandbox), ExifTool runs via /usr/bin/perl.
 -->
 <plist version="1.0">
 <dict>

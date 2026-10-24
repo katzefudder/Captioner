@@ -1,4 +1,4 @@
-"""Rechtschreibpruefung der Beschreibung (macOS NSSpellChecker)."""
+"""Spell checking of the caption (macOS NSSpellChecker)."""
 import os
 import sys
 
@@ -19,7 +19,7 @@ def app():
 
 def test_utf16_positions():
     text = 'a 🏒 Jubbel'
-    assert spelling.utf16_slice(text, 5, 6) == 'Jubbel'          # 🏒 sind zwei UTF-16-Einheiten
+    assert spelling.utf16_slice(text, 5, 6) == 'Jubbel'          # 🏒 is two UTF-16 units
     import re
     assert spelling.utf16_spans('x #bn23# 🏒 #kh7#', re.compile(r'#\w+#')) == [(2, 8), (12, 17)]
 
@@ -30,7 +30,7 @@ def test_codes_and_roster_names_are_not_flagged(app):
     assert checker is not None
     if 'de' not in checker.languages():
         pytest.skip('kein deutsches Woerterbuch auf diesem Mac')
-    document = QTextDocument()   # festhalten: der Highlighter haengt am Dokument
+    document = QTextDocument()   # keep a reference: the highlighter hangs on the document
     highlighter = spelling.SpellHighlighter(document, checker)
     highlighter.language = 'de'
     highlighter.set_known_words(['-23- Marius Erk (EC Bad Nauheim)'])

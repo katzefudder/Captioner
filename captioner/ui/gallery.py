@@ -1,7 +1,6 @@
 """
-Galerie: alle Kacheln eines Ordners, Tastaturbedienung wie in einem
-Workflow-Tool fuer die Auswahl von Fotos,
-Drag & Drop nach Lightroom (ADR 0001, Punkte 3 und 7).
+Gallery: all tiles of a folder, keyboard operation as in a photo culling workflow
+tool, drag & drop to Lightroom (ADR 0001, items 3 and 7).
 """
 import collections
 
@@ -13,16 +12,16 @@ from ..i18n import _
 
 ItemRole = Qt.ItemDataRole.UserRole + 1
 
-TILE_W, TILE_H = 220, 210          # Voreinstellung (Settings.thumbnail_size)
-MIN_TILE_W, MAX_TILE_W = 140, 480  # Bereich des Reglers
+TILE_W, TILE_H = 220, 210          # default (Settings.thumbnail_size)
+MIN_TILE_W, MAX_TILE_W = 140, 480  # range of the slider
 IMAGE_H = 150
 
 
 def tile_size(width):
-    """Kachel (Breite, Hoehe) und Bildhoehe zu einer Breite; Bildbereich im Verhaeltnis 196:150."""
+    """Tile (width, height) and image height for a width; image area in a 196:150 ratio."""
     image_h = round((width - 24) * IMAGE_H / (TILE_W - 24))
     return width, image_h + TILE_H - IMAGE_H, image_h
-FRAME_W = 5  # Rahmen in der Farbklasse ums Foto
+FRAME_W = 5  # frame in the color class around the photo
 
 LABEL_COLORS = {
     'red': '#d64541', 'rot': '#d64541',
@@ -33,8 +32,8 @@ LABEL_COLORS = {
 }
 
 
-# Farbklassen 1-8; 1-3 entsprechen den vorhandenen Sidecars
-# im Archiv (1 Winner = Red, 2 Winner alt = Yellow, 3 Superior = Green)
+# Color classes 1-8; 1-3 match the existing sidecars in the archive
+# (1 Winner = Red, 2 Winner alt = Yellow, 3 Superior = Green)
 CLASS_COLORS = {1: '#d64541', 2: '#e6b800', 3: '#3fa34d', 4: '#3b7dd8', 5: '#8e5bc8',
                 6: '#e67e22', 7: '#16a085', 8: '#7f8c8d'}
 
@@ -44,7 +43,7 @@ def label_color(label):
 
 
 def item_color(meta):
-    """Farbe der Kachel: Farbklasse, sonst Lightroom-Label, sonst None."""
+    """Color of the tile: color class, otherwise Lightroom label, otherwise None."""
     if meta.color_class:
         return QColor(CLASS_COLORS[meta.color_class])
     if meta.label:
@@ -61,7 +60,7 @@ class GalleryModel(QAbstractListModel):
         loader.ready.connect(self._thumbnail_ready)
 
     def set_items(self, items):
-        """Neu aufbauen nur, wenn sich die Liste aendert (ein Reset springt nach oben)."""
+        """Rebuild only if the list changes (a reset jumps to the top)."""
         items = list(items)
         if items == self.items:
             return False
@@ -117,7 +116,7 @@ class TileDelegate(QStyledItemDelegate):
         self.loader = loader
         self.writer = writer
         self.tile_w, self.tile_h, self.image_h = tile_size(TILE_W)
-        # Fertig skalierte Vorschauen: Skalieren bei jedem Neuzeichnen machte grosse Kacheln traege
+        # previews already scaled: scaling on every repaint made large tiles sluggish
         self._scaled = collections.OrderedDict()
 
     def set_tile_width(self, width):
@@ -130,7 +129,7 @@ class TileDelegate(QStyledItemDelegate):
     SCALED_LIMIT = 400
 
     def _scaled_pixmap(self, key, image, size, dpr):
-        """Vorschau auf size (logische Pixel), scharf auf Retina (devicePixelRatio)."""
+        """Preview at size (logical pixels), sharp on Retina (devicePixelRatio)."""
         cache_key = (key, image.cacheKey(), size.width(), size.height(), dpr)
         pixmap = self._scaled.get(key)
         if pixmap is not None and pixmap[0] == cache_key:
@@ -173,10 +172,10 @@ class TileDelegate(QStyledItemDelegate):
             painter.drawRect(image_rect)
             photo_rect = image_rect
 
-        # Farbklasse als Rahmen direkt ums Foto, aussen anliegend
+        # color class as a frame right around the photo, on the outside
         color = item_color(item.meta)
         if color is not None:
-            half = FRAME_W / 2  # Innenkante genau auf der Bildkante, ohne Spalt
+            half = FRAME_W / 2  # inner edge exactly on the image edge, without a gap
             painter.setPen(QPen(color, FRAME_W, Qt.PenStyle.SolidLine, Qt.PenCapStyle.SquareCap,
                                 Qt.PenJoinStyle.MiterJoin))
             painter.setBrush(Qt.BrushStyle.NoBrush)
@@ -194,7 +193,7 @@ class TileDelegate(QStyledItemDelegate):
         painter.drawText(name_rect, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, item.kind)
 
         status_rect = QRect(rect.left() + 8, line_y + 16, rect.width() - 16, 16)
-        # Tag-Kaestchen, davor die Sterne
+        # tag checkbox, the stars before it
         tag = '☑' if item.meta.tagged else '☐'
         stars = '★' * item.meta.rating + '☆' * (5 - item.meta.rating)
         painter.drawText(status_rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, f'{tag} {stars}')
@@ -217,13 +216,13 @@ class TileDelegate(QStyledItemDelegate):
 
 
 class GalleryView(QListView):
-    # Alle Kuerzel haengen als QShortcut am View, siehe keymap.py.
-    files_dropped = Signal()  # Bilder aus der Galerie eines anderen Tabs hierher gezogen
-    visible_changed = Signal()  # gescrollt, Groesse oder Inhalt geaendert: Kacheln nachladen
-    context_menu_requested = Signal(object)  # globale Position; die Auswahl ist schon angepasst
-    background_double_clicked = Signal()  # Doppelklick neben die Kacheln (leere Galerie: Ordner oeffnen)
+    # All shortcuts hang on the view as QShortcut, see keymap.py.
+    files_dropped = Signal()  # images dragged here from another tab's gallery
+    visible_changed = Signal()  # scrolled, size or content changed: load tiles
+    context_menu_requested = Signal(object)  # global position; the selection is already adjusted
+    background_double_clicked = Signal()  # double-click next to the tiles (empty gallery: open a folder)
 
-    FALLBACK_ROWS = 100  # solange das Layout noch nicht steht
+    FALLBACK_ROWS = 100  # as long as the layout is not ready
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -236,13 +235,13 @@ class GalleryView(QListView):
         self.setDragEnabled(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
         self.setDefaultDropAction(Qt.DropAction.CopyAction)
-        # Drops nur aus anderen Galerien (Tabs), siehe dragEnterEvent
+        # drops only from other galleries (tabs), see dragEnterEvent
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(False)
         self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
-        self.mime_factory = None  # liefert QMimeData fuer die gesamte Auswahl, oder None
-        self.empty_text = ''      # Hinweis mit Logo, solange die Galerie leer ist
-        # Beim Scrollen nicht fuer jedes Pixel Kacheln anfordern
+        self.mime_factory = None  # returns QMimeData for the whole selection, or None
+        self.empty_text = ''      # notice with logo while the gallery is empty
+        # don't request tiles for every pixel while scrolling
         self._visible_timer = QTimer(self, singleShot=True, interval=40)
         self._visible_timer.timeout.connect(self.visible_changed)
         self.verticalScrollBar().valueChanged.connect(self.schedule_visible)
@@ -252,12 +251,12 @@ class GalleryView(QListView):
         model.modelReset.connect(self.schedule_visible)
 
     def set_tile_width(self, width):
-        """Kachelgroesse aendern (Regler); das Bild unter dem Cursor bleibt im Blick."""
+        """Change the tile size (slider); the image under the cursor stays in view."""
         delegate = self.itemDelegate()
         if not isinstance(delegate, TileDelegate) or delegate.tile_w == width:
             return
         delegate.set_tile_width(width)
-        # gleich grosse Kacheln: Qt merkt sich die Groesse, erst setUniformItemSizes vergisst sie
+        # uniform tiles: Qt remembers the size, only setUniformItemSizes forgets it
         self.setUniformItemSizes(False)
         self.setUniformItemSizes(True)
         self.doItemsLayout()
@@ -273,7 +272,7 @@ class GalleryView(QListView):
         self.schedule_visible()
 
     def contextMenuEvent(self, event):
-        """Wie im Finder: Rechtsklick auf ein nicht ausgewaehltes Bild waehlt nur dieses."""
+        """As in Finder: right-clicking an unselected image selects only that one."""
         index = self.indexAt(event.pos())
         if not index.isValid():
             return
@@ -295,8 +294,8 @@ class GalleryView(QListView):
 
     def visible_rows(self):
         """
-        (erste, letzte) Zeile im sichtbaren Bereich, aus dem Raster gerechnet (gleich grosse
-        Kacheln, zeilenweise): kein Durchlaufen tausender Kacheln beim Scrollen.
+        (first, last) row in the visible area, computed from the grid (uniform tiles, row by
+        row): no iterating over thousands of tiles while scrolling.
         """
         model = self.model()
         count = model.rowCount() if model is not None else 0
@@ -310,7 +309,7 @@ class GalleryView(QListView):
             columns += 1
         line_height = (self.visualRect(model.index(columns)).top() - first_rect.top()) if columns < count else 0
         if line_height <= 0:
-            return 0, count - 1  # nur eine Zeile
+            return 0, count - 1  # only one row
         area = self.viewport().rect()
         first_line = max(0, (area.top() - first_rect.top()) // line_height)
         last_line = max(first_line, (area.bottom() - first_rect.top()) // line_height)
@@ -346,7 +345,7 @@ class GalleryView(QListView):
             event.setDropAction(Qt.DropAction.CopyAction)
             event.accept()
         else:
-            event.ignore()  # Ordner, Templates usw. nimmt das Hauptfenster
+            event.ignore()  # folders, templates etc. are handled by the main window
 
     def dragMoveEvent(self, event):
         if self._accepts(event):

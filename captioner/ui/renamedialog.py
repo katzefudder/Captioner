@@ -1,7 +1,7 @@
 """
-"Bilder umbenennen …": ein Feld fuer den Namen (vorgeschlagen Datum + zuletzt benutzte Kuerzel),
-dahinter haengt Captioner die Nummer an; Vorschau des ersten und letzten Namens. Gerechnet und
-umbenannt wird in captioner.rename (MainWindow.rename_folder).
+"Rename images …": one field for the name (suggested: date + abbreviations used last),
+Captioner appends the number; preview of the first and last name. Computing and renaming
+happen in captioner.rename (MainWindow.rename_folder).
 """
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QVBoxLayout
 
@@ -16,7 +16,7 @@ class RenameDialog(QDialog):
         self.count = count
 
         form = QFormLayout()
-        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)  # macOS: sonst schmal
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)  # macOS: otherwise narrow
         self.name = QLineEdit(prefix)
         self.name.setPlaceholderText(_('z. B. {example}').format(example=f'{rename.today()}_MEM_EPC'))
         form.addRow(_('Name'), self.name)

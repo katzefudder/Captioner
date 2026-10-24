@@ -1,4 +1,4 @@
-"""Uebersetzungen: vollstaendig, Platzhalter gleich, .mo aktuell, keine f-Strings in _()."""
+"""Translations: complete, same placeholders, .mo up to date, no f-strings in _()."""
 import ast
 import re
 import string
@@ -61,7 +61,7 @@ def test_compiled_catalog_is_up_to_date(english):
 
 
 def test_no_formatted_strings_inside_translation_calls():
-    """_(f'…') oder _('a' + b) findet gettext nicht: nur Literale."""
+    """gettext can't find _(f'…') or _('a' + b): literals only."""
     for path in (ROOT / 'captioner').rglob('*.py'):
         tree = ast.parse(path.read_text(encoding='utf-8'))
         for node in ast.walk(tree):
@@ -69,7 +69,7 @@ def test_no_formatted_strings_inside_translation_calls():
                 count = 2 if node.func.id == 'ngettext' else 1
                 for arg in node.args[:count]:
                     ok = isinstance(arg, ast.Constant) and isinstance(arg.value, str)
-                    # _(variable) ist erlaubt: uebersetzt Werte, die anderswo mit N_ markiert sind
+                    # _(variable) is allowed: translates values marked with N_ elsewhere
                     ok = ok or (node.func.id == '_' and not isinstance(arg, (ast.JoinedStr, ast.BinOp)))
                     assert ok, f'{path.name}:{node.lineno}: {ast.unparse(node)}'
 
@@ -98,7 +98,7 @@ def test_german_is_the_source(english):
 
 
 def test_english_ui_builds(english, tmp_path, monkeypatch):
-    """Hauptfenster, Dialoge und Kuerzel-Uebersicht auf Englisch, ohne Fehler beim Formatieren."""
+    """Main window, dialogs and shortcut overview in English, without formatting errors."""
     import os
     os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
     QtWidgets = pytest.importorskip('PySide6.QtWidgets')

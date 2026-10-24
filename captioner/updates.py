@@ -1,8 +1,8 @@
 """
-Neue Version auf GitHub? Ohne Qt: URL, Auswertung, Vergleich. Das Netz macht die UI.
+New version on GitHub? Without Qt: URL, parsing, comparison. The UI does the networking.
 
-Releases heissen v<major>.<minor>.<laufnummer> (siehe .github/workflows/release.yml).
-Ein privates Repository liefert ohne Anmeldung 404: dann gibt es schlicht keinen Hinweis.
+Releases are named v<major>.<minor>.<run number> (see .github/workflows/release.yml).
+A private repository answers 404 without login: then there is simply no notice.
 """
 import re
 import time
@@ -13,7 +13,7 @@ INTERVAL_SECONDS = 24 * 60 * 60
 
 
 def parse_version(text):
-    """'v0.1.20' -> (0, 1, 20); keine Versionsnummer -> None."""
+    """'v0.1.20' -> (0, 1, 20); no version number -> None."""
     match = re.match(r'^v?(\d+(?:\.\d+)*)$', (text or '').strip())
     return tuple(int(part) for part in match.group(1).split('.')) if match else None
 
@@ -24,7 +24,7 @@ def is_newer(latest, current):
 
 
 def parse_release(data):
-    """GitHub-Antwort -> (Version ohne 'v', Seite des Releases) oder None."""
+    """GitHub response -> (version without 'v', release page) or None."""
     if not isinstance(data, dict) or data.get('draft') or data.get('prerelease'):
         return None
     tag = data.get('tag_name') or ''

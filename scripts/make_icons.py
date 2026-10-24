@@ -1,11 +1,11 @@
 """
-Erzeugt alle Icons aus captioner/resources/logo.svg:
+Generates all icons from captioner/resources/logo.svg:
 
-    captioner/resources/logo_<n>.png   Fenster-/Dock-Icon (QIcon mit mehreren Groessen)
-    captioner/resources/captioner.icns macOS-App (PyInstaller --icon)
-    captioner/resources/captioner.ico  Windows-App
+    captioner/resources/logo_<n>.png   window/Dock icon (QIcon with several sizes)
+    captioner/resources/captioner.icns macOS app (PyInstaller --icon)
+    captioner/resources/captioner.ico  Windows app
 
-Aufruf: make icons (braucht macOS fuer iconutil; .png und .ico gehen ueberall).
+Run: make icons (needs macOS for iconutil; .png and .ico work anywhere).
 """
 import shutil
 import subprocess
@@ -20,7 +20,7 @@ from PySide6.QtSvg import QSvgRenderer
 
 RESOURCES = Path(__file__).resolve().parent.parent / 'captioner' / 'resources'
 PNG_SIZES = [16, 32, 64, 128, 256, 512]
-ICONSET = {  # Dateiname im .iconset -> Kantenlaenge
+ICONSET = {  # file name in the .iconset -> edge length
     'icon_16x16.png': 16, 'icon_16x16@2x.png': 32, 'icon_32x32.png': 32, 'icon_32x32@2x.png': 64,
     'icon_128x128.png': 128, 'icon_128x128@2x.png': 256, 'icon_256x256.png': 256,
     'icon_256x256@2x.png': 512, 'icon_512x512.png': 512, 'icon_512x512@2x.png': 1024,

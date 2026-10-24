@@ -12,7 +12,7 @@ def template(**kwargs):
 
 def test_headline_has_the_format_recognition_parses():
     import re
-    # Muster aus app/recognition/lib/matches.py
+    # pattern from app/recognition/lib/matches.py
     pattern = re.compile(r'^(?P<occasion>.+?)\s+-\s+(?P<home>.+?)\s+gegen\s+(?P<away>.+?)$')
     match = pattern.match(template().headline)
     assert match.group('home') == 'EC Bad Nauheim'
@@ -71,7 +71,7 @@ def test_file_with_umlauts_and_without_name(tmp_path):
     path = tmp_path / 'Regensburg.toml'
     path.write_text('occasion = "DEL 2"\nhome = "EC Bad Nauheim"\naway = "Eisbären Regensburg"\n', encoding='utf-8')
     loaded = templates.load_file(path)
-    assert loaded.headline == 'DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg'  # Version 1 umgerechnet
+    assert loaded.headline == 'DEL 2 - EC Bad Nauheim gegen Eisbären Regensburg'  # version 1 converted
     assert loaded.name == 'Regensburg'
 
 
@@ -145,7 +145,7 @@ def test_version_1_without_teams_has_no_headline(tmp_path):
     loaded = templates.load_file(path)
     assert loaded.headline == '' and loaded.teams == [] and loaded.name == 'DEL2 Heimspiele'
     assert loaded.keywords == ['Bad Nauheim', 'Eishockey']
-    # Anhang mit dem Titel des Bildes statt eines festen
+    # suffix with the image's headline instead of a fixed one
     assert loaded.compose_caption('Jubel', '', headline='DEL 2 - A gegen B', city='Bad Nauheim') == \
         'Jubel, DEL 2 - A gegen B, Bad Nauheim'
 
@@ -174,11 +174,11 @@ def test_rights_and_location_roundtrip(tmp_path):
     assert 'home' not in text and 'occasion' not in text
     assert templates.load_file(path) == saved
     assert saved.fixed_values() == RIGHTS
-    assert template(creator='X').fixed_values() == {'creator': 'X'}  # leere Felder fehlen
+    assert template(creator='X').fixed_values() == {'creator': 'X'}  # empty fields are missing
 
 
 def test_the_users_version_1_file(tmp_path):
-    """Datei aus Version 1, wie sie im Umlauf ist."""
+    """File from version 1, as found in the wild."""
     from captioner import templates
     path = tmp_path / 'EC_Bad_Nauheim_gegen_Kassel_Huskies.toml'
     path.write_text('''# Captioner Spiel-Template (siehe docs/adr/0001-*.md)
@@ -197,7 +197,7 @@ caption_suffix = ", {headline}, {city}, {sublocation}, {date}"
     assert loaded.headline == 'DEL 2 - EC Bad Nauheim gegen EC Kassel Huskies'
     assert loaded.teams == ['EC Bad Nauheim', 'EC Kassel Huskies']
     assert loaded.keywords == ['EC Bad Nauheim', 'EC Kassel Huskies', 'Bad Nauheim', 'del2', 'kassel']
-    # Wieder gespeichert: Version 2 ohne occasion/home/away
+    # saved again: version 2 without occasion/home/away
     templates.save_file(loaded, path)
     text = path.read_text(encoding='utf-8')
     assert 'version = 2' in text and 'home' not in text
@@ -211,8 +211,8 @@ def test_suffix_with_rights_fields_uses_image_value_when_template_is_empty():
                       caption_suffix=', {headline}, Foto: {creator}, {copyright}, {source}')
     meta = Metadata(creator='Kamera-Artist', copyright='© 2026 Bild')
     values = t.field_values(meta)
-    assert values['creator'] == 'Florian Dehn'        # Template gefuellt: gewinnt
-    assert values['copyright'] == '© 2026 Bild'       # Template leer: Wert des Bildes
+    assert values['creator'] == 'Florian Dehn'        # template filled: wins
+    assert values['copyright'] == '© 2026 Bild'       # template empty: the image's value
     assert t.compose_caption('Jubel', **values) == 'Jubel, DEL 2 - A gegen B, Foto: Florian Dehn, © 2026 Bild'
 
 
@@ -229,17 +229,17 @@ def test_fixed_date_replaces_capture_date(tmp_path):
     assert t.date_mismatch('2026:10:13 19:30:00') is None
 
 
-# --- Template aus einem beschrifteten Foto ---------------------------------------------
+# --- Template from a captioned photo ---------------------------------------------------
 
 def test_derive_suffix_from_a_captioned_photo():
     from captioner.templates import derive_suffix
     values = {'headline': 'DEL 2 - EC Bad Nauheim gegen ESV Kaufbeuren', 'city': 'Bad Nauheim',
               'date': '20.02.24', 'creator': 'Florian Dehn', 'caption_writer': 'Florian Dehn'}
     caption = 'Hellvis (Maskottchen), DEL 2 - EC Bad Nauheim gegen ESV Kaufbeuren, Bad Nauheim, , 20.02.24'
-    # leeres Segment nach der Stadt: dort stand der (leere) Ort
+    # empty segment after the city: that is where the (empty) location was
     assert derive_suffix(caption, values) == ', {headline}, {city}, {sublocation}, {date}'
-    assert derive_suffix('Jubel, Florian Dehn', values) == ', {creator}'          # Vorrang: Fotograf
-    assert derive_suffix('Jubel in Bad Nauheim', values) == ''                   # kein eigenes Segment
+    assert derive_suffix('Jubel, Florian Dehn', values) == ', {creator}'          # precedence: photographer
+    assert derive_suffix('Jubel in Bad Nauheim', values) == ''                   # no segment of its own
     assert derive_suffix('Jubel', values) == '' and derive_suffix('', values) == ''
 
 
@@ -258,9 +258,9 @@ def test_template_from_photo_metadata():
     assert (template.city, template.country, template.creator, template.category) == (
         'Bad Nauheim', 'Deutschland', 'Florian Dehn', 'Eishockey')
     assert template.caption_suffix == ', {headline}, {city}, {sublocation}, {date}'
-    # Teams, Stadt und Personen kommen ohnehin dazu, sie gehoeren nicht in die Zusatz-Tags
+    # teams, city and people are added anyway, they don't belong in the extra tags
     assert template.extra_tags == ['DEL2', 'Eishockey', 'Rote Teufel']
     assert template.date == '' and template.latitude is None
-    # derselbe Anhang wie im Bild
+    # the same suffix as in the image
     assert template.compose_caption('-23- Max Muster (EC Bad Nauheim) jubelt', '2024:02:20 19:20:19') == \
         meta.caption.replace(', , ', ', ')

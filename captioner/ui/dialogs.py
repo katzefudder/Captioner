@@ -1,4 +1,4 @@
-"""Template-, Einstellungs- und Grossansicht-Dialog."""
+"""Template, settings and shortcuts dialogs."""
 import html
 import re
 
@@ -20,8 +20,8 @@ from ..templates import DEFAULT_CAPTION_SUFFIX, MatchTemplate, parse_headline
 ROSTER_FILE_FILTER = N_('Roster-Dateien (*.txt *.tsv *.csv);;Alle Dateien (*)')
 
 
-# Platzhalter im Anhang: Feld, aus dem der Wert kommt, und eine Farbe, die Legende, Feldname,
-# Vorschau und Rahmen verbindet (auf hellem und dunklem Grund lesbar)
+# Placeholders in the suffix: the field the value comes from, and a color that connects
+# legend, field name, preview and frame (readable on light and dark backgrounds)
 SUFFIX_PLACEHOLDERS = [
     ('headline', N_('Titel'), '#3b7dd8'), ('city', N_('Stadt'), '#3fa34d'),
     ('sublocation', N_('Ort / Halle'), '#e67e22'), ('state', N_('Bundesland'), '#16a085'),
@@ -38,12 +38,12 @@ PLACEHOLDER_PATTERN = re.compile(r'\{(\w+)\}')
 
 
 class MultiLineField(QPlainTextEdit):
-    """Mehrzeiliges Feld mit der Schnittstelle von QLineEdit, die der Dialog nutzt (text())."""
+    """Multi-line field with the QLineEdit interface the dialog uses (text())."""
 
     def __init__(self, value='', placeholder='', lines=4, parent=None):
         super().__init__(value, parent)
         self.setPlaceholderText(placeholder)
-        self.setTabChangesFocus(True)   # Tab springt weiter, wie in den einzeiligen Feldern
+        self.setTabChangesFocus(True)   # Tab moves on, as in the single-line fields
         metrics = self.fontMetrics()
         self.setFixedHeight(metrics.lineSpacing() * lines + 2 * round(self.document().documentMargin()) + 8)
 
@@ -56,19 +56,19 @@ def _split(text):
 
 
 class TemplateDialog(QDialog):
-    """Template bearbeiten: Ort, Urheber und Rechte, Tags, Anhang, optional ein fester Titel."""
+    """Edit a template: location, creator and rights, tags, suffix, optionally a fixed headline."""
 
     def __init__(self, template: MatchTemplate, places=None, parent=None):
         super().__init__(parent)
         self.places = places if places is not None else geo.PlaceBook()
         self.places_changed = False
         self.setWindowTitle(_('Template'))
-        self.setMinimumWidth(760)   # Platz fuer die Legende der Platzhalter in drei Spalten
+        self.setMinimumWidth(760)   # room for the legend of the placeholders in three columns
         template = template or MatchTemplate()
-        # Felder scrollen (der Dialog ist hoeher als ein kleiner Laptop-Bildschirm), Knoepfe fest darunter
+        # fields scroll (the dialog is taller than a small laptop screen), buttons fixed below
         content = QWidget()
         form = QFormLayout(content)
-        # macOS-Standard laesst Felder auf Mindestbreite; hier sollen sie den Dialog fuellen
+        # the macOS default keeps fields at minimum width; here they should fill the dialog
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         def field(value, placeholder=''):
@@ -95,7 +95,7 @@ class TemplateDialog(QDialog):
         city_row = QHBoxLayout()
         city_row.addWidget(self.city, 1)
         city_row.addWidget(map_button)
-        # Koordinaten aus der Datei, solange Stadt/Ort nicht geaendert werden
+        # coordinates from the file, as long as city/location are not changed
         self._file_place = geo.Place(template.city, template.sublocation, template.latitude, template.longitude)
         self.country_code = field(template.country_code, _('DEU (drei Buchstaben, ISO 3166)'))
         self.creator = field(template.creator, _('Vor- und Nachname'))
@@ -145,10 +145,10 @@ class TemplateDialog(QDialog):
         form.addRow(_('Kategorie'), self.category)
         form.addRow(_('Zusatz-Tags'), self.extra_tags)
         form.addRow(_('Anhang'), self.suffix)
-        # Legende: welcher Platzhalter woher kommt; Klick fuegt ihn an der Cursorposition ein
+        # legend: where each placeholder comes from; a click inserts it at the cursor position
         form.addRow('', self._placeholder_box())
-        # Feldnamen, deren Wert im Anhang landet, bekommen einen Punkt in der Farbe des Platzhalters
-        # Die Feld-Widgets heissen wie die Platzhalter (self.city, self.creator, ...)
+        # field names whose value ends up in the suffix get a dot in the placeholder's color
+        # The field widgets are named like the placeholders (self.city, self.creator, ...)
         self._suffix_sources = {key: getattr(self, key) for key, _label, _color in SUFFIX_PLACEHOLDERS}
         self._source_labels = {key: (form.labelForField(city_row if key == 'city' else edit), _(label))
                                for key, label, _color in SUFFIX_PLACEHOLDERS
@@ -159,7 +159,7 @@ class TemplateDialog(QDialog):
                                   'des Bildes stehen. Heim und Gast stehen im Titel und ergeben sich aus den '
                                   'Codes in der Beschreibung.') + '</small>')
         note.setWordWrap(True)
-        note.setMinimumWidth(560)   # wie suffix_preview: sonst zu hoch geschaetzt, Luecke darueber
+        note.setMinimumWidth(560)   # like suffix_preview: otherwise estimated too tall, gap above it
         note.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         form.addRow('', note)
 
@@ -174,7 +174,7 @@ class TemplateDialog(QDialog):
         outer = QVBoxLayout(self)
         outer.addWidget(self.scroll, 1)
         outer.addWidget(self.buttons)
-        # so hoch wie der Inhalt, hoechstens 90 % des Bildschirms
+        # as tall as the content, at most 90 % of the screen
         screen = (parent.screen() if parent is not None else None) or QApplication.primaryScreen()
         available = screen.availableGeometry().height() if screen is not None else 900
         content.adjustSize()
@@ -187,8 +187,8 @@ class TemplateDialog(QDialog):
 
     def _placeholder_box(self):
         """
-        Kasten unter dem Anhang: Platzhalter als farbige Chips (Klick fuegt ein) mit dem Feld,
-        aus dem der Wert kommt, darunter das Ergebnis.
+        Box below the suffix: placeholders as colored chips (a click inserts) with the field
+        the value comes from, below that the result.
         """
         box = QFrame()
         box.setObjectName('placeholderBox')
@@ -207,9 +207,9 @@ class TemplateDialog(QDialog):
             chip = self._chips[key] = QPushButton('{' + key + '}')
             bold = chip.font()
             bold.setBold(True)
-            chip.setFont(bold)   # als Font, nicht im Stylesheet: sonst rechnet die Breite ohne Fettdruck
-            chip.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)   # nie stauchen
-            chip.setFocusPolicy(Qt.FocusPolicy.NoFocus)   # Tab springt weiter von Feld zu Feld
+            chip.setFont(bold)   # as a font, not in the style sheet: otherwise the width is computed without bold
+            chip.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)   # never squeeze
+            chip.setFocusPolicy(Qt.FocusPolicy.NoFocus)   # Tab moves on from field to field
             chip.setCursor(Qt.CursorShape.PointingHandCursor)
             chip.setToolTip(_('Fügt {placeholder} in den Anhang ein').format(placeholder='{' + key + '}'))
             chip.clicked.connect(lambda _checked=False, key=key: self._insert_placeholder(key))
@@ -226,7 +226,7 @@ class TemplateDialog(QDialog):
 
         self.suffix_preview = QLabel()
         self.suffix_preview.setWordWrap(True)
-        # Umbrochenes Label schaetzt seine Hoehe fuer eine schmale Breite: Platz unter dem Kasten
+        # a wrapped label estimates its height for a narrow width: room below the box
         self.suffix_preview.setMinimumWidth(560)
         self.suffix_preview.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.suffix_preview)
@@ -235,20 +235,20 @@ class TemplateDialog(QDialog):
         self._style_placeholder_box()
         return box
 
-    # Farben aus dem aktuellen Erscheinungsbild (macOS hell/dunkel), nicht fest: festes Grau
-    # und die dunkleren Platzhalter-Farben sind auf schwarzem Grund schlecht lesbar
+    # Colors from the current appearance (macOS light/dark), not fixed: a fixed grey
+    # and the darker placeholder colors are hard to read on a black background
 
     def _dark(self):
         return self.palette().window().color().lightness() < 128
 
     def _color(self, key):
-        """Farbe eines Platzhalters, im Dark Mode aufgehellt."""
+        """Color of a placeholder, lightened in dark mode."""
         color = QColor(PLACEHOLDER_COLORS[key])
         return color.lighter(140).name() if self._dark() else color.name()
 
     def _muted(self):
-        """Zuruecknehmende Textfarbe: Textfarbe mit weniger Deckkraft statt festem Grau."""
-        # Gemischt statt rgba(): Qts HTML in QLabel kennt keine Deckkraft
+        """Muted text color: text color with less opacity instead of a fixed grey."""
+        # mixed instead of rgba(): Qt's HTML in QLabel doesn't know opacity
         text, window = self.palette().windowText().color(), self.palette().window().color()
         mix = [round(a * 0.6 + b * 0.4) for a, b in zip(text.getRgb()[:3], window.getRgb()[:3])]
         return QColor(*mix).name()
@@ -272,7 +272,7 @@ class TemplateDialog(QDialog):
                 f'QPushButton:hover {{ background: rgba({rgb}, {hover}); }}')
 
     def changeEvent(self, event):
-        """Erscheinungsbild umgeschaltet, waehrend der Dialog offen ist."""
+        """Appearance switched while the dialog is open."""
         super().changeEvent(event)
         if event.type() == QEvent.Type.PaletteChange and hasattr(self, '_chips'):
             self._style_placeholder_box()
@@ -289,7 +289,7 @@ class TemplateDialog(QDialog):
         return super().eventFilter(watched, event)
 
     def placeholder_at_cursor(self):
-        """Platzhalter, in dem der Cursor im Anhang steht, sonst None."""
+        """Placeholder the cursor is on in the suffix, otherwise None."""
         position = self.suffix.cursorPosition()
         for match in PLACEHOLDER_PATTERN.finditer(self.suffix.text()):
             if match.start() <= position <= match.end() and match.group(1) in PLACEHOLDER_COLORS:
@@ -297,7 +297,7 @@ class TemplateDialog(QDialog):
         return None
 
     def _highlight_source(self):
-        """Steht der Cursor im Anhang auf {city}, wird das Feld Stadt farbig umrandet."""
+        """If the cursor in the suffix is on {city}, the city field gets a colored outline."""
         key = self.placeholder_at_cursor() if self.suffix.hasFocus() else None
         for name, edit in self._suffix_sources.items():
             kind = 'QPlainTextEdit' if isinstance(edit, QPlainTextEdit) else 'QLineEdit'
@@ -305,10 +305,10 @@ class TemplateDialog(QDialog):
                                if name == key else '')
 
     def suffix_preview_html(self):
-        """Beispiel: Beschreibung mit Anhang, eingesetzte Werte in der Farbe ihres Platzhalters."""
+        """Example: caption with suffix, inserted values in the color of their placeholder."""
         template = MatchTemplate(caption_suffix=self.suffix.text())
         values = {
-            # Leer im Template: beim Speichern kommt der Wert aus dem Panel bzw. aus dem Bild
+            # empty in the template: when saving the value comes from the panel or the image
             'headline': self.headline.text().strip() or _('Titel aus dem Panel'),
             'city': self.city.text().strip() or _('Stadt aus dem Panel'),
             'sublocation': self.sublocation.text().strip() or _('Ort aus dem Panel'),
@@ -316,7 +316,7 @@ class TemplateDialog(QDialog):
         for key, (_label, text) in self._source_labels.items():
             if key not in values:
                 values[key] = self._suffix_sources[key].text().strip() or _('{field} (vom Bild)').format(field=text)
-        # Steuerzeichen als Marken: ueberstehen das Aufraeumen der Kommas und html.escape
+        # control characters as markers: they survive the comma clean-up and html.escape
         text = template.compose_caption('\x05', mark=lambda key, value: f'\x01{key}\x02{value}\x03', **values)
         text = html.escape(text)
         text = re.sub('\x01(\\w+)\x02(.*?)\x03',
@@ -331,7 +331,7 @@ class TemplateDialog(QDialog):
             place = dialog.place()
             self.city.setText(place.city)
             self.sublocation.setText(place.sublocation)
-            # Bundesland und Land liefert die Adresssuche gleich mit
+            # the address search also returns state and country
             if place.state:
                 self.state.setText(place.state)
             if place.country:
@@ -346,7 +346,7 @@ class TemplateDialog(QDialog):
             self.sublocation.setText(place.sublocation)
 
     def _place(self):
-        """Stadt/Ort aus den Feldern, Koordinaten aus dem Ortsbuch oder der Datei."""
+        """City/location from the fields, coordinates from the place book or the file."""
         city, sublocation = self.city.text().strip(), self.sublocation.text().strip()
         known = self.places.lookup(city, sublocation)
         if known and known.has_coordinates:
@@ -356,13 +356,13 @@ class TemplateDialog(QDialog):
         return geo.Place(city, sublocation)
 
     def _too_long(self):
-        """Zu lange Felder (IPTC-Grenzen)."""
+        """Fields that are too long (IPTC limits)."""
         template = self.template()
         return metadata.validate(Metadata(headline=template.headline, city=template.city,
                                           sublocation=template.sublocation, **template.fixed_values()))
 
     def problems(self):
-        """Zu lange Felder (IPTC-Grenzen) und ein Titel im falschen Format."""
+        """Fields that are too long (IPTC limits) and a headline in the wrong format."""
         problems = self._too_long()
         headline = self.headline.text().strip()
         if headline and parse_headline(headline) is None:
@@ -383,7 +383,7 @@ class TemplateDialog(QDialog):
         self.headline_hint.setText('<small style="color:#d64541">' + html.escape('; '.join(problems)) + '</small>'
                                    if problems else '')
         self.headline_hint.setVisible(bool(problems))
-        # Nur zu lange Felder blockieren; ein abweichender Titel ist erlaubt
+        # only fields that are too long block; a deviating headline is allowed
         too_long = bool(self._too_long())
         self.buttons.button(QDialogButtonBox.StandardButton.Save).setEnabled(not too_long)
 
@@ -438,7 +438,7 @@ class SettingsDialog(QDialog):
         self.language = QComboBox()
         self.language.addItem(_('Automatisch (Systemsprache)'), '')
         for code, name in i18n.LANGUAGES.items():
-            self.language.addItem(name, code)   # in der eigenen Sprache, nicht uebersetzt
+            self.language.addItem(name, code)   # in their own language, not translated
         self.language.setCurrentIndex(max(0, self.language.findData(getattr(settings, 'language', ''))))
         language_row = QHBoxLayout()
         language_row.addWidget(self.language)
@@ -494,7 +494,7 @@ class SettingsDialog(QDialog):
 
 
 class RosterSourceList(QWidget):
-    """Roster-Quellen: Dateien vom Rechner und URLs. Bei Konflikten gewinnt die obere."""
+    """Roster sources: files on the computer and URLs. On conflicts the upper one wins."""
 
     def __init__(self, sources, parent=None):
         super().__init__(parent)
@@ -502,7 +502,7 @@ class RosterSourceList(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.list = QListWidget()
         self.list.setMinimumHeight(110)
-        # Lange Pfade in der Mitte kuerzen, Dateiname und Anfang bleiben sichtbar
+        # shorten long paths in the middle, file name and beginning stay visible
         self.list.setTextElideMode(Qt.TextElideMode.ElideMiddle)
         self.list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         for source in sources:
@@ -562,7 +562,7 @@ class RosterSourceList(QWidget):
 
 
 class ShortcutsDialog(QDialog):
-    """Uebersicht aller Kuerzel, erzeugt aus keymap.BINDINGS - kann nicht veralten."""
+    """Overview of all shortcuts, generated from keymap.BINDINGS - can't get out of date."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -573,7 +573,7 @@ class ShortcutsDialog(QDialog):
         for context, title in keymap.CONTEXT_TITLES.items():
             rows.append((_(title), None))
             for binding in keymap.BINDINGS:
-                if binding.context != context or not binding.keys:   # ohne Kuerzel (angepasst) nicht zeigen
+                if binding.context != context or not binding.keys:   # not shown without shortcuts (customized)
                     continue
                 text = _('  oder  ').join(QKeySequence(k).toString(QKeySequence.SequenceFormat.NativeText)
                                        for k in binding.keys)

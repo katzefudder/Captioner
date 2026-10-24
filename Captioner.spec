@@ -1,13 +1,13 @@
-# PyInstaller-Spec fuer die macOS-App (arm64). Aufruf ueber `make bundle`.
+# PyInstaller spec for the macOS app (arm64). Run via `make bundle`.
 #
-# Umgebungsvariablen (optional):
-#   CODESIGN_IDENTITY  "Developer ID Application: Name (TEAMID)". Ohne: ad-hoc signiert,
-#                      laeuft auf dem eigenen Mac, auf fremden Macs blockt Gatekeeper.
-#   CAPTIONER_VERSION  Versionsnummer statt der aus pyproject.toml (setzt der Release-Workflow).
+# Environment variables (optional):
+#   CODESIGN_IDENTITY  "Developer ID Application: Name (TEAMID)". Without it: ad-hoc signed,
+#                      runs on your own Mac, Gatekeeper blocks it on other Macs.
+#   CAPTIONER_VERSION  version number instead of the one from pyproject.toml (set by the release workflow).
 #
-# Info.plist: Version aus pyproject.toml, LSMinimumSystemVersion aus den tatsaechlich
-# gebuendelten Binaries (hoechstes "minos" der arm64-Slices). Damit stimmt die Angabe
-# auch, wenn sich Python oder PySide6 aendern (PySide6 6.12 verlangt macOS 26).
+# Info.plist: version from pyproject.toml, LSMinimumSystemVersion from the binaries actually
+# bundled (highest "minos" of the arm64 slices). That way the value stays right even when
+# Python or PySide6 change (PySide6 6.12 requires macOS 26).
 import os
 import tomllib
 from pathlib import Path
@@ -15,7 +15,7 @@ from pathlib import Path
 from macholib.MachO import MachO
 from macholib.mach_o import LC_BUILD_VERSION, LC_VERSION_MIN_MACOSX
 
-CPU_TYPE_ARM64 = 0x0100000C  # CPU_ARCH_ABI64 | CPU_TYPE_ARM, macholib hat keine Konstante dafuer
+CPU_TYPE_ARM64 = 0x0100000C  # CPU_ARCH_ABI64 | CPU_TYPE_ARM, macholib has no constant for it
 
 ROOT = Path(SPECPATH)
 VERSION = os.environ.get('CAPTIONER_VERSION') or \
@@ -24,7 +24,7 @@ IDENTITY = os.environ.get('CODESIGN_IDENTITY') or None
 
 
 def _minos(path):
-    """Mindest-macOS des arm64-Teils einer Mach-O-Datei als (major, minor), sonst None."""
+    """Minimum macOS of the arm64 part of a Mach-O file as (major, minor), otherwise None."""
     try:
         macho = MachO(path)
     except Exception:
@@ -45,15 +45,16 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[('vendor/exiftool', 'exiftool'), ('captioner/resources', 'captioner/resources'),
-           ('captioner/locale', 'captioner/locale'),    # Uebersetzungen (gettext, siehe captioner/i18n.py)
-           ('LICENSE', '.'), ('licenses', 'licenses'), ('docs/Captioner-Anleitung.pdf', 'docs')],  # GPL und Lizenzen der gebuendelten Teile
+           ('captioner/locale', 'captioner/locale'),    # translations (gettext, see captioner/i18n.py)
+           ('LICENSE', '.'), ('licenses', 'licenses'), ('docs/Captioner-Anleitung.pdf', 'docs'),
+           ('docs/Captioner-Manual.pdf', 'docs')],  # GPL and licenses of the bundled parts
     excludes=['PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets', 'PySide6.QtWebEngineQuick',
               'PySide6.Qt3DCore', 'PySide6.QtQuick', 'PySide6.QtQml', 'PySide6.QtPdf', 'tkinter'],
     noarchive=False,
 )
 
-# Zwei Qt-Plugins ziehen QtQuick/QtQml/QtPdf/QtVirtualKeyboard (~19 MB) nach, die
-# die App nicht nutzt: PDF als Bildformat und die Bildschirmtastatur.
+# Two Qt plugins pull in QtQuick/QtQml/QtPdf/QtVirtualKeyboard (~19 MB), which the app
+# doesn't use: PDF as an image format and the on-screen keyboard.
 UNUSED = ('libqpdf.dylib', 'libqtvirtualkeyboardplugin.dylib', 'QtQuick', 'QtQml',
           'QtVirtualKeyboard', 'QtPdf')
 a.binaries = [entry for entry in a.binaries if not any(name in entry[0] for name in UNUSED)]
@@ -69,7 +70,7 @@ exe = EXE(
     exclude_binaries=True,
     name='Captioner',
     console=False,
-    target_arch='arm64',          # universal2-Wheels werden auf arm64 ausgeduennt
+    target_arch='arm64',          # universal2 wheels are thinned to arm64
     codesign_identity=IDENTITY,
     entitlements_file=str(ROOT / 'packaging' / 'entitlements.plist'),
 )
@@ -91,8 +92,8 @@ app = BUNDLE(
         'NSHighResolutionCapable': True,
         'NSHumanReadableCopyright': 'Florian Dehn',
         'CFBundleDevelopmentRegion': 'de',
-        # Ordner und Karten aus dem Finder: aufs Dock-Symbol ziehen, "Oeffnen mit".
-        # Kommen als QFileOpenEvent an (main_window.OpenRequests), je Ordner ein Tab.
+        # Folders and cards from Finder: drop on the Dock icon, "Open With".
+        # They arrive as QFileOpenEvent (main_window.OpenRequests), one tab per folder.
         'CFBundleDocumentTypes': [{
             'CFBundleTypeName': 'Ordner',
             'CFBundleTypeRole': 'Viewer',

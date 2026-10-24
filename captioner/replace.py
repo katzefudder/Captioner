@@ -1,10 +1,10 @@
 """
-Suchen und Ersetzen ueber mehrere Bilder (ohne Qt).
+Find and replace across several images (without Qt).
 
-Gerechnet wird je Bild wie beim Speichern: In der Beschreibung wird im Rohtext mit Codes
-ersetzt (so wird aus #bn9# ein #bn10# und die Personen-Tags passen danach), sonst im
-aufgeloesten Text. Der Anhang des Templates wird nicht durchsucht, sondern mit den neuen
-Werten neu gebildet; fremde Anhaenge bleiben stehen.
+Each image is computed as when saving: in the caption, the raw text with codes is
+replaced (so #bn9# becomes #bn10# and the person tags match afterwards), elsewhere the
+resolved text. The template's suffix is not searched but rebuilt with the new values;
+foreign suffixes stay.
 """
 import dataclasses
 import re
@@ -14,7 +14,7 @@ from . import codes, geo, metadata
 from .templates import unique
 
 FIELDS = ('caption', 'headline', 'keywords', 'city', 'sublocation')
-# Markiert Fundstellen fuer die Vorschau (Zeichen aus dem privaten Bereich, nie im Text)
+# marks matches for the preview (characters from the private use area, never in the text)
 MARK_START, MARK_END = '', ''
 
 
@@ -25,7 +25,7 @@ class Options:
 
 
 def compile_pattern(find, options=Options()):
-    """Regulaerer Ausdruck fuer den Suchtext (immer woertlich), None bei leerem Suchtext."""
+    """Regular expression for the search text (always literal), None for an empty search."""
     if not find:
         return None
     text = re.escape(find)
@@ -35,12 +35,12 @@ def compile_pattern(find, options=Options()):
 
 
 def replace_text(text, pattern, replacement):
-    """(neuer Text, Anzahl); die Ersetzung woertlich, auch mit Backslashes."""
+    """(new text, count); the replacement is literal, even with backslashes."""
     return pattern.subn(lambda _match: replacement, text or '')
 
 
 def mark(text, pattern, replacement=None):
-    """Fundstellen umrahmt; mit replacement statt ihrer die Ersetzung (Vorschau "nachher")."""
+    """Matches framed; with replacement, the replacement instead of them (preview "after")."""
     return pattern.sub(lambda m: MARK_START + (m.group(0) if replacement is None else replacement) + MARK_END,
                        text or '')
 
@@ -48,12 +48,12 @@ def mark(text, pattern, replacement=None):
 @dataclass
 class Change:
     item: object
-    meta: object                 # neue Metadaten
-    raw: str = None              # neuer Rohtext der Beschreibung (None = unveraendert)
-    count: int = 0               # Treffer
-    diffs: list = field(default_factory=list)   # (Feld, vorher markiert, nachher markiert)
-    unknown: list = field(default_factory=list)   # unbekannte Codes nach dem Ersetzen
-    problems: list = field(default_factory=list)  # zu lange Felder (metadata.validate)
+    meta: object                 # new metadata
+    raw: str = None              # new raw text of the caption (None = unchanged)
+    count: int = 0               # matches
+    diffs: list = field(default_factory=list)   # (field, before marked, after marked)
+    unknown: list = field(default_factory=list)   # unknown codes after replacing
+    problems: list = field(default_factory=list)  # fields that are too long (metadata.validate)
 
     @property
     def ok(self):
@@ -63,8 +63,8 @@ class Change:
 def plan(items, find, replacement, fields, roster, delimiter='#', options=Options(),
          raw_lookup=None, template=None, places=None):
     """
-    Aenderungen je Bild, noch nicht geschrieben. Bilder ohne Treffer fehlen.
-    raw_lookup(item): Rohtext mit Codes (ohne Anhang), sonst None.
+    Changes per image, not written yet. Images without matches are missing.
+    raw_lookup(item): raw text with codes (without suffix), otherwise None.
     """
     pattern = compile_pattern(find, options)
     if pattern is None:
@@ -109,7 +109,7 @@ def _plan_item(item, pattern, replacement, fields, roster, delimiter, raw_lookup
         if 'caption' in fields:
             new_body, count = replace_text(body, pattern, replacement)
             if not count:
-                # Name gesucht, im Rohtext steht aber der Code: im aufgeloesten Text ersetzen
+                # searching for a name, but the raw text has the code: replace in the resolved text
                 resolved = codes.resolve(body, roster, delimiter).text
                 if resolved != body:
                     new_body, count = replace_text(resolved, pattern, replacement)
@@ -119,8 +119,8 @@ def _plan_item(item, pattern, replacement, fields, roster, delimiter, raw_lookup
             change.count += count
             change.diffs.append(('caption', mark(body, pattern), mark(body, pattern, replacement)))
             change.raw = body = new_body
-        # Neu zusammensetzen bei Treffern in der Beschreibung, und wenn Titel/Stadt/Ort im
-        # Anhang des Templates stehen und sich geaendert haben
+        # Recompose on matches in the caption, and when headline/city/location appear in the
+        # template's suffix and have changed
         values_changed = any(values[name] != getattr(meta, name) for name in values)
         if count or (from_template and values_changed):
             resolution = codes.resolve(body, roster, delimiter)
@@ -131,7 +131,7 @@ def _plan_item(item, pattern, replacement, fields, roster, delimiter, raw_lookup
                                                    **template.field_values(meta))
             elif caption:
                 caption += tail
-            # Personen-Tags: die der alten Beschreibung raus, die der neuen rein
+            # person tags: those of the old caption out, those of the new one in
             old_persons = set(codes.persons_in(meta.caption, roster))
             new_persons = unique(resolution.persons + codes.persons_in(caption, roster))
             keywords = unique([k for k in keywords if k not in old_persons or k in new_persons] + new_persons)
@@ -146,8 +146,8 @@ def _plan_item(item, pattern, replacement, fields, roster, delimiter, raw_lookup
 
 def _split_caption(item, caption, roster, delimiter, raw_lookup, template):
     """
-    (Text zum Durchsuchen, uebriger Anhang, Anhang vom Template?). Mit gemerktem Rohtext
-    wird darin gesucht; sonst in der Beschreibung ohne den Anhang des Templates.
+    (text to search, remaining suffix, suffix from the template?). With a remembered raw
+    text the search runs on that; otherwise on the caption without the template's suffix.
     """
     meta = item.meta
     suffix = ''
@@ -156,7 +156,7 @@ def _split_caption(item, caption, roster, delimiter, raw_lookup, template):
                                      sublocation=meta.sublocation, **template.field_values(meta))
     raw = raw_lookup(item) if raw_lookup else None
     resolved = metadata.single_line(codes.resolve(raw, roster, delimiter).text) if raw is not None else None
-    # Rohtext nur, solange er zur Beschreibung passt (sonst wurde sie anderswo geaendert)
+    # raw text only as long as it matches the caption (otherwise it was changed elsewhere)
     if raw is not None and resolved and caption.startswith(resolved):
         tail = caption[len(resolved):]
         return raw, tail, bool(suffix) and tail.strip() == suffix.strip()

@@ -1,9 +1,9 @@
 """
-ExifTool als dauerhafter Prozess (-stay_open), nicht ein Prozess pro Datei.
+ExifTool as a long-running process (-stay_open), not one process per file.
 
-Sonst kostet allein der Perl-Start pro Bild mehr als das Auslesen der Vorschau
-(ADR 0001, Punkt 2). Eine Instanz ist nicht threadsicher; ExifToolPool gibt
-jedem Thread seine eigene.
+Otherwise the Perl start-up alone costs more per image than reading the preview
+(ADR 0001, item 2). An instance is not thread-safe; ExifToolPool gives each thread
+its own.
 """
 import json
 import logging
@@ -21,10 +21,10 @@ from .i18n import _
 
 logger = logging.getLogger(__name__)
 
-# ExifTool beendet sich im -stay_open-Modus nicht, wenn stdin zugeht. Stirbt die
-# App hart, bleiben die Prozesse liegen. Jeder Prozess traegt deshalb die PID der
-# App als Kennung; reap_orphans() raeumt beim naechsten Start auf. Unter Windows
-# haengen die Prozesse stattdessen an einem Job Object, das mit der App stirbt.
+# In -stay_open mode ExifTool does not quit when stdin closes. If the app dies hard,
+# the processes stay behind. Each process therefore carries the app's PID as a marker;
+# reap_orphans() cleans up on the next start. On Windows the processes are attached
+# to a Job Object instead, which dies with the app.
 PARENT_MARKER = 'captioner_parent'
 
 WINDOWS = sys.platform == 'win32'
@@ -40,7 +40,7 @@ def find_exiftool(configured=''):
         candidates.append(configured)
     bundle_dir = getattr(sys, '_MEIPASS', None)
     if bundle_dir:
-        # Windows: exiftool.exe startet das Perl aus exiftool_files/ daneben
+        # Windows: exiftool.exe starts the Perl from exiftool_files/ next to it
         candidates.append(str(Path(bundle_dir) / 'exiftool' / ('exiftool.exe' if WINDOWS else 'exiftool')))
     for candidate in candidates:
         if candidate and os.path.isfile(candidate) and os.access(candidate, os.X_OK):
@@ -68,11 +68,11 @@ class ExifTool:
             [self.executable, '-stay_open', 'True', '-@', '-', '-common_args', '-charset', 'filename=UTF8',
              '-userParam', f'{PARENT_MARKER}={os.getpid()}'],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            # Windows: sonst oeffnet jeder Prozess ein Konsolenfenster
+            # Windows: otherwise every process opens a console window
             creationflags=subprocess.CREATE_NO_WINDOW if WINDOWS else 0)
         if WINDOWS:
             _windows_job().assign(self._process)
-        # Je Pipe ein Lese-Thread. selectors kann unter Windows keine Pipes beobachten.
+        # One reader thread per pipe. selectors cannot watch pipes on Windows.
         self._chunks = queue.Queue()
         for name, pipe in (('out', self._process.stdout), ('err', self._process.stderr)):
             threading.Thread(target=_pump, args=(pipe, name, self._chunks), daemon=True,
@@ -90,7 +90,7 @@ class ExifTool:
         self._process = None
 
     def execute(self, *args):
-        """Fuehrt ein Kommando aus, gibt (stdout_bytes, stderr_text) zurueck."""
+        """Runs a command, returns (stdout_bytes, stderr_text)."""
         for arg in args:
             if '\n' in str(arg):
                 raise ValueError('ExifTool-Argumente duerfen keine Zeilenumbrueche enthalten')
@@ -121,8 +121,8 @@ class ExifTool:
         out_bytes = bytes(out).rstrip()
         out_bytes = out_bytes[:-len(marker)]
         err_text = bytes(err).rstrip()[:-len(marker)].decode('utf-8', 'replace').strip()
-        # stdout endet mit "\n{readyN}" (Windows: "\r\n"); das Zeilenende vor dem Marker gehoert
-        # nicht zu den Daten
+        # stdout ends with "\n{readyN}" (Windows: "\r\n"); the line ending before the marker is
+        # not part of the data
         if WINDOWS and out_bytes.endswith(b'\r\n'):
             out_bytes = out_bytes[:-2]
         elif out_bytes.endswith(b'\n'):
@@ -145,11 +145,11 @@ class ExifTool:
 
 class ExifToolPool:
     """
-    Eine ExifTool-Instanz pro Betriebssystem-Thread.
+    One ExifTool instance per operating system thread.
 
-    Bewusst nicht threading.local: In Threads des QThreadPool legt PySide pro
-    Aufruf einen neuen Python-Thread-Zustand an, threading.local waere jedes Mal
-    leer und jede Vorschau startete einen eigenen Perl-Prozess.
+    Deliberately not threading.local: in QThreadPool threads PySide creates a new
+    Python thread state per call, threading.local would be empty every time and every
+    preview would start its own Perl process.
     """
 
     def __init__(self, executable):
@@ -179,7 +179,7 @@ class ExifToolPool:
 
 
 def _pump(pipe, name, chunks):
-    """Liest eine Pipe bis zum Ende; b'' heisst: Prozess weg."""
+    """Reads a pipe to the end; b'' means: process gone."""
     fd = pipe.fileno()
     while True:
         try:
@@ -193,8 +193,8 @@ def _pump(pipe, name, chunks):
 
 class _WindowsJob:
     """
-    Job Object mit KILL_ON_JOB_CLOSE: Endet die App (auch hart), schliesst Windows den
-    Handle und beendet alle zugeordneten ExifTool-Prozesse samt ihrem Perl.
+    Job Object with KILL_ON_JOB_CLOSE: when the app ends (even hard), Windows closes the
+    handle and terminates all assigned ExifTool processes along with their Perl.
     """
     JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x2000
     JOB_OBJECT_EXTENDED_LIMIT_INFORMATION = 9
@@ -255,7 +255,7 @@ def _windows_job():
 
 
 def reap_orphans():
-    """Beendet ExifTool-Prozesse frueherer App-Laeufe, deren App nicht mehr lebt."""
+    """Terminates ExifTool processes of earlier app runs whose app is no longer alive."""
     if os.name != 'posix':
         return 0
     try:

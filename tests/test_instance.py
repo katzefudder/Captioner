@@ -1,4 +1,4 @@
-"""Weitere Starts reichen ihre Ordner an die laufende App weiter (Windows, ui/instance.py)."""
+"""Further starts pass their folders to the running app (Windows, ui/instance.py)."""
 import os
 import subprocess
 import sys
@@ -36,7 +36,7 @@ sys.exit(0 if instance.forward(sys.argv[2:], name=sys.argv[1]) else 3)
 
 
 def start_second(name, *paths):
-    """Ein zweiter Start als eigener Prozess, wie aus dem Explorer."""
+    """A second start as a separate process, as from Explorer."""
     return subprocess.Popen([sys.executable, '-c', FORWARD, name, *paths])
 
 
@@ -48,7 +48,7 @@ def test_second_start_forwards_folders(app):
         second = start_second(name, 'C:\\Fotos\\Spiel', 'E:\\DCIM\\100NCZ_9')
         assert wait_for(lambda: second.poll() is not None, 15)
         assert second.returncode == 0 and received == [['C:\\Fotos\\Spiel', 'E:\\DCIM\\100NCZ_9']]
-        third = start_second(name)  # ohne Ordner: nur nach vorn holen
+        third = start_second(name)  # without folders: just raise the window
         assert wait_for(lambda: third.poll() is not None, 15)
         assert third.returncode == 0 and received[1:] == [[]]
     finally:
@@ -65,6 +65,6 @@ def test_first_start_finds_nobody(app):
 def test_drive_from_explorer_context_menu(monkeypatch):
     from captioner.ui.main_window import command_line_path
     monkeypatch.setattr('sys.platform', 'win32')
-    assert command_line_path('E:"') == 'E:\\'          # aus "E:\" wird E:" (Escape)
+    assert command_line_path('E:"') == 'E:\\'          # "E:\" becomes E:" (escape)
     assert command_line_path('E:\\DCIM') == 'E:\\DCIM'
     assert command_line_path('') == ''

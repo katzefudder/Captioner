@@ -226,6 +226,8 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 
 ## Übersetzungen (i18n)
 
+- Kommentare, Docstrings und Commit-Nachrichten auf **Englisch** (seit Oktober 2026). Nur die
+  Texte in `_()` bleiben deutsch: sie sind die Ausgangssprache (msgid) des Katalogs.
 - gettext, `captioner/i18n.py`: Ausgangssprache **Deutsch** im Code, Katalog
   `captioner/locale/en/LC_MESSAGES/captioner.po` (+ `.mo`, eingecheckt, gebündelt).
 - Jeder sichtbare Text in `_()`; mit Werten `_('… {name} …').format(name=…)` (nie f-Strings in
@@ -270,15 +272,20 @@ Kern (`roster`, `codes`, `geo`, `templates`, `scanner`, `metadata`, `previews`, 
 
 ## Anleitung
 
-- Quelle `docs/manual/anleitung.html` + `anleitung.css` (Druck-CSS für WeasyPrint), Ergebnis
-  `docs/Captioner-Anleitung.pdf` (eingecheckt): `make manual`. Für Anwender geschrieben (du-Form,
-  kein Bauen/Paketieren). Screenshots in `docs/manual/img/` erzeugt `make manual-screenshots`
-  offscreen aus der echten App (`scripts/manual_screenshots.py`: Beispielbilder, Roster mit
-  erfundenen Namen, Template, eigenes `CAPTIONER_HOME`). Neue Funktion mit sichtbarer Bedienung →
-  Anleitung mitziehen.
-- Mitgeliefert: beide Specs bündeln das PDF nach `docs/`, `captioner.manual_path()` findet es (Bundle
-  bzw. Quellbaum), *Hilfe → Anleitung (PDF)* öffnet es. Dazu liegt es als `Anleitung.pdf` im DMG und
-  im Windows-Startmenü; `verify` beider Paket-Skripte prüft, dass es im Bundle ist.
+- Zwei Fassungen mit gemeinsamem `anleitung.css` (Druck-CSS für WeasyPrint): deutsch
+  `docs/manual/anleitung.html` → `docs/Captioner-Anleitung.pdf`, englisch `docs/manual/manual.html` →
+  `docs/Captioner-Manual.pdf` (beide eingecheckt): `make manual`. Für Anwender geschrieben (du-Form
+  bzw. „you“, kein Bauen/Paketieren); Begriffe wie in der Oberfläche der Sprache (englische aus der `.po`,
+  z. B. Großansicht = „Preview“, Ablage = „File“). Neue Funktion mit sichtbarer Bedienung → **beide**
+  Anleitungen mitziehen.
+- Screenshots erzeugt `make manual-screenshots` offscreen aus der echten App
+  (`scripts/manual_screenshots.py de|en`: Beispielbilder, Roster mit erfundenen Namen, Template, eigenes
+  `CAPTIONER_HOME`; Beispieltexte je Sprache in `TEXTS`): deutsch nach `docs/manual/img/`, englisch nach
+  `docs/manual/img/en/`.
+- Mitgeliefert: beide Specs bündeln beide PDFs nach `docs/`, `captioner.manual_path(language)` wählt
+  nach der Sprache der Oberfläche (`MANUALS`, sonst Englisch), *Hilfe → Anleitung (PDF)* öffnet es. Dazu
+  liegen sie als `Anleitung.pdf`/`Manual.pdf` im DMG und im Windows-Startmenü; `verify` beider
+  Paket-Skripte prüft, dass beide im Bundle sind.
 
 ## Logo
 

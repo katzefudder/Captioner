@@ -1,9 +1,9 @@
 """
-Ort waehlen: Suche (Adresse, PLZ, Halle -> Punkt), Klick auf die Karte
-(Punkt -> Stadt/Halle), oder einfach Stadt und Ort eintippen.
+Choose a place: search (address, postcode, arena -> point), click on the map
+(point -> city/arena), or simply type city and location.
 
-Offline ersetzt ein Hinweis die Karte; Stadt und Ort bleiben Textfelder, und
-gemerkte Orte werden weiter vorgeschlagen.
+Offline, a notice replaces the map; city and location stay text fields, and
+remembered places are still suggested.
 """
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QCompleter, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
@@ -19,7 +19,7 @@ OFFLINE_TEXT = N_('Diese Karte kann nur bei Verbindung mit dem Internet angezeig
 
 
 def place_completer(book, parent):
-    """Vorschlaege 'Stadt – Ort' aus dem PlaceBook; funktioniert offline."""
+    """Suggestions 'city – location' from the PlaceBook; works offline."""
     completer = QCompleter([p.display() for p in book.places], parent)
     completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
     completer.setFilterMode(Qt.MatchFlag.MatchContains)
@@ -109,7 +109,7 @@ class PlacePickerDialog(QDialog):
         self._update_coordinates()
         self.query.setFocus()
 
-    # --- Ergebnis -------------------------------------------------------------
+    # --- Result ---------------------------------------------------------------
 
     def place(self):
         place = geo.Place(self.city.text().strip(), self.sublocation.text().strip(), self.latitude, self.longitude)
@@ -136,11 +136,11 @@ class PlacePickerDialog(QDialog):
         self._found_place = place
         if place.city:
             self.city.setText(place.city)
-        # Ohne Hallen-/Ortsnamen bleibt ein eingetippter Ort stehen
+        # without an arena/place name, a typed-in location stays
         if place.sublocation:
             self.sublocation.setText(place.sublocation)
 
-    # --- Suche und Karte ------------------------------------------------------
+    # --- Search and map -------------------------------------------------------
 
     def search(self):
         if self.query.text().strip():
@@ -191,7 +191,7 @@ class PlacePickerDialog(QDialog):
         place = place_for_completion(self.book, text)
         if place is None:
             return
-        # QLineEdit hat gerade den Vorschlag "Stadt – Ort" eingesetzt; aufteilen
+        # QLineEdit has just inserted the suggestion "city – location"; split it
         self.city.setText(place.city)
         self.sublocation.setText(place.sublocation)
         if place.has_coordinates:

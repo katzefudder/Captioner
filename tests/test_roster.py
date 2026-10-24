@@ -41,7 +41,7 @@ def test_zero_ttl_never_uses_the_cache_even_with_a_future_mtime(tmp_path):
     loader.load(['https://example.org/r.txt'])
     for cached in tmp_path.rglob('*'):
         if cached.is_file():
-            os.utime(cached, (time.time() + 1, time.time() + 1))   # Dateizeit knapp vor der Uhr
+            os.utime(cached, (time.time() + 1, time.time() + 1))   # file time just before the clock
     second = loader.load(['https://example.org/r.txt'])
     assert second.status[0].origin == 'netz' and 'Jane Doe' in second.entries['bi99'].replacement
 
@@ -94,7 +94,7 @@ def test_conflicting_codes_are_reported_not_silently_merged(tmp_path):
 
 
 def test_duplicate_code_within_one_file_is_a_conflict(tmp_path):
-    # So steht es aktuell in roster_del2.txt: zweimal "bn" fuer Spieler ohne Nummer
+    # this is how roster_del2.txt currently has it: "bn" twice for players without a number
     path = tmp_path / 'r.txt'
     path.write_text('bn\t- Julius Schulte (EC Bad Nauheim)\nbn\t- Ramon Hupf (EC Bad Nauheim)\n', encoding='utf-8')
     roster = RosterLoader(tmp_path).load([str(path)])
@@ -148,7 +148,7 @@ def test_roster_file_keeps_encoding_and_line_endings(tmp_path, encoding, newline
     path.write_bytes(ROSTER_SOURCE.replace('\n', newline).encode(encoding))
     loaded = roster.read_file(path)
     assert (loaded.encoding, loaded.newline) == (encoding, newline)
-    assert loaded.text == ROSTER_SOURCE  # im Editor immer \n
+    assert loaded.text == ROSTER_SOURCE  # always \n in the editor
     roster.write_file(loaded, loaded.text + 'bn99\t-99- Jörg Öhler (EC Bad Nauheim)\n')
     data = path.read_bytes()
     expected = (ROSTER_SOURCE + 'bn99\t-99- Jörg Öhler (EC Bad Nauheim)\n').replace('\n', newline).encode(encoding)
@@ -160,10 +160,10 @@ def test_roster_check_finds_ignored_and_conflicting_lines():
     from captioner import roster
     text = ('- EC Bad Nauheim -\n'
             'bn23\t-23- Marius Erk (EC Bad Nauheim)\n'
-            'bn31 -31- Dean Döge (EC Bad Nauheim)\n'       # Leerzeichen statt Tab
-            'bn40\t\n'                                      # Ersetzung fehlt
-            'bn23\t-23- Jemand anders (EC Bad Nauheim)\n'  # widerspruechlich
-            'bn23\t-23- Marius Erk (EC Bad Nauheim)\n'     # nur doppelt
+            'bn31 -31- Dean Döge (EC Bad Nauheim)\n'       # space instead of tab
+            'bn40\t\n'                                      # replacement missing
+            'bn23\t-23- Jemand anders (EC Bad Nauheim)\n'  # contradictory
+            'bn23\t-23- Marius Erk (EC Bad Nauheim)\n'     # only duplicated
             '\n')
     problems = roster.check(text)
     assert [(p.line, p.serious) for p in problems] == [(3, True), (4, True), (5, True), (6, False)]

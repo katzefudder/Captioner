@@ -1,14 +1,14 @@
 """
-Spiel-Templates, der Ersatz fuer das "IPTC Stationery Pad" (ADR 0001, Punkt 6).
+Game templates, the replacement for the "IPTC Stationery Pad" (ADR 0001, item 6).
 
-Ein Template traegt, was fuer viele Bilder gleich ist: Ort (Stadt, Halle,
-Bundesland, Land), Urheber und Rechte, Zusatz-Tags, den Anhang an die
-Beschreibung und optional einen festen Titel. Heim und Gast stehen im Titel
-bzw. ergeben sich aus den Codes in der Beschreibung.
+A template carries what is the same for many images: location (city, arena,
+state, country), creator and rights, extra tags, the suffix appended to the caption
+and optionally a fixed headline. Home and away are in the headline or follow from
+the codes in the caption.
 
-Die Headline hat das feste Format "<Anlass> - <Heim> gegen <Gast>", weil
-recognition/lib/matches.py den Spielkontext genau daraus liest; parse_headline
-liest die Teams daraus (Reihenfolge der Code-Vorschlaege).
+The headline has the fixed format "<occasion> - <home> gegen <away>", because
+recognition/lib/matches.py reads the game context from exactly that; parse_headline
+reads the teams from it (order of the code suggestions).
 """
 import re
 import tomllib
@@ -23,76 +23,76 @@ from .i18n import _
 
 DEFAULT_CAPTION_SUFFIX = ', {headline}, {city}, {sublocation}, {date}'
 
-# Wie in app/recognition/lib/matches.py
+# as in app/recognition/lib/matches.py
 HEADLINE_PATTERN = re.compile(r'^(?P<occasion>.+?)\s+-\s+(?P<home>.+?)\s+gegen\s+(?P<away>.+?)$')
 
 
 def parse_headline(text):
-    """'DEL 2 - EC Bad Nauheim gegen Eisbaeren Regensburg' -> (Anlass, Heim, Gast), sonst None."""
+    """'DEL 2 - EC Bad Nauheim gegen Eisbaeren Regensburg' -> (occasion, home, away), otherwise None."""
     match = HEADLINE_PATTERN.match((text or '').strip())
     return (match.group('occasion'), match.group('home'), match.group('away')) if match else None
 
 
-# Felder, die das Template beim Speichern in jedes Bild schreibt, sofern sie gefuellt
-# sind (Namen wie in scanner.Metadata); leere lassen den Wert des Bildes stehen
+# Fields the template writes into every image when saving, if they are filled
+# (names as in scanner.Metadata); empty ones keep the image's value
 FIXED_FIELDS = ('state', 'country', 'country_code', 'creator', 'contact_email', 'authors_position', 'credit',
                 'caption_writer', 'copyright', 'web_statement', 'source', 'category', 'instructions')
 
-# Platzhalter im Anhang ({city} usw.): Feldnamen wie in scanner.Metadata, dazu {date}
+# placeholders in the suffix ({city} etc.): field names as in scanner.Metadata, plus {date}
 SUFFIX_FIELDS = ('headline', 'city', 'sublocation') + FIXED_FIELDS
 
 
 @dataclass
 class MatchTemplate:
     name: str = ''
-    # Optional fester Titel "<Anlass> - <Heim> gegen <Gast>"; leer = im Panel eintragen
+    # optional fixed headline "<occasion> - <home> gegen <away>"; empty = enter it in the panel
     headline: str = ''
     city: str = ''
     sublocation: str = ''
-    state: str = ''             # Bundesland
+    state: str = ''             # state/province
     country: str = ''
-    country_code: str = ''      # ISO 3166 mit drei Buchstaben, z. B. "DEU"
+    country_code: str = ''      # ISO 3166 with three letters, e.g. "DEU"
     extra_tags: list = field(default_factory=list)  # "Eishockey", "DEL2", "2026/27"
-    # Urheber und Rechte (Lightroom: "IPTC-Copyright" / "IPTC-Ersteller")
-    creator: str = ''           # Fotograf, dc:creator
-    contact_email: str = ''     # E-Mail des Fotografen (IPTC Creator Contact Info)
+    # creator and rights (Lightroom: "IPTC Copyright" / "IPTC Creator")
+    creator: str = ''           # photographer, dc:creator
+    contact_email: str = ''     # photographer's email (IPTC Creator Contact Info)
     authors_position: str = ''  # "Fotograf", "Pressefotograf"
-    credit: str = ''            # Bildnachweis ("Credit Line"), z. B. "Florian Dehn/chuc.de"
-    caption_writer: str = ''    # wer beschriftet
+    credit: str = ''            # credit line, e.g. "Florian Dehn/chuc.de"
+    caption_writer: str = ''    # who writes the captions
     copyright: str = ''         # "© 2026 Florian Dehn"
-    web_statement: str = ''     # URL zu Nutzungsbedingungen/Lizenz
-    source: str = ''            # Quelle/Agentur
-    category: str = ''          # photoshop:Category, z. B. "Sport"
-    instructions: str = ''      # Hinweise (IPTC Special Instructions): Kontakt, Kontoverbindung
-    # Wird an jede Bildunterschrift gehaengt, wie bisher im Workflow-Tool fuer die Auswahl von Fotos:
+    web_statement: str = ''     # URL of the terms of use/license
+    source: str = ''            # source/agency
+    category: str = ''          # photoshop:Category, e.g. "Sport"
+    instructions: str = ''      # instructions (IPTC Special Instructions): contact, bank details
+    # Appended to every caption, as before in the photo culling workflow tool:
     # "..., DEL 2 - EC Bad Nauheim gegen Eisbaeren Regensburg, Bad Nauheim, Colonel-Knight-Stadion, 01.03.26"
     caption_suffix: str = DEFAULT_CAPTION_SUFFIX
-    # Fester Text fuer {date}, z. B. "18.10.26" fuer ein Spiel, das erst kommt; leer = Aufnahmedatum
+    # fixed text for {date}, e.g. "18.10.26" for an upcoming game; empty = capture date
     date: str = ''
-    # Koordinaten des Ortes (Karten-Picker), damit sie mit der Datei weitergegeben
-    # werden; fehlen in der Datei, solange keine gesetzt sind
+    # Coordinates of the place (map picker), so they are passed on with the file;
+    # missing from the file as long as none are set
     latitude: float = None
     longitude: float = None
-    # Woher das Template stammt; wird nicht in die Datei geschrieben
+    # where the template comes from; not written to the file
     path: str = field(default='', compare=False, repr=False)
 
     @property
     def keywords(self):
-        """Galerie-Tags ohne Personen; Personen kommen pro Bild dazu."""
+        """Gallery tags without people; people are added per image."""
         return unique([*self.teams, self.city, *self.extra_tags])
 
     @property
     def teams(self):
-        """Heim und Gast aus dem festen Titel, sonst leer."""
+        """Home and away from the fixed headline, otherwise empty."""
         parsed = parse_headline(self.headline)
         return list(parsed[1:]) if parsed else []
 
     def fixed_values(self):
-        """Gefuellte Ort-/Rechte-Felder, die beim Speichern in jedes Bild gehen."""
+        """Filled location/rights fields that go into every image when saving."""
         return {name: getattr(self, name) for name in FIXED_FIELDS if getattr(self, name)}
 
     def date_mismatch(self, taken_at):
-        """Festes Datum, das nicht zum Aufnahmedatum passt: (Template, Bild), sonst None."""
+        """Fixed date that doesn't match the capture date: (template, image), otherwise None."""
         fixed, taken = self.date.strip(), format_date(taken_at)
         return (fixed, taken) if fixed and taken and fixed != taken else None
 
@@ -100,16 +100,16 @@ class MatchTemplate:
         return self.name or self.headline or 'Unbenannt'
 
     def field_values(self, meta):
-        """Ort/Rechte, wie sie nach dem Speichern im Bild stehen: Template, sonst Wert des Bildes."""
+        """Location/rights as they will be in the image after saving: template, else the image's value."""
         return {name: getattr(self, name) or getattr(meta, name, '') or '' for name in FIXED_FIELDS}
 
     def suffix_for(self, taken_at='', date=None, mark=None, **fields):
         """
-        Suffix mit eingesetzten Werten ({headline}, {city}, ... aus SUFFIX_FIELDS, {date});
-        leere Platzhalter fallen samt Komma weg. Uebergebene Felder (die tatsaechlich
-        gespeicherten Werte, siehe field_values) haben Vorrang vor denen des Templates.
-        date: fertiger Text; sonst das feste Datum des Templates, sonst aus taken_at.
-        mark(key, value): umhuellt jeden eingesetzten Wert (Vorschau im Template-Dialog).
+        Suffix with values filled in ({headline}, {city}, ... from SUFFIX_FIELDS, {date});
+        empty placeholders are dropped together with their comma. Fields passed in (the
+        values actually saved, see field_values) take precedence over the template's.
+        date: finished text; otherwise the template's fixed date, otherwise from taken_at.
+        mark(key, value): wraps every inserted value (preview in the template dialog).
         """
         if not self.caption_suffix:
             return ''
@@ -122,7 +122,7 @@ class MatchTemplate:
         return re.sub(r',\s*$', '', text)
 
     def compose_caption(self, caption, taken_at='', **values):
-        """Haengt das Suffix an, sofern es nicht schon dasteht."""
+        """Appends the suffix unless it is already there."""
         caption = (caption or '').strip()
         suffix = self.suffix_for(taken_at, **values)
         if not caption or not suffix or caption.endswith(suffix.strip()):
@@ -132,18 +132,18 @@ class MatchTemplate:
         return f'{caption} {suffix}'
 
 
-# Reihenfolge, wenn mehrere Felder denselben Wert haben (Fotograf = Beschriftet von)
+# order when several fields have the same value (photographer = caption writer)
 _SUFFIX_PRIORITY = ('headline', 'city', 'sublocation', 'date', 'state', 'country') + \
     tuple(name for name in FIXED_FIELDS if name not in ('state', 'country'))
 
 
 def derive_suffix(caption, values):
     """
-    Anhang einer fertigen Beschreibung als Platzhalter: "Jubel, DEL 2 - A gegen B, Bad Nauheim, ,
-    20.02.24" mit den Werten des Bildes -> ", {headline}, {city}, {sublocation}, {date}". Gesucht
-    wird von hinten nach Segmenten (durch Komma getrennt), die genau einem Wert entsprechen; ein
-    leeres Segment nach {city} wird zu {sublocation} (leere Platzhalter fallen ohnehin weg).
-    Ohne erkennbaren Anhang: ''.
+    Suffix of a finished caption as placeholders: "Jubel, DEL 2 - A gegen B, Bad Nauheim, ,
+    20.02.24" with the image's values -> ", {headline}, {city}, {sublocation}, {date}". Searches
+    from the end for segments (separated by commas) that match exactly one value; an empty
+    segment after {city} becomes {sublocation} (empty placeholders are dropped anyway).
+    Without a recognizable suffix: ''.
     """
     by_value = {}
     for key in _SUFFIX_PRIORITY:
@@ -159,7 +159,7 @@ def derive_suffix(caption, values):
             parts.insert(0, by_value[value])
             rest = re.sub(r',\s*$', '', rest[:-len(value)], count=1)
         elif parts and re.search(r',\s*$', rest):
-            parts.insert(0, None)            # leeres Segment ", ,"
+            parts.insert(0, None)            # empty segment ", ,"
             rest = re.sub(r',\s*$', '', rest, count=1)
         else:
             break
@@ -178,10 +178,10 @@ def derive_suffix(caption, values):
 
 def from_metadata(meta, taken_at='', name='', persons=()):
     """
-    Template, das der Beschriftung eines Bildes moeglichst nahe kommt: Titel, Ort, Urheber und
-    Rechte wie im Bild, Zusatz-Tags = Stichwoerter ohne Personen, Stadt und Teams (die kommen
-    ohnehin dazu), Anhang aus dem Ende der Beschreibung (derive_suffix), GPS als Ort.
-    persons: Namen, die nicht in die Zusatz-Tags sollen (Personen-Tags aus Codes).
+    Template that comes as close as possible to an image's caption: headline, location,
+    creator and rights as in the image, extra tags = keywords without people, city and teams
+    (those are added anyway), suffix from the end of the caption (derive_suffix), GPS as place.
+    persons: names that must not go into the extra tags (person tags from codes).
     """
     template = MatchTemplate(
         name=name or meta.headline,
@@ -219,20 +219,20 @@ def slug(name):
     return re.sub(r'[^A-Za-z0-9_-]+', '_', name).strip('_') or 'template'
 
 
-# Dateiformat: TOML mit Kennung, damit beim Oeffnen nicht jede beliebige
-# TOML-Datei als Template durchgeht. Beispiel:
+# File format: TOML with an identifier, so that not just any TOML file passes as a
+# template when opened. Example:
 #
 #     format = "captioner-template"
 #     version = 2
 #     name = "DEL 2 Heimspiele"
-#     headline = ""              # optional fester Titel
+#     headline = ""              # optional fixed headline
 #     city = "Bad Nauheim"
 #     sublocation = "Colonel-Knight-Stadion"
 #     state = "Hessen"
 #     country = "Deutschland"
 #     extra_tags = ["Eishockey", "DEL2"]
 #     caption_suffix = ", {headline}, {city}, {sublocation}, {date}"
-#     date = ""                  # optional fester Text fuer {date}, sonst Aufnahmedatum
+#     date = ""                  # optional fixed text for {date}, otherwise capture date
 #     creator = "Florian Dehn"
 #     authors_position = "Fotograf"
 #     caption_writer = "Florian Dehn"
@@ -241,10 +241,10 @@ def slug(name):
 #     source = "chuc.de"
 #     category = "Sport"
 #     instructions = "Honorarpflichtig. Kontakt: … · IBAN DE…"
-#     latitude = 50.37255        # optional, vom Karten-Picker
+#     latitude = 50.37255        # optional, from the map picker
 #     longitude = 8.73845
 #
-# Version 1 hatte occasion/home/away statt headline; load_file rechnet sie um.
+# Version 1 had occasion/home/away instead of headline; load_file converts them.
 FORMAT_ID = 'captioner-template'
 FORMAT_VERSION = 2
 FILE_SUFFIX = '.toml'
@@ -256,7 +256,7 @@ class TemplateError(ValueError):
 
 
 def load_file(path):
-    """Liest ein Template aus einer Datei. TemplateError bei falschem Inhalt."""
+    """Reads a template from a file. TemplateError for wrong content."""
     path = Path(path).expanduser()
     try:
         with open(path, 'rb') as handle:
@@ -265,7 +265,7 @@ def load_file(path):
         raise TemplateError(_('{name}: nicht lesbar ({error})').format(name=path.name, error=e.strerror or e))
     except tomllib.TOMLDecodeError as e:
         raise TemplateError(_('{name}: kein gültiges TOML ({error})').format(name=path.name, error=e))
-    # Dateien ohne Kennung stammen aus der ersten Version und sind gueltig
+    # files without an identifier come from the first version and are valid
     if data.get('format', FORMAT_ID) != FORMAT_ID:
         raise TemplateError(_('{name}: kein Captioner-Template (format = {format})')
                             .format(name=path.name, format=repr(data.get('format'))))
@@ -290,7 +290,7 @@ def load_file(path):
 
 
 def _upgrade_v1(data):
-    """Version 1: Titel aus occasion/home/away (nur wenn alle drei da sind)."""
+    """Version 1: headline from occasion/home/away (only if all three are present)."""
     legacy = [data.pop(key, '') for key in ('occasion', 'home', 'away')]
     if not data.get('headline') and all(isinstance(v, str) and v.strip() for v in legacy):
         occasion, home, away = (v.strip() for v in legacy)
@@ -298,12 +298,12 @@ def _upgrade_v1(data):
 
 
 def save_file(template, path):
-    """Schreibt das Template in eine Datei und verknuepft es mit ihr."""
+    """Writes the template to a file and links it to that file."""
     path = Path(path).expanduser()
     if not template.name:
         template.name = template.headline or path.stem
     data = {'format': FORMAT_ID, 'version': FORMAT_VERSION}
-    # TOML kennt kein None: fehlende Koordinaten werden weggelassen
+    # TOML has no None: missing coordinates are left out
     data.update({key: getattr(template, key) for key in SERIALIZED_FIELDS if getattr(template, key) is not None})
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_name(f'.{path.name}.tmp')
@@ -320,8 +320,8 @@ def default_filename(template):
 
 class TemplateStore:
     """
-    Templates im Konfigurationsverzeichnis plus beliebige Dateien vom Rechner,
-    die geoeffnet wurden (Pfade in Settings.template_files).
+    Templates in the configuration directory plus any files from the computer that
+    were opened (paths in Settings.template_files).
     """
 
     def __init__(self, directory: Path):
@@ -332,7 +332,7 @@ class TemplateStore:
         return bool(template.path) and Path(template.path).parent == self.directory
 
     def list(self, external_paths=()):
-        """Alle Templates; zweiter Rueckgabewert: Fehlermeldungen zu unlesbaren Dateien."""
+        """All templates; second return value: error messages for unreadable files."""
         templates, errors = [], []
         paths = sorted(self.directory.glob('*' + FILE_SUFFIX))
         paths += [Path(p).expanduser() for p in external_paths]
@@ -349,7 +349,7 @@ class TemplateStore:
         return templates, errors
 
     def save(self, template: MatchTemplate):
-        """Speichert an Ort und Stelle; neue Templates landen im Konfigurationsverzeichnis."""
+        """Saves in place; new templates go into the configuration directory."""
         if template.path:
             return save_file(template, template.path)
         if not template.name:
@@ -357,7 +357,7 @@ class TemplateStore:
         return save_file(template, self._free_path(default_filename(template)))
 
     def _free_path(self, filename):
-        """Neues Template nie ueber ein vorhandenes gleichen Namens schreiben: name-2.toml usw."""
+        """Never write a new template over an existing one with the same name: name-2.toml etc."""
         path = self.directory / filename
         stem, number = path.stem, 2
         while path.exists():
@@ -366,6 +366,6 @@ class TemplateStore:
         return path
 
     def delete(self, template: MatchTemplate):
-        """Loescht nur Templates im Konfigurationsverzeichnis, nie fremde Dateien."""
+        """Only deletes templates in the configuration directory, never foreign files."""
         if self.is_internal(template) and Path(template.path).exists():
             Path(template.path).unlink()

@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Captioner – Manual</title>
+<meta name="author" content="Captioner">
+<meta name="description" content="Manual for Captioner: review, rate and caption photos before importing them into Lightroom.">
+<link rel="stylesheet" href="anleitung.css">
+</head>
+<body>
+
+<!-- Cover -->
+<section class="cover">
+  <img class="logo" src="../../captioner/resources/logo.svg" alt="">
+  <h1 class="cover-title">Captioner</h1>
+  <p class="cover-sub">Review, rate and caption photos<br>before importing them into Lightroom</p>
+  <p class="cover-meta">Manual · Version 0.3 · October 2026</p>
+</section>
+
+<!-- Contents -->
+<nav class="toc">
+  <p class="toc-title">Contents</p>
+  <ol>
+    <li><a href="#overview">What Captioner does</a></li>
+    <li><a href="#installation">Installing and starting</a></li>
+    <li><a href="#window">The window</a></li>
+    <li><a href="#folders">Folders and tabs</a></li>
+    <li><a href="#reviewing">Reviewing: gallery and preview</a></li>
+    <li><a href="#rating">Ratings, color classes, tags</a></li>
+    <li><a href="#filtering">Searching and filtering</a></li>
+    <li><a href="#captioning">Captioning</a></li>
+    <li><a href="#templates">Templates</a></li>
+    <li><a href="#roster">Rosters and codes</a></li>
+    <li><a href="#location">Location, map and GPS</a></li>
+    <li><a href="#replace">Find and replace</a></li>
+    <li><a href="#undo">Undo</a></li>
+    <li><a href="#lightroom">Handing over to Lightroom</a></li>
+    <li><a href="#files">Copy, rename, trash, Finder</a></li>
+    <li><a href="#settings">Settings</a></li>
+    <li><a href="#shortcuts">Keyboard shortcuts</a></li>
+    <li><a href="#faq">Questions and problems</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="overview">What Captioner does</h2>
+
+<p>Captioner is the tool between the memory card and Lightroom. You review the photos of a
+game, rate them, pick the keepers and caption them. Then you drag the selection into
+Lightroom, which takes over headline, caption, keywords, stars and color on import.</p>
+
+<p>What makes it special are <strong>codes</strong>: instead of “-23- Max Muster (EC Bad Nauheim)”
+you type <code>#bn23#</code>. Captioner suggests players as you type, inserts the full name
+when saving and adds the person to the tags automatically. The codes live in <strong>roster
+files</strong> that a team maintains once and everybody uses.</p>
+
+<p>A typical workflow:</p>
+<ol class="steps">
+  <li><strong>Open a folder</strong>, e.g. the image folder on the memory card.</li>
+  <li><strong>Review and rate</strong>: preview, stars, color classes, tags.</li>
+  <li><strong>Choose a template</strong>: location, photographer, copyright and suffix for the game.</li>
+  <li><strong>Enter the headline</strong>, e.g. <code>DEL 2 - EC Bad Nauheim gegen Bietigheim Steelers</code>.</li>
+  <li><strong>Caption image by image</strong>, using codes for the players.</li>
+  <li><strong>Drag into Lightroom.</strong></li>
+</ol>
+
+<div class="note">
+  <p><strong>Your files are safe.</strong> Captioner never changes RAW files (NEF, CR2, ARW …);
+  everything goes into an XMP file next to them. JPG, DNG and TIFF are written via a copy that
+  only replaces the original once the image data has been verified to be unchanged. More under
+  <a href="#lightroom">Handing over to Lightroom</a>.</p>
+</div>
+
+<!-- 2 -->
+<h2 id="installation">Installing and starting</h2>
+
+<h3>macOS</h3>
+<p>Captioner runs on Macs with Apple silicon (M1 and later) with macOS 26 or newer. There are
+two ways to install it:</p>
+<ul>
+  <li><strong>Disk image (DMG):</strong> open it and drag <em>Captioner</em> onto “Applications”.</li>
+  <li><strong>Installer package (PKG):</strong> double-click it and follow the assistant.</li>
+</ul>
+<p>On first launch macOS may say that the app cannot be opened because it is not notarized by
+Apple. In that case open <em>System Settings → Privacy &amp; Security</em> once and click
+<strong>“Open Anyway”</strong> at the bottom. After that the app starts normally.</p>
+<p>ExifTool, which Captioner needs to read and write metadata, is built in.</p>
+
+<h3>Windows</h3>
+<p>Run the installer <code>Captioner-…-x64-setup.exe</code>. It installs for all users or,
+without administrator rights, just for you. Optionally it creates a desktop icon and the entry
+<strong>“Open with Captioner”</strong> in the context menu of folders and drives.</p>
+<p>Windows SmartScreen warns on first launch because the installer is not signed:
+<em>“More info” → “Run anyway”</em>.</p>
+
+<div class="note">
+  <p><strong>Windows differences:</strong> wherever this manual says <kbd>⌘</kbd>, use
+  <kbd>Ctrl</kbd> on Windows; <kbd>⌥</kbd> is <kbd>Alt</kbd>. Some shortcuts differ (see
+  <a href="#shortcuts">Keyboard shortcuts</a>). Spell checking is only available on the Mac.</p>
+</div>
+
+<h3>Updates</h3>
+<p>At most once a day, Captioner checks for a new version on startup. If there is one,
+“Update … available” appears at the bottom right; a click opens the download page. To check
+by hand: <em>Help → Check for updates …</em>.</p>
+
+<h3>Language</h3>
+<p>Captioner follows the system language (German or English). You can choose it in the
+<a href="#settings">settings</a>. <em>Help → Manual (PDF)</em> opens this manual in the
+language of the interface.</p>
+
+<!-- 3 -->
+<h2 id="window">The window</h2>
+
+<figure class="wide">
+  <img src="img/en/hauptfenster.png" alt="Main window">
+  <figcaption>The main window: tabs of the open folders at the top, filters and gallery below,
+  the caption panel on the right.</figcaption>
+</figure>
+
+<dl class="parts">
+  <dt>Tabs</dt>
+  <dd>Every open folder has its own tab, with <kbd>+</kbd> on the right for a new one. The tab
+  shows the name of the memory card and of the folder.</dd>
+  <dt>Filter bar</dt>
+  <dd>Folder path and number of images, filters for tags, stars, colors and “uncaptioned only”,
+  below that the search field and the time filter.</dd>
+  <dt>Gallery</dt>
+  <dd>All images of the folder as tiles, sorted by capture time. A tile shows the file name, the
+  file type (RAW+JPG with the same name are one tile), the tag checkbox, stars and, as a colored
+  frame, the color class. A pencil icon means the image is captioned.</dd>
+  <dt>Caption panel</dt>
+  <dd>Template, headline, caption with preview, tags, city and location. At the bottom Save and
+  “Save &amp; next”, copy/paste of the caption and the roster status.</dd>
+  <dt>Status bar</dt>
+  <dd>Number of images and of selected ones, hints, the <strong>“Preview”</strong> slider for the
+  tile size and, at the far right, whether everything is saved.</dd>
+</dl>
+
+<p>On the Mac the menus are in the menu bar at the top of the screen:
+<strong>Captioner</strong> (About, Settings, Quit), <strong>File</strong> (Open folder, Reload,
+Rename images, Close tab, Customize keyboard shortcuts), <strong>Edit</strong> (Undo, Redo,
+Find and replace), <strong>Template</strong>, <strong>Roster</strong> and <strong>Help</strong>
+(Manual, Keyboard shortcuts, Website, Updates).</p>
+
+<!-- 4 -->
+<h2 id="folders">Folders and tabs</h2>
+
+<h3>Opening folders</h3>
+<p>There are several ways:</p>
+<ul>
+  <li><kbd>⌘O</kbd> or <em>File → Open folder …</em>. In the dialog, <kbd>⌘</kbd>-click or
+  <kbd>⇧</kbd>-click selects several folders at once.</li>
+  <li><strong>Double-click into the empty gallery</strong> while no folder is open yet.</li>
+  <li><strong>Drag folders</strong> from Finder or Explorer <strong>onto the window</strong>.</li>
+  <li>Drag folders onto the <strong>Captioner icon in the Dock</strong>, or right-click in Finder
+  and choose <em>Open With → Captioner</em>. On Windows: right-click → “Open with Captioner”.</li>
+</ul>
+<p>Captioner reads JPG, NEF and other RAW formats, DNG and TIFF.</p>
+
+<h3>Opening a whole memory card</h3>
+<p>If a folder contains no images itself but subfolders with images (the card itself or
+<code>DCIM</code>), every image folder opens in its own tab. Drop two cards onto the window and
+all image folders of both cards are open right away. With more than eight folders, Captioner
+asks first.</p>
+<p>If you prefer everything in one tab, turn on “Include subfolders” in the
+<a href="#settings">settings</a>.</p>
+
+<h3>Working with tabs</h3>
+<ul>
+  <li>Each tab has its own gallery and selection. Filters and the caption panel apply to the
+  active tab.</li>
+  <li>Switch: click the tab or press <kbd>⌘⌥→</kbd> / <kbd>⌘⌥←</kbd>. Close: <kbd>⌘W</kbd> or the
+  cross on the tab. Tabs can be reordered with the mouse.</li>
+  <li><strong>Right-click a tab:</strong> Close tab, Close other tabs, Close all tabs.</li>
+  <li>A folder that is already open is not opened twice but brought to the front.</li>
+  <li>The tabs are back on the next start. Missing folders (card not inserted) are skipped.</li>
+  <li><kbd>F5</kbd> reloads the active folder, e.g. after images were added outside Captioner.</li>
+</ul>
+
+<!-- 5 -->
+<h2 id="reviewing">Reviewing: gallery and preview</h2>
+
+<h3>Gallery</h3>
+<p>A click selects an image, <kbd>⌘</kbd>-click and <kbd>⇧</kbd>-click select several. The arrow
+keys move through the gallery, <kbd>Home</kbd> and <kbd>End</kbd> jump to the first or last
+image. <kbd>⌘A</kbd> selects all, <kbd>⌘D</kbd> clears the selection. The “Preview” slider at the
+bottom right sets the tile size.</p>
+
+<h3>Preview</h3>
+<p><kbd>Space</kbd> or a double-click on a tile shows the image large; <kbd>Space</kbd>,
+<kbd>Esc</kbd> or <kbd>⌘W</kbd> closes it again. <kbd>←</kbd> and <kbd>→</kbd> move to the
+previous or next image. Stars, color classes and tags work with the same keys as in the gallery.</p>
+
+<figure class="wide">
+  <img src="img/en/grossansicht.png" alt="Preview with info panel">
+  <figcaption>Preview with info panel. At the bottom zoom, “Caption” and “Info”.</figcaption>
+</figure>
+
+<p><strong>Zoom:</strong></p>
+<ul>
+  <li><kbd>Z</kbd> or <kbd>*</kbd> switches between “fitted” and 100 %.</li>
+  <li><kbd>+</kbd> and <kbd>-</kbd> zoom in steps (50 to 400 %), the slider at the bottom continuously.</li>
+  <li><kbd>⌥</kbd> + scroll wheel or a double-click zooms at the mouse position, <kbd>⌘</kbd> + click
+  zooms to the spot and centers it.</li>
+  <li>When zoomed, drag with the mouse, use the scroll wheel or <kbd>⌥</kbd> + arrow keys
+  (faster with <kbd>⇧</kbd>) to move the visible area.</li>
+</ul>
+<p>Zoom and visible area are kept when you move to the next image, so you can compare the
+sharpness of a burst at the same spot. 100 % is the full resolution of the preview embedded in
+the file; for Nikon NEFs that is the full sensor resolution.</p>
+
+<p>Below the image you see the file name, tag, stars and color class, and at the very bottom the
+camera, lens, focal length, shutter speed, aperture, ISO and the files of the image, e.g.
+<em>NIKON Z 9 · NIKKOR Z 70-200mm f/2.8 VR S · 200 mm · 1/500 s · f/2.8 · ISO 64 · DSC_0001.NEF</em>.</p>
+
+<p><strong>Info panel:</strong> on the right are the image's EXIF and IPTC data: capture time with
+hundredths of a second, camera and serial number, lens, exposure, GPS, the caption and the
+files that belong to the image. “Info” hides and shows the panel; Captioner remembers your choice.</p>
+
+<p><strong>Captioning in the preview:</strong> <kbd>I</kbd> or “Caption” brings the caption panel
+next to the image and puts the cursor into the caption. <kbd>⌘N</kbd> / <kbd>⌘B</kbd> save and show
+the next or previous image large. While you type, digits, <kbd>T</kbd>, <kbd>Z</kbd>,
+<kbd>+</kbd>, <kbd>-</kbd> and the space bar do nothing else; a click on the image hands the keys
+back to the preview.</p>
+
+<!-- 6 -->
+<h2 id="rating">Ratings, color classes, tags</h2>
+
+<table class="keys">
+  <thead><tr><th>What</th><th>macOS</th><th>Windows</th></tr></thead>
+  <tbody>
+    <tr><td>Color class 1–8 · remove</td><td><kbd>1</kbd>–<kbd>8</kbd> · <kbd>0</kbd></td><td><kbd>1</kbd>–<kbd>8</kbd> · <kbd>0</kbd></td></tr>
+    <tr><td>Stars 1–5 · remove</td><td><kbd>⌘1</kbd>–<kbd>⌘5</kbd> · <kbd>⌘0</kbd></td><td><kbd>Ctrl+1</kbd>–<kbd>5</kbd> · <kbd>Ctrl+0</kbd></td></tr>
+    <tr><td>Tag on/off · on · off</td><td><kbd>T</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td><td><kbd>T</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td></tr>
+  </tbody>
+</table>
+
+<p>Everything applies to the selection, so also to many images at once, and can be undone with
+<kbd>⌘Z</kbd>.</p>
+
+<ul>
+  <li><strong>Color classes</strong> show as a colored frame around the tile. Classes 1–5 are also
+  written to the file as Lightroom color labels: red, yellow, green, blue, purple. The names must
+  match your Lightroom (see <a href="#settings">Settings</a>).</li>
+  <li><strong>Stars</strong> become the rating in Lightroom.</li>
+  <li><strong>Tags</strong> are a marker for picking images, e.g. “goes into the gallery”.
+  <kbd>⌘T</kbd> selects all tagged images; <kbd>F3</kbd> shows only tagged ones, <kbd>F4</kbd> only
+  untagged ones (press again to show all). Lightroom does not know tags.</li>
+</ul>
+
+<h3>Context menu of the tiles</h3>
+<div class="side">
+  <img src="img/en/kontextmenue.png" alt="Context menu of a tile">
+  <div>
+    <p>Right-clicking a tile opens a menu for the selection. If you click an image that is not
+    selected, only that one is selected first (as in Finder).</p>
+    <p>It contains <strong>Rating</strong> and <strong>Color class</strong> (submenus, the current
+    value is checked), <strong>Tagged</strong>, Preview, copy and paste caption,
+    <strong>Copy to tab</strong>, <strong>Show in Finder</strong> (Windows: in Explorer),
+    <strong>Copy path</strong> and <strong>Move to trash</strong>. Each entry shows its keyboard
+    shortcut on the right.</p>
+  </div>
+</div>
+
+<!-- 7 -->
+<h2 id="filtering">Searching and filtering</h2>
+<ul>
+  <li><strong>Search field:</strong> finds words in the file name, headline, caption and tags. With
+  several words, all of them must occur.</li>
+  <li><strong>Tags, stars, colors:</strong> e.g. “★★★ and more” or “no color”.</li>
+  <li><strong>uncaptioned only:</strong> shows the images that have no caption yet.</li>
+  <li><strong>Camera:</strong> appears when the folder contains images from several cameras. Two
+  bodies of the same model are told apart by serial number (“NIKON Z 9 · …1234”).</li>
+  <li><strong>Time:</strong> shows only images from a time span, e.g. one period. When you turn it
+  on, the span of all images is preset.</li>
+</ul>
+<p>The filters apply to all tabs; when you switch tabs they act on the new one.</p>
+
+<!-- 8 -->
+<h2 id="captioning">Captioning</h2>
+
+<h3>The fields</h3>
+<dl class="parts">
+  <dt>Template</dt>
+  <dd>Provides location, photographer, copyright, extra tags and the suffix appended to the
+  caption. See <a href="#templates">Templates</a>.</dd>
+  <dt>Headline</dt>
+  <dd>The game in the format <code>&lt;occasion&gt; - &lt;home&gt; gegen &lt;away&gt;</code>, e.g.
+  <code>DEL 2 - EC Bad Nauheim gegen Bietigheim Steelers</code>. The word <code>gegen</code> stays
+  German in the English interface too, because the later player recognition reads exactly that.
+  If the headline deviates, the panel warns but still saves. An image without a headline takes
+  the last one saved. Codes work in the headline as well, e.g. <code>DEL 2 - #bn# gegen #bi#</code>.</dd>
+  <dt>Caption</dt>
+  <dd>What happens in the picture, with codes for the people. Below it the preview: this is how it
+  will be saved, including the suffix and the people who go into the tags.</dd>
+  <dt>Tags</dt>
+  <dd>Keywords, separated by commas. While you type, Captioner suggests words you have used
+  before. People from the codes and the template's extra tags are added when saving.</dd>
+  <dt>City, Location</dt>
+  <dd>From the template or by hand; <strong>Map …</strong> looks the place up on a map (see
+  <a href="#location">Location, map and GPS</a>).</dd>
+</dl>
+
+<h3>Typing codes</h3>
+<p>A code sits between two hash signs: <code>#bn23#</code>. As soon as you type <code>#bn</code>, a
+list of matching players opens; the two teams from the headline are at the top. Arrow keys and
+<kbd>Enter</kbd> accept a suggestion.</p>
+
+<div class="example">
+  <p class="label">Input</p>
+  <p><code>Battle between #bn23# and #bi99# in front of the goal</code></p>
+  <p class="label">Saved as</p>
+  <p>Battle between -23- Max Muster (EC Bad Nauheim) and -99- John Doe (Bietigheim Steelers)
+  in front of the goal, DEL 2 - EC Bad Nauheim gegen Bietigheim Steelers, Bad Nauheim,
+  Colonel-Knight-Stadion, 18.10.26</p>
+  <p class="label">Tags</p>
+  <p>Max Muster, John Doe, Ice hockey, DEL2</p>
+</div>
+
+<p>Known codes are highlighted green in the text, unknown ones red. <strong>An unknown code
+blocks saving</strong>, so a code never ends up in the file instead of a name. The resolved text
+is always what gets saved; Captioner remembers the text with codes so you can edit it later.</p>
+
+<h3>Save and next</h3>
+<table class="keys">
+  <thead><tr><th>What</th><th>macOS</th><th>Windows</th></tr></thead>
+  <tbody>
+    <tr><td>Save</td><td><kbd>Enter</kbd></td><td><kbd>Enter</kbd></td></tr>
+    <tr><td>Save and next image</td><td><kbd>⌘N</kbd> or <kbd>⌘]</kbd></td><td><kbd>Ctrl+M</kbd> or <kbd>Alt+]</kbd></td></tr>
+    <tr><td>Save and previous image</td><td><kbd>⌘B</kbd> or <kbd>⌘[</kbd></td><td><kbd>Alt+B</kbd> or <kbd>Alt+[</kbd></td></tr>
+    <tr><td>Save and back to the gallery</td><td><kbd>⌘Enter</kbd></td><td><kbd>Ctrl+Enter</kbd></td></tr>
+    <tr><td>Next · previous image without saving</td><td><kbd>⌘⇧N</kbd> · <kbd>⌘⇧B</kbd></td><td><kbd>Ctrl+⇧N</kbd> · <kbd>Ctrl+⇧B</kbd></td></tr>
+  </tbody>
+</table>
+<p>Saving is instant; the files are written in the background. The bottom right reads
+“everything saved” once all files are written. Below the caption Captioner counts the bytes:
+IPTC allows at most 2000 bytes for the caption. If a field is too long it turns red and saving
+is blocked.</p>
+
+<h3>Several images at once</h3>
+<p>With several images selected, headline, tags, city and location apply to all of them. The
+caption is only taken over if you changed it in the field; otherwise every image keeps its own.</p>
+
+<h3>Carrying a caption from image to image</h3>
+<p><kbd>⌘⇧C</kbd> (or “Copy” in the panel) copies headline, caption, tags, city and location,
+including what is not saved yet. <kbd>⌘⇧V</kbd> (or “Paste”) pastes into all selected images and
+saves. The codes are resolved again per image, and the suffix gets the date of the target image.</p>
+
+<h3>Spelling (macOS)</h3>
+<p>Typos in the caption are underlined in red, using the same dictionaries as Mail or Pages.
+Codes and names from the roster don't count as mistakes. A right-click shows suggestions,
+“Learn spelling” (then also applies in other apps) and “Ignore”. Choose the language in the
+settings.</p>
+
+<!-- 9 -->
+<h2 id="templates">Templates</h2>
+
+<p>A template holds everything that is always the same for a game or an arena. You choose it at
+the top of the panel; <strong>Edit …</strong> next to it opens it.</p>
+
+<figure class="half">
+  <img src="img/en/template.png" alt="Edit template">
+  <figcaption>Editing a template. The colored dots show which field goes into which placeholder
+  of the suffix.</figcaption>
+</figure>
+
+<dl class="parts">
+  <dt>Headline</dt>
+  <dd>Usually empty: then you enter the headline in the panel, and the template works for every
+  game. With a fixed headline it fits exactly one game.</dd>
+  <dt>Date</dt>
+  <dd>Normally empty, then the suffix contains the capture date. To prepare ahead (today for
+  Sunday) enter a fixed text such as <code>18.10.26</code>; if it doesn't match an image's capture
+  date, the panel shows an orange warning.</dd>
+  <dt>Location</dt>
+  <dd>City, location/arena, state, country, country code (three letters, e.g. <code>DEU</code>).
+  “Map …” fills city, location, state and country in one go.</dd>
+  <dt>Creator and rights</dt>
+  <dd>Photographer, photographer's email, position, credit (how the credit line should be
+  printed), caption writer, copyright, copyright URL, source, instructions (e.g. contact and bank
+  details).</dd>
+  <dt>Category, extra tags</dt>
+  <dd>Extra tags go into every image, e.g. <code>Ice hockey, DEL2</code>.</dd>
+  <dt>Suffix</dt>
+  <dd>Text appended to every caption, with placeholders such as <code>{headline}</code>,
+  <code>{city}</code>, <code>{sublocation}</code>, <code>{date}</code>, <code>{creator}</code>,
+  <code>{copyright}</code>. Clicking a placeholder in the legend inserts it, “Result” shows the
+  finished suffix. Empty placeholders are dropped together with their comma.</dd>
+</dl>
+
+<p><strong>Filled fields</strong> are written into every image when saving. <strong>Empty
+fields</strong> keep the image's value, e.g. photographer and copyright the camera has already
+entered.</p>
+
+<h3>Applying a template to the selection</h3>
+<p>“Apply template to selection” (<kbd>⌘⌥A</kbd>) sets headline, location, rights and tags for
+all selected images. With <strong>“Overwrite content”</strong> (on by default) everything is
+reset to the template and existing captions are cleared; without the check mark the captions
+stay.</p>
+
+<h3>Managing templates</h3>
+<p>In the <em>Template</em> menu and under <kbd>⋯</kbd> next to the selection:</p>
+<ul>
+  <li><strong>New template …</strong> and <strong>New template from the selected one …</strong>
+  (a copy, e.g. for an away game; Cancel discards the copy).</li>
+  <li><strong>Create template from photo …</strong> turns the caption of the selected photo into a
+  new template, e.g. from an image already captioned in Lightroom. Headline, location, creator
+  and rights are taken over, the keywords (without people, teams and city) become extra tags, and
+  Captioner recognizes the suffix from the end of the caption, e.g.
+  <code>, {headline}, {city}, {sublocation}, {date}</code>. The dialog opens for you to check;
+  nothing is saved before OK.</li>
+  <li><strong>Load template file …</strong> adds a file from anywhere on the computer, e.g. from a
+  colleague (or drag the <code>.toml</code> file onto the window). It stays linked: changes are
+  written back to exactly that file.</li>
+  <li><strong>Save template as …</strong> writes the template to a new file, e.g. to pass it on.</li>
+  <li><strong>Show template folder in Finder</strong> shows where your own templates are stored.</li>
+  <li><strong>Remove from list</strong>: files outside the template folder are never deleted.</li>
+</ul>
+
+<!-- 10 -->
+<h2 id="roster">Rosters and codes</h2>
+
+<p>A roster is a text file with one line per code: the code, a <strong>tab</strong>, then the text
+to insert. Lines such as <code>- EC Bad Nauheim -</code> are section headers for a team.</p>
+
+<pre class="file">- EC Bad Nauheim -
+
+bn23	-23- Max Muster (EC Bad Nauheim)
+bn9	-9- Tom Platzhalter (EC Bad Nauheim)
+
+- Bietigheim Steelers -
+
+bi99	-99- John Doe (Bietigheim Steelers)
+
+- Teams -
+
+bn	EC Bad Nauheim
+bi	Bietigheim Steelers</pre>
+
+<p>People are written as <code>-number- Name (Team)</code>; that is how Captioner recognizes them
+and adds the name to the tags. Team codes such as <code>bn</code> can be used in the headline.</p>
+
+<h3>Sources</h3>
+<p>Rosters come from web addresses (URLs), from files on the computer or both.
+<em>Roster → Add roster file …</em> adds a file, or drag the <code>.txt</code> onto the window. In
+the settings you can add, remove and reorder sources. If the same code has different texts in two
+sources, the upper one wins and Captioner shows the conflict. Without internet, Captioner uses the
+last version of a URL it loaded. “Reload roster” fetches all sources fresh.</p>
+
+<h3>Editing rosters</h3>
+<p><em>Roster → Edit roster …</em> opens an editor for the roster files on the computer. Tabs are
+highlighted blue. Lines that would be ignored when loading (space instead of tab, missing text)
+and contradictory duplicate codes are marked red and listed at the bottom; a click jumps to the
+line. <kbd>⌘F</kbd> searches, <kbd>⌘S</kbd> saves. Files are saved in their own character
+encoding, so rosters created on Windows stay intact.</p>
+
+<!-- 11 -->
+<h2 id="location">Location, map and GPS</h2>
+
+<p><strong>Map …</strong> next to “City” (in the panel and in the template) opens an OpenStreetMap
+map:</p>
+<ul>
+  <li><strong>Search:</strong> type an address, postcode or venue, e.g.
+  <code>Colonel-Knight-Stadion</code>, then <kbd>Enter</kbd>. The map jumps there and fills city and
+  location. With several results, choose the right one.</li>
+  <li><strong>Click:</strong> a click sets the point; city and location are looked up for it.
+  Dragging moves the map, the scroll wheel zooms.</li>
+  <li>City and location can still be changed before you confirm with OK.</li>
+</ul>
+<p>Every chosen place is remembered. When you type in “City”, Captioner suggests remembered places,
+even without internet. Without a connection the dialog shows a notice instead of the map; you
+can still enter city and location.</p>
+
+<h3>GPS</h3>
+<p>If the chosen place has coordinates, Captioner writes them into the file as GPS position when
+saving; Lightroom shows them in the Map module. This happens <strong>only for images without
+GPS</strong>: if the camera recorded GPS itself, it is left untouched. The note below “Location”
+says what will happen.</p>
+
+<p class="small">Captioner uses OpenStreetMap for the map. Searching only starts on
+<kbd>Enter</kbd>, at most once per second; the search text or the clicked point is sent to
+openstreetmap.org.</p>
+
+<!-- 12 -->
+<h2 id="replace">Find and replace</h2>
+
+<p><em>Edit → Find and Replace …</em> (<kbd>⌘⌥F</kbd>) replaces text in the selected images, or in
+all shown images if nothing is selected.</p>
+
+<figure class="half">
+  <img src="img/en/suchen-ersetzen.png" alt="Find and replace">
+  <figcaption>Preview per image: before in red, after in green. Individual images can be
+  deselected.</figcaption>
+</figure>
+
+<ul>
+  <li>Choose from caption, headline, tags, city and location; plus “Match case” and “Whole words
+  only”.</li>
+  <li>In the caption, the search runs on the text with codes. <code>#bn9#</code> → <code>#bn10#</code>
+  therefore swaps the player including the person tag. A written-out name is found even where the
+  text has a code.</li>
+  <li>The template's suffix is not searched but rebuilt.</li>
+  <li>Images where an unknown code or a field that is too long would result are locked.</li>
+  <li><kbd>⌘Z</kbd> undoes everything in one step.</li>
+</ul>
+
+<!-- 13 -->
+<h2 id="undo">Undo</h2>
+<p><kbd>⌘Z</kbd> undoes the last change: stars, color class, tag, saved caption, paste, apply
+template, find and replace, also for many images at once. <kbd>⌘⇧Z</kbd> redoes it. The
+<em>Edit</em> menu shows what will be undone. In a text field <kbd>⌘Z</kbd> applies to what you
+just typed.</p>
+<p>Moving to the trash (get images back from there in Finder or Explorer) and renaming cannot be
+undone.</p>
+
+<!-- 14 -->
+<h2 id="lightroom">Handing over to Lightroom</h2>
+
+<p>Drag the selected images into the Lightroom grid. Lightroom opens the import dialog and takes
+over headline, caption, keywords, stars, color label, location, rights and GPS.</p>
+
+<p>Before dragging, Captioner writes everything that is still pending. Images whose metadata is
+not safely stored (write error, or a captioned RAW file without an XMP file) are left out of the
+drag; Captioner tells you which ones.</p>
+
+<h3>Where the metadata goes</h3>
+<table class="plain">
+  <thead><tr><th>File</th><th>where to</th></tr></thead>
+  <tbody>
+    <tr><td>NEF, CR2, ARW, … (RAW)</td><td>Into the XMP file next to it, <code>&lt;name&gt;.xmp</code>.
+    The RAW file is never changed. An existing XMP file (also <code>.XMP</code> from another
+    program) is updated.</td></tr>
+    <tr><td>JPG, DNG, TIFF</td><td>Into the file itself (IPTC, XMP, EXIF). Captioner writes to a copy
+    that only replaces the original if the image data is unchanged.</td></tr>
+  </tbody>
+</table>
+
+<p>The XMP files are included in the drag (can be turned off in the settings).</p>
+
+<!-- 15 -->
+<h2 id="files">Copy, rename, trash, Finder</h2>
+
+<h3>Copying between tabs</h3>
+<p>Drag images from the gallery onto another tab (hovering over it briefly switches to it, so you
+can also drop them into its gallery), or use <strong>Copy to tab</strong> in the context menu.
+RAW, JPG and XMP file are copied together, with all saved metadata. The source stays as it is.</p>
+<p>If a file already exists in the target, Captioner asks: <strong>Skip</strong>,
+<strong>Rename</strong> (<code>DSC_0001-2.NEF</code> + <code>-2.JPG</code> + <code>-2.xmp</code>)
+or <strong>Replace</strong>, optionally for all remaining ones. Cancelling never leaves half-written
+files behind.</p>
+
+<h3>Moving to the trash</h3>
+<p><kbd>⌘⌫</kbd> (Windows: <kbd>Del</kbd>) or the context menu moves the selected images to the
+trash after asking, with all their files (RAW, JPG, XMP). Nothing is deleted permanently; the
+images can be restored from the trash.</p>
+
+<h3>Renaming images</h3>
+<p><em>File → Rename images …</em> renames all images of the folder in the current tab. The dialog
+has one field for the name, e.g. <code>20261023_MEM_EPC</code>; Captioner appends the number
+(<code>20261023_MEM_EPC_001</code>). What the name looks like is up to you. It suggests the name
+you used last with today's date in front (<code>YYYYMMDD</code>), the first time just the date.</p>
+<p>Numbering starts at 1 in order of capture time, padded with zeros to three digits
+(<code>001</code> to <code>999</code>, four digits beyond that). RAW, JPG and XMP file of an image get
+the same number, the extensions stay. If one of the new names already belongs to another file in
+the folder, nothing is renamed. Captions, stars and color classes are kept.</p>
+
+<h3>Show in Finder, copy paths</h3>
+<p><kbd>⌘⌥R</kbd> or the context menu opens the folder in Finder (Windows: Explorer) and selects
+the file. “Copy path” puts the file paths of the selection on the clipboard.</p>
+
+<!-- 16 -->
+<h2 id="settings">Settings</h2>
+
+<p><kbd>⌘,</kbd> (Windows: <em>File → Settings …</em>).</p>
+
+<figure class="half">
+  <img src="img/en/einstellungen.png" alt="Settings">
+</figure>
+
+<dl class="parts">
+  <dt>Roster sources</dt>
+  <dd>Files (<em>File …</em>) and web addresses (<em>URL …</em>), order with ▲/▼. GitHub links can
+  be entered as they appear in the browser.</dd>
+  <dt>Cache for URLs</dt>
+  <dd>How long a loaded URL stays valid before Captioner fetches it again.</dd>
+  <dt>Code delimiter</dt>
+  <dd>Default <code>#</code>.</dd>
+  <dt>Include subfolders</dt>
+  <dd>Show a folder with all its subfolders in one tab.</dd>
+  <dt>Lightroom label for color class 1, 2, 3, …</dt>
+  <dd>Must match the color label set in Lightroom: <code>Red, Yellow, Green, Blue, Purple</code> for
+  an English Lightroom, <code>Rot, Gelb, Grün, Blau, Lila</code> for a German one.</dd>
+  <dt>Include XMP sidecars when dragging</dt>
+  <dd>Leave on as long as Lightroom accepts them.</dd>
+  <dt>Language</dt>
+  <dd>Automatic, Deutsch or English; takes effect after a restart.</dd>
+  <dt>Spell checking</dt>
+  <dd>Automatic, German, English or Off (macOS only).</dd>
+  <dt>Check for updates</dt>
+  <dd>At most once a day on startup.</dd>
+</dl>
+
+<!-- 17 -->
+<h2 id="shortcuts">Keyboard shortcuts</h2>
+
+<p><kbd>F1</kbd> (or <em>Help → Keyboard shortcuts</em>) shows all shortcuts as they are currently
+assigned. The tables here show the defaults.</p>
+
+<h3>Gallery and everywhere</h3>
+<table class="keys">
+  <thead><tr><th>What</th><th>macOS</th><th>Windows</th></tr></thead>
+  <tbody>
+    <tr><td>Open folder · reload</td><td><kbd>⌘O</kbd> · <kbd>F5</kbd></td><td><kbd>Ctrl+O</kbd> · <kbd>F5</kbd></td></tr>
+    <tr><td>Color class 1–8 · remove</td><td><kbd>1</kbd>–<kbd>8</kbd> · <kbd>0</kbd></td><td><kbd>1</kbd>–<kbd>8</kbd> · <kbd>0</kbd></td></tr>
+    <tr><td>Stars 1–5 · remove</td><td><kbd>⌘1</kbd>–<kbd>⌘5</kbd> · <kbd>⌘0</kbd></td><td><kbd>Ctrl+1</kbd>–<kbd>5</kbd> · <kbd>Ctrl+0</kbd></td></tr>
+    <tr><td>Tag on/off · on · off</td><td><kbd>T</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td><td><kbd>T</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td></tr>
+    <tr><td>Preview</td><td><kbd>Space</kbd></td><td><kbd>Space</kbd></td></tr>
+    <tr><td>Edit caption</td><td><kbd>I</kbd> or <kbd>Enter</kbd></td><td><kbd>I</kbd> or <kbd>Enter</kbd></td></tr>
+    <tr><td>Select all · none · tagged</td><td><kbd>⌘A</kbd> · <kbd>⌘D</kbd> · <kbd>⌘T</kbd></td><td><kbd>Ctrl+A</kbd> · <kbd>Ctrl+D</kbd> · <kbd>Ctrl+T</kbd></td></tr>
+    <tr><td>Tagged only · untagged only</td><td><kbd>F3</kbd> · <kbd>F4</kbd></td><td><kbd>F3</kbd> · <kbd>F4</kbd></td></tr>
+    <tr><td>Next · previous image</td><td><kbd>⌘N</kbd> · <kbd>⌘B</kbd></td><td><kbd>Ctrl+M</kbd> · <kbd>Alt+B</kbd></td></tr>
+    <tr><td>First · last · last viewed image</td><td><kbd>Home</kbd> · <kbd>End</kbd> · <kbd>L</kbd></td><td><kbd>Home</kbd> · <kbd>End</kbd> · <kbd>L</kbd></td></tr>
+    <tr><td>Copy · paste caption</td><td><kbd>⌘⇧C</kbd> · <kbd>⌘⇧V</kbd></td><td><kbd>Ctrl+⇧C</kbd> · <kbd>Ctrl+⇧V</kbd></td></tr>
+    <tr><td>Find and replace</td><td><kbd>⌘⌥F</kbd></td><td><kbd>Ctrl+Alt+F</kbd></td></tr>
+    <tr><td>Load template · save as · apply</td><td><kbd>⌘⌥L</kbd> · <kbd>⌘⌥S</kbd> · <kbd>⌘⌥A</kbd></td><td><kbd>Ctrl+Alt+L</kbd> · <kbd>S</kbd> · <kbd>A</kbd></td></tr>
+    <tr><td>Roster sources · reload</td><td><kbd>⌃⌘C</kbd> · <kbd>⌃⇧⌘C</kbd></td><td><kbd>Ctrl+Alt+C</kbd> · <kbd>Ctrl+Alt+⇧C</kbd></td></tr>
+    <tr><td>Undo · redo</td><td><kbd>⌘Z</kbd> · <kbd>⌘⇧Z</kbd></td><td><kbd>Ctrl+Z</kbd> · <kbd>Ctrl+⇧Z</kbd></td></tr>
+    <tr><td>Close tab · next · previous</td><td><kbd>⌘W</kbd> · <kbd>⌘⌥→</kbd> · <kbd>⌘⌥←</kbd></td><td><kbd>Ctrl+W</kbd> · <kbd>Ctrl+Alt+→</kbd> · <kbd>←</kbd></td></tr>
+    <tr><td>Trash · show in Finder/Explorer</td><td><kbd>⌘⌫</kbd> · <kbd>⌘⌥R</kbd></td><td><kbd>Del</kbd> · <kbd>Ctrl+Alt+R</kbd></td></tr>
+    <tr><td>Settings · quit</td><td><kbd>⌘,</kbd> · <kbd>⌘Q</kbd></td><td>via the menu</td></tr>
+    <tr><td>This overview</td><td><kbd>F1</kbd></td><td><kbd>F1</kbd></td></tr>
+  </tbody>
+</table>
+
+<h3>Preview</h3>
+<table class="keys">
+  <thead><tr><th>What</th><th>macOS</th><th>Windows</th></tr></thead>
+  <tbody>
+    <tr><td>Close</td><td><kbd>Esc</kbd>, <kbd>⌘W</kbd>, <kbd>Space</kbd></td><td><kbd>Esc</kbd>, <kbd>Alt+W</kbd>, <kbd>Space</kbd></td></tr>
+    <tr><td>Previous/next image</td><td><kbd>←</kbd> <kbd>→</kbd></td><td><kbd>←</kbd> <kbd>→</kbd></td></tr>
+    <tr><td>Zoom on/off · in · out</td><td><kbd>Z</kbd> or <kbd>*</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td><td><kbd>Z</kbd> or <kbd>*</kbd> · <kbd>+</kbd> · <kbd>-</kbd></td></tr>
+    <tr><td>Move visible area</td><td><kbd>⌥</kbd> + arrow keys</td><td><kbd>Alt</kbd> + arrow keys</td></tr>
+    <tr><td>Caption</td><td><kbd>I</kbd></td><td><kbd>I</kbd></td></tr>
+  </tbody>
+</table>
+
+<p class="small">On German keyboards <kbd>[</kbd> and <kbd>]</kbd> are on <kbd>⌥5</kbd> and
+<kbd>⌥6</kbd>; that is why there are letter alternatives everywhere (<kbd>⌘N</kbd>,
+<kbd>⌘B</kbd>).</p>
+
+<h3>Customizing shortcuts</h3>
+<div class="side">
+  <img src="img/en/kuerzel-aufnehmen.png" alt="Record shortcut">
+  <div>
+    <p><em>File → Customize keyboard shortcuts …</em> lists all actions. Choose an action, then
+    <strong>Change …</strong> (or double-click) or <strong>Add …</strong>, and press the new
+    combination. The field shows what is currently pressed; at most three keys together, e.g.
+    <kbd>⌘⇧K</kbd>.</p>
+    <p>If the combination is already taken, the dialog says so; it is removed there when you
+    confirm. Changed actions are shown in bold. “Default” and “Reset all to defaults” restore the
+    standard assignment. New shortcuts take effect immediately.</p>
+  </div>
+</div>
+
+<!-- 18 -->
+<h2 id="faq">Questions and problems</h2>
+
+<dl class="faq">
+  <dt>Save is greyed out.</dt>
+  <dd>There is an unknown code (red in the text) or a field is too long (red below the caption).
+  Fix the code or add it to the roster and choose “Reload roster”.</dd>
+
+  <dt>A code is not recognized although it is in the roster.</dt>
+  <dd>Usually there is a space instead of a tab between code and text. <em>Edit roster …</em>
+  marks such lines red. For URL sources: “Reload roster”.</dd>
+
+  <dt>Lightroom doesn't show the color label.</dt>
+  <dd>The label names in the settings must match the color label set in Lightroom (German
+  Lightroom: <code>Rot, Gelb, Grün, Blau, Lila</code>). Classes 6–8 have no Lightroom label.</dd>
+
+  <dt>Images are missing when dragging.</dt>
+  <dd>Captioner only drags images whose metadata is safely written and names the others. Often a
+  captioned RAW file lacks its XMP file, e.g. because the folder is read-only (locked memory card).</dd>
+
+  <dt>The panel warns about the headline.</dt>
+  <dd>The headline doesn't follow the format <code>&lt;occasion&gt; - &lt;home&gt; gegen &lt;away&gt;</code>.
+  It is saved anyway, but the later player recognition can't match the game. “gegen” stays German
+  in the English interface too.</dd>
+
+  <dt>The map stays empty.</dt>
+  <dd>Without internet the dialog shows a notice instead of the map. Remembered places are still
+  suggested when you type in “City”.</dd>
+
+  <dt>A shortcut does nothing.</dt>
+  <dd><kbd>F1</kbd> shows the current assignment. Gallery shortcuts such as <kbd>T</kbd> or digits
+  only work when the gallery has the focus, not while typing in the panel. If in doubt, use
+  “Reset all to defaults” in <em>Customize keyboard shortcuts</em>.</dd>
+
+  <dt>Where are settings and templates stored?</dt>
+  <dd>macOS: <code>~/Library/Application Support/captioner/</code>, templates in the subfolder
+  <code>templates</code>. Quickest way there: <em>Template → Show template folder in Finder</em>.</dd>
+</dl>
+
+<p class="end">Captioner is free software under the GNU General Public License v3.0 or later.<br>
+www.katzefudder.de/captioner</p>
+
+</body>
+</html>

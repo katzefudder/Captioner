@@ -1,4 +1,4 @@
-"""Suchen und Ersetzen ueber mehrere Bilder (captioner.replace, ohne Qt)."""
+"""Find and replace across several images (captioner.replace, without Qt)."""
 from pathlib import Path
 
 from captioner import replace
@@ -30,7 +30,7 @@ def test_swapping_a_code_fixes_caption_person_tags_and_suffix(roster):
     assert change.meta.caption == 'Tor -31- Dean Döge (EC Bad Nauheim)' + SUFFIX
     assert change.meta.keywords == ['Eishockey', 'Dean Döge']
     assert change.diffs == [('caption', f'Tor {MARK_START}#bn23#{MARK_END}', f'Tor {MARK_START}#bn31#{MARK_END}')]
-    assert photo.meta.caption.startswith('Tor -23-')       # erst geplant, nichts geaendert
+    assert photo.meta.caption.startswith('Tor -23-')       # only planned, nothing changed
 
 
 def test_name_is_found_although_the_raw_text_has_the_code(roster):
@@ -39,15 +39,15 @@ def test_name_is_found_although_the_raw_text_has_the_code(roster):
     [change] = plan([photo], 'Marius Erk', 'M. Erk', roster=roster)
     assert change.raw == 'Tor -23- M. Erk (EC Bad Nauheim)'
     assert change.meta.caption == 'Tor -23- M. Erk (EC Bad Nauheim)' + SUFFIX
-    assert change.meta.keywords == []                       # kein Roster-Name mehr in der Beschreibung
+    assert change.meta.keywords == []                       # no roster name left in the caption
 
 
 def test_changing_the_headline_renews_the_template_suffix(roster):
-    photo = item('a', 'Jubel' + SUFFIX)                      # ohne gemerkten Rohtext
+    photo = item('a', 'Jubel' + SUFFIX)                      # without a remembered raw text
     [change] = plan([photo], 'A gegen B', 'C gegen D', fields=('caption', 'headline'), roster=roster)
     assert change.meta.headline == 'DEL 2 - C gegen D'
     assert change.meta.caption == 'Jubel, DEL 2 - C gegen D, Bad Nauheim, 01.03.26'
-    assert [field for field, _before, _after in change.diffs] == ['headline']   # im Anhang wird nicht gesucht
+    assert [field for field, _before, _after in change.diffs] == ['headline']   # the suffix is not searched
 
 
 def test_case_and_whole_words(roster):
@@ -70,13 +70,13 @@ def test_unknown_code_blocks_only_that_photo(roster):
 def test_tags_city_and_untouched_photos(roster):
     photos = [item('a', keywords=['Eishokey', 'DEL2', 'Eishockey']), item('b', keywords=['Fussball'])]
     [change] = plan(photos, 'Eishokey', 'Eishockey', fields=('keywords',), roster=roster)
-    assert change.item.key == 'a' and change.meta.keywords == ['Eishockey', 'DEL2']   # doppelte zusammengelegt
+    assert change.item.key == 'a' and change.meta.keywords == ['Eishockey', 'DEL2']   # duplicates merged
     [moved] = plan([item('c', city='Bad Nauhiem')], 'Nauhiem', 'Nauheim', fields=('city',), roster=roster)
     assert moved.meta.city == 'Bad Nauheim'
     assert plan(photos, '', 'x', roster=roster) == []
 
 
 def test_foreign_suffix_stays_and_replacement_is_literal(roster):
-    photo = item('a', 'Jubel, Foto: Agentur')               # kein Anhang dieses Templates
+    photo = item('a', 'Jubel, Foto: Agentur')               # no suffix of this template
     [change] = plan([photo], 'Agentur', r'\1 & Co', roster=roster)
     assert change.meta.caption == r'Jubel, Foto: \1 & Co'

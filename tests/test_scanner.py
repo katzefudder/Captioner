@@ -22,10 +22,10 @@ def test_pairs_raw_and_jpeg_and_finds_uppercase_sidecar(tmp_path):
     pair = items['DSC_0001.JPG']
     assert pair.raw.name == 'DSC_0001.NEF'
     assert pair.kind == 'NEF+JPG'
-    # vorhandenes Sidecar wird in seiner Schreibweise weiterbenutzt
+    # an existing sidecar keeps being used in its spelling
     assert pair.sidecar_target.name == 'DSC_0001.XMP'
 
-    # neues Sidecar: <basis>.xmp, nicht <basis>.NEF.xmp
+    # new sidecar: <base>.xmp, not <base>.NEF.xmp
     assert items['DSC_0002.NEF'].sidecar_target.name == 'DSC_0002.xmp'
     assert items['other.jpg'].sidecar_target is None
 
@@ -88,7 +88,7 @@ def test_text_search_and_time_of_day(tmp_path):
     item.meta = Metadata(headline='DEL 2 - EC Bad Nauheim gegen Kassel', caption='Torjubel Erk',
                          keywords=['Eishockey'])
     assert scanner.matches_text(item, '')
-    assert scanner.matches_text(item, 'jubel erk')          # alle Woerter, ohne Gross/klein
+    assert scanner.matches_text(item, 'jubel erk')          # all words, case-insensitive
     assert scanner.matches_text(item, 'dsc_0001 kassel')
     assert not scanner.matches_text(item, 'jubel regensburg')
     assert scanner.time_of_day(item) == '19:42'

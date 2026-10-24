@@ -1,15 +1,15 @@
 """
-Vorschauen aus den Dateien, ohne RAW-Entwicklung (ADR 0001, Punkt 2).
+Previews from the files, without RAW development (ADR 0001, item 2).
 
-* JPG: Pillow draft() dekodiert direkt in 1/2..1/8 der Aufloesung, das ist fuer
-  Kacheln schneller und schaerfer als das 160-px-EXIF-Thumbnail.
-* RAW/DNG: das passende eingebettete JPEG per ExifTool.
+* JPG: Pillow draft() decodes straight to 1/2..1/8 of the resolution; for tiles that is
+  faster and sharper than the 160 px EXIF thumbnail.
+* RAW/DNG: the matching embedded JPEG via ExifTool.
 
-Die Ausrichtung wird hier aus der Datei gelesen, deren Vorschau gezeigt wird -
-nicht aus item.orientation. Kacheln werden angefordert, bevor der Scan die
-Metadaten gelesen hat; mit dem Default 1 landete sonst eine ungedrehte Kachel
-dauerhaft im Plattencache. Eingebettete Vorschauen sind oft nicht gedreht.
-Ergebnisse landen in einem Plattencache (Pfad + Groesse + mtime).
+The orientation is read here from the file whose preview is shown - not from
+item.orientation. Tiles are requested before the scan has read the metadata; with the
+default 1 an unrotated tile would otherwise end up in the disk cache for good. Embedded
+previews are often not rotated.
+Results go into a disk cache (path + size + mtime).
 """
 import hashlib
 import io
@@ -20,11 +20,11 @@ from PIL import Image
 
 from .scanner import Item, JPEG_EXTENSIONS
 
-TILE_SIZE = 512  # gross genug fuer die groessten Kacheln (Regler) auf Retina
-# Erhoehen, wenn sich die Darstellung aendert; alte Kacheln im Plattencache verfallen dann
+TILE_SIZE = 512  # big enough for the largest tiles (slider) on Retina
+# increase when the rendering changes; old tiles in the disk cache then expire
 CACHE_VERSION = 2
 
-# Reihenfolge: kleinste brauchbare zuerst fuer Kacheln, groesste fuer die Grossansicht
+# order: smallest usable first for tiles, largest for the preview
 TILE_TAGS = ['PreviewImage', 'OtherImage', 'JpgFromRaw', 'ThumbnailImage']
 FULL_TAGS = ['JpgFromRaw', 'OtherImage', 'PreviewImage', 'ThumbnailImage']
 MIN_TILE_EDGE = 300
@@ -62,7 +62,7 @@ def _open_jpeg(data_or_path, max_edge):
 
 
 def _embedded_jpeg(tool, path, tags, min_edge):
-    """Erstes eingebettetes JPEG aus tags, das min_edge erreicht (sonst das groesste)."""
+    """First embedded JPEG from tags that reaches min_edge (otherwise the largest)."""
     best = None
     for tag in tags:
         data = tool.binary(tag, path)
@@ -81,7 +81,7 @@ def _embedded_jpeg(tool, path, tags, min_edge):
 
 
 def orientation_of(tool, path):
-    records = tool.json('-n', '-fast2', '-Orientation', str(path))  # IFD0 genuegt, Makernotes nicht noetig
+    records = tool.json('-n', '-fast2', '-Orientation', str(path))  # IFD0 is enough, no makernotes needed
     try:
         return int(records[0].get('Orientation') or 1) if records else 1
     except (TypeError, ValueError):
@@ -90,11 +90,11 @@ def orientation_of(tool, path):
 
 def render_view(tool, item: Item, min_edge=None):
     """
-    Grossansicht: (PIL-Image, (Breite, Hoehe) des Originals, ausgerichtet).
+    Preview: (PIL image, (width, height) of the original, oriented).
 
-    Mit min_edge wird das JPEG im Draft-Modus verkleinert dekodiert (1/2, 1/4, 1/8 direkt
-    beim Entpacken), aber nie unter min_edge: eingepasst so scharf wie in voller Groesse,
-    bei 45 MP zwei- bis dreimal schneller. Ohne min_edge: volle Aufloesung fuer 100 %.
+    With min_edge the JPEG is decoded downscaled in draft mode (1/2, 1/4, 1/8 directly
+    while decompressing), but never below min_edge: fitted it is as sharp as at full size,
+    two to three times faster at 45 MP. Without min_edge: full resolution for 100 %.
     """
     path = item.primary
     if path.suffix.lower() in JPEG_EXTENSIONS:
@@ -102,7 +102,7 @@ def render_view(tool, item: Item, min_edge=None):
     else:
         source = _embedded_jpeg(tool, path, FULL_TAGS, 10 ** 6)
     if source is None:
-        image = Image.open(path).convert('RGB')  # TIFF/manche DNGs: kein eingebettetes JPEG
+        image = Image.open(path).convert('RGB')  # TIFF/some DNGs: no embedded JPEG
         size = image.size
     else:
         image = Image.open(io.BytesIO(source) if isinstance(source, bytes) else source)
@@ -118,7 +118,7 @@ def render_view(tool, item: Item, min_edge=None):
 
 
 def render(tool, item: Item, max_edge):
-    """PIL-Image fuer die Kachel (max_edge) bzw. Grossansicht (max_edge=None)."""
+    """PIL image for the tile (max_edge) or the preview (max_edge=None)."""
     path = item.primary
     if path.suffix.lower() in JPEG_EXTENSIONS:
         image = _open_jpeg(path, max_edge)
@@ -126,7 +126,7 @@ def render(tool, item: Item, max_edge):
         tags = TILE_TAGS if max_edge else FULL_TAGS
         data = _embedded_jpeg(tool, path, tags, max_edge or 10 ** 6)
         if data is None:
-            # Letzter Versuch: Pillow kann TIFF/manche DNGs direkt lesen
+            # last resort: Pillow can read TIFF/some DNGs directly
             image = Image.open(path).convert('RGB')
             if max_edge:
                 image.thumbnail((max_edge, max_edge), Image.Resampling.LANCZOS)
@@ -141,7 +141,7 @@ class PreviewCache:
         self.directory.mkdir(parents=True, exist_ok=True)
 
     def tile(self, tool, item: Item, size=TILE_SIZE):
-        """JPEG-Bytes der Kachel, aus dem Cache oder frisch erzeugt."""
+        """JPEG bytes of the tile, from the cache or freshly made."""
         key = cache_key(item.primary, size)
         cached = self.directory / key[:2] / f'{key}.jpg'
         if cached.exists():

@@ -1,10 +1,10 @@
 """
-Rechtschreibpruefung der Beschreibung mit der von macOS (NSSpellChecker, per ctypes
-wie folderdialog): dieselben Woerterbuecher wie Mail/Pages, gelernte Woerter gelten
-in beiden Richtungen. Auf anderen Systemen gibt es keine Pruefung.
+Spell checking of the caption with the one from macOS (NSSpellChecker, via ctypes like
+folderdialog): the same dictionaries as Mail/Pages, learned words apply both ways.
+Other systems have no spell checking.
 
-Nicht angestrichen: Codes (#bn23#) und Woerter aus den Roster-Ersetzungen (Namen).
-Bereiche von NSSpellChecker sind UTF-16-Positionen, wie in QString/QSyntaxHighlighter.
+Not marked: codes (#bn23#) and words from the roster replacements (names).
+NSSpellChecker ranges are UTF-16 positions, as in QString/QSyntaxHighlighter.
 """
 import ctypes
 import logging
@@ -32,7 +32,7 @@ def utf16_slice(text, start, length):
 
 
 def utf16_spans(text, pattern):
-    """Treffer eines Musters als (Anfang, Ende) in UTF-16-Einheiten."""
+    """Matches of a pattern as (start, end) in UTF-16 units."""
     spans = []
     for match in pattern.finditer(text):
         start = len(text[:match.start()].encode('utf-16-le')) // 2
@@ -42,7 +42,7 @@ def utf16_spans(text, pattern):
 
 
 class MacSpellChecker:
-    """Gerade genug NSSpellChecker: falsch geschriebene Woerter, Vorschlaege, lernen."""
+    """Just enough NSSpellChecker: misspelled words, suggestions, learning."""
 
     def __init__(self):
         self.objc = _ObjC()
@@ -54,7 +54,7 @@ class MacSpellChecker:
         return self.objc.string(language) if language else None
 
     def misspelled(self, text, language=None):
-        """[(Anfang, Laenge)] in UTF-16-Einheiten."""
+        """[(start, length)] in UTF-16 units."""
         objc = self.objc
         nstext = objc.string(text)
         total = len(text.encode('utf-16-le')) // 2
@@ -98,7 +98,7 @@ _checker = None
 
 
 def checker():
-    """Der macOS-Pruefer, oder None (anderes System oder nicht ansprechbar)."""
+    """The macOS checker, or None (other system or not reachable)."""
     global _checker
     if _checker is None and sys.platform == 'darwin':
         try:
@@ -111,22 +111,22 @@ def checker():
 
 class SpellHighlighter(QSyntaxHighlighter):
     """
-    Rot gewellt unterstreichen; Codes und bekannte Namen auslassen. Dazu die Codes selbst:
-    bekannte gruen hinterlegt (wird ersetzt), unbekannte rot (blockiert das Speichern).
+    Red wavy underline; leave out codes and known names. Plus the codes themselves:
+    known ones with a green background (will be replaced), unknown ones red (block saving).
     """
 
     def __init__(self, document, spell_checker, delimiter='#'):
         super().__init__(document)
         self.spell_checker = spell_checker
-        self.language = None        # None = macOS waehlt (automatisch)
+        self.language = None        # None = macOS chooses (automatic)
         self.enabled = spell_checker is not None
-        self.known = set()          # Woerter aus Roster-Ersetzungen, kleingeschrieben
-        self.ignored = set()        # "Ignorieren" in dieser Sitzung
+        self.known = set()          # words from roster replacements, lower case
+        self.ignored = set()        # "Ignore" in this session
         self.set_delimiter(delimiter)
         self.format = QTextCharFormat()
         self.format.setUnderlineStyle(QTextCharFormat.UnderlineStyle.SpellCheckUnderline)
         self.format.setUnderlineColor(QColor('#d64541'))
-        self.lookup = None          # Code -> Roster-Eintrag oder None; ohne Roster keine Farben
+        self.lookup = None          # code -> roster entry or None; no colors without a roster
         self.known_code = QTextCharFormat()
         self.known_code.setBackground(QColor(63, 163, 77, 90))
         self.unknown_code = QTextCharFormat()
@@ -139,14 +139,14 @@ class SpellHighlighter(QSyntaxHighlighter):
     def set_delimiter(self, delimiter):
         d = re.escape(delimiter or '#')
         self.code_pattern = re.compile(f'{d}[^{d}\\s]*{d}?')
-        self.complete_code = codes.code_pattern(delimiter or '#')   # nur abgeschlossene: #bn9#
+        self.complete_code = codes.code_pattern(delimiter or '#')   # only completed ones: #bn9#
 
     def set_known_words(self, texts):
         self.known = {w.casefold() for text in texts for w in WORD.findall(text)}
         self.rehighlight()
 
     def misspelled(self, text):
-        """[(Anfang, Laenge, Wort)] nach Abzug von Codes und bekannten Woertern."""
+        """[(start, length, word)] after removing codes and known words."""
         if not self.enabled or not text.strip():
             return []
         codes = utf16_spans(text, self.code_pattern)
@@ -161,7 +161,7 @@ class SpellHighlighter(QSyntaxHighlighter):
         return result
 
     def code_spans(self, text):
-        """[(Anfang, Laenge, bekannt)] der abgeschlossenen Codes, in UTF-16-Einheiten."""
+        """[(start, length, known)] of the completed codes, in UTF-16 units."""
         if self.lookup is None:
             return []
         matches = list(self.complete_code.finditer(text))

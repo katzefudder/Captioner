@@ -1,4 +1,4 @@
-"""Neue Version suchen (GitHub-Releases) und in der Statusleiste anbieten."""
+"""Look for a new version (GitHub releases) and offer it in the status bar."""
 import json
 import time
 
@@ -9,11 +9,11 @@ from .. import updates, version
 
 
 class UpdateChecker(QObject):
-    found = Signal(str, str)       # Version, Release-Seite
-    up_to_date = Signal(str)       # eigene Version
+    found = Signal(str, str)       # version, release page
+    up_to_date = Signal(str)       # own version
     failed = Signal(str)
 
-    url = updates.LATEST_URL       # in Tests ersetzbar
+    url = updates.LATEST_URL       # replaceable in tests
 
     def __init__(self, parent=None):
         super().__init__(parent)

@@ -1,11 +1,11 @@
-# Baut bei jedem Push auf main die macOS-App (arm64) und die Windows-Version (x64), testet
-# beide und veroeffentlicht DMG, PKG und setup.exe als ein GitHub-Release. Versionsnummer:
-# <major>.<minor> aus pyproject.toml plus fortlaufende Laufnummer des Workflows, z. B. 0.1.17
-# (Tag v0.1.17). Die Build-Jobs tragen sie vor dem Bauen in ihre pyproject.toml ein
-# (scripts/set_version.py), damit auch Paket-Metadaten und Tests sie sehen; ins Repo nicht.
+# On every push to main, builds the macOS app (arm64) and the Windows version (x64), tests
+# both and publishes DMG, PKG and setup.exe as one GitHub release. Version number:
+# <major>.<minor> from pyproject.toml plus the workflow's running number, e.g. 0.1.17
+# (tag v0.1.17). The build jobs write it into their pyproject.toml before building
+# (scripts/set_version.py), so package metadata and tests see it too; not into the repo.
 #
-# Pull Requests und andere Branches (von Hand gestartet) bauen und testen nur; veroeffentlicht
-# wird ausschliesslich von main.
+# Pull requests and other branches (started by hand) only build and test; publishing
+# happens from main only.
 name: Release
 
 on:
@@ -40,7 +40,7 @@ jobs:
 
   macos:
     needs: version
-    # Apple Silicon; PySide6 6.12 verlangt ohnehin macOS 26 (siehe Claude.md, Paketierung)
+    # Apple silicon; PySide6 6.12 requires macOS 26 anyway (see Claude.md, packaging)
     runs-on: macos-26
     env:
       QT_QPA_PLATFORM: offscreen
@@ -55,7 +55,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Release-Version in pyproject.toml, nur in dieser Arbeitskopie (nicht zurueck ins Repo)
+      # release version in pyproject.toml, only in this working copy (not back into the repo)
       - run: python scripts/set_version.py
 
       - name: Poetry und ExifTool
@@ -128,7 +128,7 @@ jobs:
 
       - run: poetry install
 
-      # Dasselbe ExifTool, das gebuendelt wird, auch fuer die Tests (auf den PATH)
+      # the same ExifTool that gets bundled, for the tests too (on the PATH)
       - name: ExifTool
         run: |
           poetry run python scripts/package_windows.py exiftool
@@ -153,7 +153,7 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      # Nur die Aenderungsliste; vor dem Download, weil checkout den Arbeitsordner leert
+      # only the change list; before the download, because checkout empties the work folder
       - uses: actions/checkout@v7
         with:
           sparse-checkout: CHANGELOG.md
@@ -170,7 +170,7 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           MIN_OS: ${{ needs.macos.outputs.min_os }}
         run: |
-          # Abschnitt "## <major>.<minor>" aus CHANGELOG.md, dann die Hinweise zur Installation
+          # section "## <major>.<minor>" from CHANGELOG.md, then the installation notes
           awk -v v="${VERSION%.*}" '/^## / { p = ($2 == v); next } p' CHANGELOG.md > notes.md
           cat >> notes.md <<EOF
 

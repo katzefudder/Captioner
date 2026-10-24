@@ -1,9 +1,9 @@
 """
-Rueckgaengig/Wiederholen fuer Metadaten-Aenderungen, ohne Qt.
+Undo/redo for metadata changes, without Qt.
 
-Ein Schritt ist eine Aktion des Nutzers (Bewertung, Farbklasse, Tag, Beschriftung,
-Template anwenden, Einfuegen) mit dem Vorher/Nachher aller betroffenen Bilder,
-einschliesslich des Rohtexts mit Codes. Rueckgaengig schreibt das Vorher zurueck.
+A step is one user action (rating, color class, tag, caption, apply template, paste)
+with before/after of all affected images, including the raw text with codes. Undo
+writes the "before" back.
 """
 import dataclasses
 from dataclasses import dataclass, field
@@ -16,20 +16,20 @@ class Change:
     item: object
     before: object        # scanner.Metadata
     after: object
-    raw_before: str = None   # Rohtext mit Codes (RawCaptionStore), None = keiner
+    raw_before: str = None   # raw text with codes (RawCaptionStore), None = none
     raw_after: str = None
 
 
 @dataclass
 class Step:
-    label: str            # mit N_ markierter Text, uebersetzt wird bei der Anzeige
+    label: str            # text marked with N_, translated when displayed
     changes: list = field(default_factory=list)
 
 
 def reverting(current, target):
     """
-    Metadaten, die `target` wiederherstellen. GPS muss geschrieben werden, wenn es sich
-    gegenueber `current` aendert (auch: entfernen, das sonst nie geschrieben wuerde).
+    Metadata that restores `target`. GPS must be written if it changes compared with
+    `current` (also: removing it, which would otherwise never be written).
     """
     gps_differs = (current.latitude, current.longitude) != (target.latitude, target.longitude)
     return dataclasses.replace(target, gps_changed=gps_differs)
@@ -63,7 +63,7 @@ class UndoStack:
         return step
 
     def forget(self, items):
-        """Geloeschte Bilder aus allen Schritten nehmen; leere Schritte fallen weg."""
+        """Take deleted images out of all steps; steps left empty are dropped."""
         gone = {id(item) for item in items}
         for steps in (self.undo_steps, self.redo_steps):
             for step in steps:

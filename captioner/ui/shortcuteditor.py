@@ -1,10 +1,10 @@
 """
-"Tastenkuerzel anpassen": jede Belegung aus keymap.py aendern, ergaenzen, entfernen.
+"Customize keyboard shortcuts": change, add or remove any binding from keymap.py.
 
-Ein neues Kuerzel wird ueber die Tastatur aufgenommen (KeyCaptureField): das Feld zeigt,
-was gerade gedrueckt ist, und ist leer, sobald keine Taste mehr gedrueckt ist. Hoechstens
-keymap.MAX_KEYS Tasten zusammen (z. B. ⌘⇧K). Ist die Kombination schon belegt, wird sie
-dort entfernt (der Dialog sagt das vorher).
+A new shortcut is recorded from the keyboard (KeyCaptureField): the field shows what is
+currently pressed and is empty as soon as no key is held. At most keymap.MAX_KEYS keys
+together (e.g. ⌘⇧K). If the combination is already taken, it is removed there (the dialog
+says so beforehand).
 """
 from PySide6.QtCore import QEvent, QKeyCombination, Qt, Signal
 from PySide6.QtGui import QKeySequence
@@ -26,12 +26,12 @@ IGNORED_KEYS = {Qt.Key.Key_unknown, Qt.Key.Key_AltGr, Qt.Key.Key_CapsLock, Qt.Ke
 
 
 def native(key):
-    """Kuerzel in der Schreibweise der Plattform (auf dem Mac mit ⌘)."""
+    """Shortcut in the platform's notation (with ⌘ on the Mac)."""
     return QKeySequence(key).toString(QKeySequence.SequenceFormat.NativeText)
 
 
 def modifier_text(modifiers):
-    """Nur die gehaltenen Modifier, z. B. „⌘⇧“ bzw. „Ctrl+Shift+“."""
+    """Only the held modifiers, e.g. "⌘⇧" or "Ctrl+Shift+"."""
     if not modifiers:
         return ''
     text = QKeySequence(QKeyCombination(modifiers, Qt.Key.Key_A)).toString(QKeySequence.SequenceFormat.NativeText)
@@ -44,9 +44,9 @@ def count_modifiers(modifiers):
 
 class KeyCaptureField(QLineEdit):
     """
-    Zeigt die gerade gedrueckten Tasten, leer ohne Tastendruck. Jede Kombination mit einer
-    Taste ausser Modifiern meldet `captured` (Qt-Schreibweise, PortableText) bzw.
-    `too_many`, wenn mehr als keymap.MAX_KEYS Tasten gedrueckt sind.
+    Shows the keys currently pressed, empty without a key press. Every combination with a
+    key other than modifiers reports `captured` (Qt notation, PortableText), or
+    `too_many` if more than keymap.MAX_KEYS keys are pressed.
     """
     captured = Signal(str)
     too_many = Signal()
@@ -64,7 +64,7 @@ class KeyCaptureField(QLineEdit):
         self._key = None
 
     def event(self, event):
-        # Alle Tasten gehoeren dem Feld: keine Kuerzel, kein Tab-Wechsel, kein Esc/Enter fuer den Dialog
+        # All keys belong to the field: no shortcuts, no tab focus change, no Esc/Enter for the dialog
         if event.type() == QEvent.Type.ShortcutOverride:
             event.accept()
             return True
@@ -91,8 +91,8 @@ class KeyCaptureField(QLineEdit):
         if count_modifiers(modifiers) + 1 > keymap.MAX_KEYS:
             self.too_many.emit()
             return
-        # Zeichen, fuer die man Shift braucht (* + ? auf deutscher Tastatur), ohne Shift merken:
-        # das Zeichen sagt es schon, und so loest Qt das Kuerzel auch aus
+        # Characters that need Shift (* + ? on a German keyboard) are remembered without Shift:
+        # the character already says it, and that way Qt also triggers the shortcut
         if (modifiers & Qt.KeyboardModifier.ShiftModifier and 0x21 <= key <= 0x7e
                 and not Qt.Key.Key_A <= key <= Qt.Key.Key_Z and not Qt.Key.Key_0 <= key <= Qt.Key.Key_9):
             modifiers &= ~Qt.KeyboardModifier.ShiftModifier
@@ -105,7 +105,7 @@ class KeyCaptureField(QLineEdit):
         if key in MODIFIER_KEYS:
             self._modifiers = event.modifiers() & MODIFIER_MASK & ~MODIFIER_KEYS[key]
             if not self._modifiers:
-                self._key = None   # macOS meldet das Loslassen von ⌘+Taste nicht immer
+                self._key = None   # macOS doesn't always report releasing ⌘+key
         else:
             self._modifiers = event.modifiers() & MODIFIER_MASK
             self._key = None
@@ -124,7 +124,7 @@ class KeyCaptureField(QLineEdit):
 
 
 class KeyCaptureDialog(QDialog):
-    """Ein Kuerzel ueber die Tastatur aufnehmen; `key` ist danach die Qt-Schreibweise."""
+    """Record a shortcut from the keyboard; `key` is then the Qt notation."""
 
     def __init__(self, command, keys_by_command, parent=None):
         super().__init__(parent)
@@ -145,14 +145,14 @@ class KeyCaptureDialog(QDialog):
         layout.addWidget(self.field)
         self.result_label = QLabel(' ')
         self.result_label.setWordWrap(True)
-        # Platz fuer „Neu: …“ und den Hinweis auf eine Doppelbelegung, damit nichts springt
+        # room for "New: …" and the note about a clash, so nothing jumps
         self.result_label.setMinimumHeight(self.result_label.fontMetrics().lineSpacing() * 3)
         self.result_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(self.result_label)
         self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
-        # Nur per Maus: die Tastatur gehoert dem Aufnahmefeld (auch Esc und Enter sind Kuerzel)
+        # Mouse only: the keyboard belongs to the capture field (Esc and Enter are shortcuts too)
         for button in self.buttons.buttons():
             button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             button.setAutoDefault(False)
@@ -178,14 +178,14 @@ class KeyCaptureDialog(QDialog):
 
 
 class ShortcutEditorDialog(QDialog):
-    """Alle Befehle nach Kontext; je Befehl seine Kuerzel (das erste steht in Menues und Hinweisen)."""
+    """All commands by context; per command its shortcuts (the first is shown in menus and hints)."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(_('Tastenkürzel anpassen'))
         self.resize(720, 760)
         self.keys = {binding.command: list(binding.keys) for binding in keymap.BINDINGS}
-        self.capture_dialog = None   # fuer Tests: der gerade offene Aufnahme-Dialog
+        self.capture_dialog = None   # for tests: the capture dialog currently open
 
         layout = QVBoxLayout(self)
         self.search = QLineEdit(placeholderText=_('Aktion oder Kürzel suchen'))
@@ -256,13 +256,13 @@ class ShortcutEditorDialog(QDialog):
     def overrides(self):
         return keymap.overrides(self.keys)
 
-    # --- Anzeige -----------------------------------------------------------------
+    # --- Display -----------------------------------------------------------------
 
     def _refresh(self):
         for command, item in self.items.items():
             item.setText(1, _('  oder  ').join(native(k) for k in self.keys[command]))
             font = item.font(0)
-            font.setBold(tuple(self.keys[command]) != keymap.DEFAULT_KEYS[command])  # geaendert
+            font.setBold(tuple(self.keys[command]) != keymap.DEFAULT_KEYS[command])  # changed
             item.setFont(0, font)
             item.setFont(1, font)
         self._filter(self.search.text())
@@ -302,7 +302,7 @@ class ShortcutEditorDialog(QDialog):
         self.remove_button.setEnabled(has_key)
         self.default_button.setEnabled(command is not None and tuple(self.keys[command]) != keymap.DEFAULT_KEYS[command])
 
-    # --- Aendern -----------------------------------------------------------------
+    # --- Changing ----------------------------------------------------------------
 
     def _capture(self):
         self.capture_dialog = KeyCaptureDialog(self.command, self.keys, self)
@@ -314,12 +314,12 @@ class ShortcutEditorDialog(QDialog):
             self.capture_dialog = None
 
     def _take(self, key, clashing):
-        """Kombination bei den anderen Befehlen entfernen (auch doppelt beim selben)."""
+        """Remove the combination from the other commands (also a duplicate on the same one)."""
         for other in clashing:
             self.keys[other] = [k for k in self.keys[other] if keymap.normalized(k) != keymap.normalized(key)]
 
     def change_key(self):
-        """Gewaehltes Kuerzel ersetzen (ohne Kuerzel: eins hinzufuegen)."""
+        """Replace the selected shortcut (without a shortcut: add one)."""
         command, row = self.command, self.key_list.currentRow()
         if command is None:
             return

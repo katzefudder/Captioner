@@ -1,4 +1,4 @@
-"""Drag-Regeln aus ADR 0001, Punkt 7, im Offscreen-Modus."""
+"""Drag rules from ADR 0001, item 7, in offscreen mode."""
 import os
 import sys
 from pathlib import Path
@@ -74,7 +74,7 @@ def test_edited_raw_without_sidecar_is_refused(window, tmp_path, monkeypatch):
     window.apply_filter()
     window.set_rating(1)
     window.writer.flush(30)
-    raw_item.sidecar.unlink()  # Sidecar verschwindet nach dem Schreiben
+    raw_item.sidecar.unlink()  # sidecar disappears after writing
 
     warnings = []
     monkeypatch.setattr(QtWidgets.QMessageBox, 'warning', lambda *a: warnings.append(a[2]))
@@ -96,7 +96,7 @@ def test_failed_write_is_refused(window, tmp_path, monkeypatch):
 
 
 def test_thumbnail_threads_share_one_exiftool_per_thread(app, tmp_path):
-    """Regression: threading.local erzeugte im QThreadPool pro Kachel einen Perl-Prozess."""
+    """Regression: threading.local created one Perl process per tile in the QThreadPool."""
     from captioner import scanner
     from captioner.exiftool import ExifToolPool, find_exiftool
     from captioner.previews import PreviewCache
@@ -131,11 +131,11 @@ def test_open_and_save_template_files(window, tmp_path):
     assert copy.path.endswith('kopie.toml')
     assert templates.load_file(copy.path).teams[0] == 'EC Kassel Huskies'
     assert window.editor.template.path == copy.path
-    assert opened.path == str(shared)  # Original bleibt unveraendert verknuepft
+    assert opened.path == str(shared)  # original stays linked unchanged
 
     window.remove_template(window.editor.template)
     assert copy.path not in window.settings.template_files
-    assert Path(copy.path).exists()  # fremde Dateien werden nie geloescht
+    assert Path(copy.path).exists()  # foreign files are never deleted
 
 
 def test_broken_template_file_shows_warning(window, tmp_path, monkeypatch):
@@ -167,13 +167,13 @@ def test_menus_replace_the_toolbar(window):
     assert entries['Einstellungen …'].menuRole() == QAction.MenuRole.PreferencesRole
     assert entries['Über Captioner'].menuRole() == QAction.MenuRole.AboutRole
     assert entries['Beenden'].menuRole() == QAction.MenuRole.QuitRole
-    # keine Doppelbelegung mit der Keymap (Qt loest doppelte Kuerzel gar nicht aus)
+    # no clash with the keymap (Qt doesn't trigger duplicate shortcuts at all)
     from captioner.ui import keymap
     from PySide6.QtGui import QKeySequence
     keymap_keys = {QKeySequence(k).toString() for b in keymap.BINDINGS if b.context != 'menu' for k in b.keys}
     for entry in entries.values():
         assert entry.shortcut().isEmpty() or entry.shortcut().toString() not in keymap_keys, entry.text()
-    # Menue-Kuerzel kommen aus der Keymap (Kontext menu), damit sie sich anpassen lassen
+    # menu shortcuts come from the keymap (context menu) so they can be customized
     assert [k.toString() for k in entries['Ordner öffnen …'].shortcuts()] == ['Ctrl+O']
     assert [k.toString() for k in entries['Neu einlesen'].shortcuts()] == ['F5']
 
@@ -186,9 +186,13 @@ def test_window_title_shows_the_version(window):
 def test_help_menu_opens_the_bundled_manual(window, monkeypatch):
     from captioner import manual_path
     from captioner.ui import main_window
-    assert manual_path().is_file() and manual_path().suffix == '.pdf'   # eingecheckt, von beiden Specs gebuendelt
+    # checked in, bundled by both specs; one per UI language, English for anything else
+    for language in ('de', 'en'):
+        assert manual_path(language).is_file() and manual_path(language).suffix == '.pdf'
+    assert manual_path('en') != manual_path('de') and manual_path('fr') == manual_path('en')
+    assert manual_path() == manual_path('de')    # tests run in German
     opened = []
-    # Qt liefert unter Windows '/', Python '\\': als Path vergleichen
+    # Qt returns '/' on Windows, Python '\\': compare as Path
     monkeypatch.setattr(main_window.QDesktopServices, 'openUrl', lambda url: opened.append(Path(url.toLocalFile())) or True)
     help_menu = next(a.menu() for a in window.menuBar().actions() if a.text() == 'Hilfe')
     next(a for a in help_menu.actions() if a.text() == 'Anleitung (PDF)').trigger()
@@ -200,7 +204,7 @@ def test_about_dialog_links_to_the_website(app):
     from captioner.ui.about import AboutDialog
     dialog = AboutDialog()
     assert WEBSITE == 'https://www.katzefudder.de/captioner'
-    # Kampagnen-Parameter da; welcher mtm_source, entscheidet captioner/__init__.py
+    # campaign parameters present; captioner/__init__.py decides which mtm_source
     from urllib.parse import parse_qs, urlsplit
     query = parse_qs(urlsplit(WEBSITE_LINK).query)
     assert WEBSITE_LINK.startswith(WEBSITE + '?') and query['mtm_campaign'] == ['captioner'] and query['mtm_source']
@@ -268,7 +272,7 @@ def test_new_template_never_overwrites_same_name(tmp_path):
 def test_open_template_folder(window, monkeypatch):
     from captioner.ui import main_window
     opened = []
-    # Als Path vergleichen: Qt liefert unter Windows C:/..., Python C:\\...
+    # compare as Path: Qt returns C:/... on Windows, Python C:\\...
     monkeypatch.setattr(main_window.QDesktopServices, 'openUrl',
                         lambda url: opened.append(Path(url.toLocalFile())) or True)
     actions = [a for a in window.editor.template_menu.actions() if a.text().startswith('Template-Ordner')]
@@ -276,14 +280,14 @@ def test_open_template_folder(window, monkeypatch):
                 for a in m.menu().actions() if a.text().startswith('Template-Ordner')]
     assert len(actions) == 2
 
-    for action in actions:   # ueber das Menue, nicht die Methode: so faellt eine falsche Verbindung auf
+    for action in actions:   # via the menu, not the method: that way a wrong connection shows up
         action.trigger()
 
     assert opened == [Path(window.template_store.directory)] * 2
 
 
 def test_template_menu_entries_emit(window):
-    """Eintraege im Menue "⋯" muessen ihr Signal ausloesen (ein Signal ist kein Slot fuer addAction)."""
+    """Entries in the "⋯" menu must emit their signal (a signal is not a slot for addAction)."""
     editor = window.editor
     emitted = []
     for signal in (editor.open_template_requested, editor.save_template_as_requested,
@@ -293,7 +297,7 @@ def test_template_menu_entries_emit(window):
     names = ('Template-Datei laden …', 'Speichern unter …', 'Template-Ordner')
     for action in editor.template_menu.actions():
         if action.text().startswith(names):
-            action.setEnabled(True)   # "Speichern unter" ist ohne Template gesperrt
+            action.setEnabled(True)   # "Save as" is disabled without a template
             action.trigger()
     assert len(emitted) == 3
 
@@ -318,13 +322,13 @@ def test_template_dialog_shows_where_suffix_values_come_from(app):
     chips = {b.text(): b for b in dialog.placeholder_legend.findChildren(QPushButton)}
     assert len(chips) == len(SUFFIX_PLACEHOLDERS)
     dialog.suffix.setCursorPosition(len(dialog.suffix.text()))
-    chips['{sublocation}'].click()                   # Klick auf den Chip in der Legende
+    chips['{sublocation}'].click()                   # click on the chip in the legend
     assert dialog.suffix.text() == ', {headline}, {city}{sublocation}'
     assert '●' in dialog._source_labels['sublocation'][0].text()
-    # leerer Ort im Template: Wert kommt beim Speichern aus dem Panel
+    # empty location in the template: the value comes from the panel when saving
     assert 'Ort aus dem Panel' in dialog.suffix_preview.text()
     dialog._insert_placeholder('creator')
-    assert 'Fotograf (vom Bild)' in dialog.suffix_preview.text()   # leer: Wert des Bildes
+    assert 'Fotograf (vom Bild)' in dialog.suffix_preview.text()   # empty: the image's value
     dialog.creator.setText('Florian Dehn')
     assert f'color:{PLACEHOLDER_COLORS["creator"]}">Florian Dehn<' in dialog.suffix_preview.text()
     assert '●' in dialog._source_labels['creator'][0].text()
@@ -365,7 +369,7 @@ def test_panel_warns_when_fixed_date_differs(app):
 
 
 def test_gallery_visible_rows_match_the_layout(app):
-    """Ohne Seiten: Kacheln werden nur fuer den sichtbaren Bereich angefordert."""
+    """No pages: tiles are only requested for the visible area."""
     from types import SimpleNamespace
     from PySide6.QtCore import QObject, QSize, Signal
     from captioner.ui.gallery import GalleryModel, GalleryView, TILE_H, TILE_W
@@ -375,7 +379,7 @@ def test_gallery_visible_rows_match_the_layout(app):
 
     view = GalleryView()
     view.setModel(GalleryModel(Loader()))
-    view.setGridSize(QSize(TILE_W, TILE_H))  # Kachelgroesse ohne TileDelegate
+    view.setGridSize(QSize(TILE_W, TILE_H))  # tile size without TileDelegate
     view.model().set_items([SimpleNamespace(key=str(n), name=str(n)) for n in range(1000)])
     view.resize(3 * TILE_W + 40, 2 * TILE_H + 20)
     view.show()
@@ -385,8 +389,8 @@ def test_gallery_visible_rows_match_the_layout(app):
         first, last = view.visible_rows()
         area = view.viewport().rect()
         shown = [r for r in range(1000) if view.visualRect(view.model().index(r)).intersects(area)]
-        assert first <= shown[0] and shown[-1] <= last  # nichts Sichtbares fehlt
-        assert last - first < 30                         # und nicht alle 1000
+        assert first <= shown[0] and shown[-1] <= last  # nothing visible is missing
+        assert last - first < 30                         # and not all 1000
         return first, last
 
     assert check()[0] == 0
@@ -404,8 +408,8 @@ def test_thumbnail_slider_resizes_tiles_in_all_tabs(window):
     for tab in window.all_tabs():
         delegate = tab.view.itemDelegate()
         assert (delegate.tile_w, delegate.tile_h, delegate.image_h) == tile_size(400)
-    assert tile_size(220) == (220, 210, 150)      # Voreinstellung wie bisher
-    third = window.new_tab()                       # neue Tabs bekommen die eingestellte Groesse
+    assert tile_size(220) == (220, 210, 150)      # default as before
+    third = window.new_tab()                       # new tabs get the configured size
     assert third.view.itemDelegate().tile_w == 400 and second is not third
 
 
@@ -416,11 +420,11 @@ def test_thumbnail_memory_keeps_wanted_tiles(app):
     loader = ThumbnailLoader(None, None)
     image = QImage(100, 100, QImage.Format.Format_RGB32)
     loader.MEMORY_BYTES = 3 * image.sizeInBytes()
-    loader.wanted = {'a', 'b', 'c', 'd'}           # alle sichtbar: nichts verwerfen, auch ueber dem Budget
+    loader.wanted = {'a', 'b', 'c', 'd'}           # all visible: drop nothing, even above the budget
     for key in 'abcd':
         loader._on_ready(key, QImage(image))
     assert set(loader.images) == {'a', 'b', 'c', 'd'}
-    loader.wanted = {'d', 'e'}                     # weitergescrollt: aelteste nicht mehr sichtbare gehen
+    loader.wanted = {'d', 'e'}                     # scrolled on: the oldest no longer visible ones go
     loader._on_ready('e', QImage(image))
     assert set(loader.images) == {'c', 'd', 'e'}
     assert loader.memory == 3 * image.sizeInBytes()
@@ -435,10 +439,10 @@ def test_template_dialog_instructions_are_multiline(app):
     text = 'Honorarpflichtig\nKontakt: foto@example.org\nIBAN DE00 1234'
     dialog = TemplateDialog(MatchTemplate(name='Hinweise', instructions=text, caption_suffix=', {instructions}'))
     assert isinstance(dialog.instructions, MultiLineField) and dialog.instructions.text() == text
-    assert dialog.template().instructions == text            # Zeilen bleiben in der Template-Datei
-    dialog.instructions.setPlainText('x' * 300)                  # zu lang: Speichern gesperrt
+    assert dialog.template().instructions == text            # lines stay in the template file
+    dialog.instructions.setPlainText('x' * 300)                  # too long: saving blocked
     assert not dialog.buttons.button(dialog.buttons.StandardButton.Save).isEnabled()
-    dialog.instructions.setPlainText('a\n' * 70)                 # 140 Bytes, im Bild mit " · " 342
+    dialog.instructions.setPlainText('a\n' * 70)                 # 140 bytes, in the image with " · " 342
     assert not dialog.buttons.button(dialog.buttons.StandardButton.Save).isEnabled()
     dialog.instructions.setPlainText(text)
     assert dialog.buttons.button(dialog.buttons.StandardButton.Save).isEnabled()
@@ -449,8 +453,8 @@ def test_codes_are_highlighted_green_or_red(app, roster):
     editor = CaptionEditor()
     editor.set_roster(roster, '#')
     highlighter = editor.caption.spelling
-    text = '😀 Jubel #bn23# und #xx1# nach #bn3'           # Emoji: zwei UTF-16-Einheiten
-    assert highlighter.code_spans(text) == [(9, 6, True), (20, 5, False)]  # #bn3 noch unvollstaendig
+    text = '😀 Jubel #bn23# und #xx1# nach #bn3'           # emoji: two UTF-16 units
+    assert highlighter.code_spans(text) == [(9, 6, True), (20, 5, False)]  # #bn3 not complete yet
     editor.caption.setPlainText(text)
     formats = editor.caption.document().firstBlock().layout().formats()
     backgrounds = {(f.start, f.length): f.format.background().color().name() for f in formats}
@@ -460,4 +464,4 @@ def test_codes_are_highlighted_green_or_red(app, roster):
     preview = editor.preview.text()
     assert f'<span style="background-color:{editor._replacement_color()}">-23- Marius Erk (EC Bad Nauheim)</span>' in preview
     assert '' not in preview and '' not in preview
-    assert editor.resolve().text == 'Jubel -23- Marius Erk (EC Bad Nauheim)'   # gespeichert ohne Markierung
+    assert editor.resolve().text == 'Jubel -23- Marius Erk (EC Bad Nauheim)'   # saved without marking

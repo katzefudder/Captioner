@@ -1,8 +1,8 @@
 """
-Einstellungen der App, als TOML im Konfigurationsverzeichnis des Betriebssystems.
+App settings, as TOML in the operating system's configuration directory.
 
-Es gibt keine eigene Bilddatenbank (ADR 0001, Punkt 4). Hier liegt nur, was die
-App selbst braucht: Roster-Quellen, Label-Namen, Templates.
+There is no image database of its own (ADR 0001, item 4). This only holds what the
+app itself needs: roster sources, label names, templates.
 """
 import os
 import tomllib
@@ -14,14 +14,14 @@ from platformdirs import user_cache_dir, user_config_dir
 
 APP_NAME = 'captioner'
 
-# xmp:Label wird von Lightroom als Text gegen das aktive Label-Set verglichen.
-# Ein englisches Lightroom (und die vorhandenen Sidecars) nutzen "Red", ein deutsches
-# erwartet "Rot". Tasten 6-9 wie in Lightroom: Rot, Gelb, Gruen, Blau.
+# Lightroom compares xmp:Label as text against the active label set.
+# An English Lightroom (and the existing sidecars) use "Red", a German one
+# expects "Rot". Keys 6-9 as in Lightroom: red, yellow, green, blue.
 DEFAULT_LABELS = ['Red', 'Yellow', 'Green', 'Blue', 'Purple']
 
 
 def _home_override():
-    """CAPTIONER_HOME lenkt Konfiguration und Cache um, z. B. fuer Tests."""
+    """CAPTIONER_HOME redirects configuration and cache, e.g. for tests."""
     home = os.environ.get('CAPTIONER_HOME')
     return Path(home) if home else None
 
@@ -55,31 +55,31 @@ class Settings:
     code_delimiter: str = '#'
     recursive: bool = False
     labels: list = field(default_factory=lambda: list(DEFAULT_LABELS))
-    # .xmp-URLs zusaetzlich in den Drag legen (ADR 0001, Punkt 7). Abschaltbar,
-    # falls eine Lightroom-Version sie im Drop nicht akzeptiert.
+    # Also put the .xmp URLs into the drag (ADR 0001, item 7). Can be turned off
+    # in case a Lightroom version doesn't accept them in the drop.
     drag_include_sidecars: bool = True
-    viewer_info_panel: bool = True   # EXIF/IPTC rechts in der Grossansicht
-    viewer_caption_panel: bool = False  # Beschriftungs-Panel in der Grossansicht
-    language: str = ''           # '' = Systemsprache, sonst 'de'/'en'; siehe i18n.LANGUAGES
-    spellcheck: str = 'auto'     # Beschreibung: 'auto' (macOS waehlt), 'de', 'en', 'off'
-    check_updates: bool = True   # einmal am Tag auf GitHub nach einem neuen Release fragen
+    viewer_info_panel: bool = True   # EXIF/IPTC on the right in the preview
+    viewer_caption_panel: bool = False  # caption panel in the preview
+    language: str = ''           # '' = system language, otherwise 'de'/'en'; see i18n.LANGUAGES
+    spellcheck: str = 'auto'     # caption: 'auto' (macOS chooses), 'de', 'en', 'off'
+    check_updates: bool = True   # ask GitHub for a new release once a day
     last_update_check: float = 0.0
     exiftool_path: str = ''
     last_folder: str = ''
-    # Offene Tabs beim Beenden (Ordnerpfade, in Reihenfolge) und der aktive; beim Start
-    # wieder geoeffnet, nicht vorhandene (Karte nicht eingesteckt) uebersprungen
+    # Tabs open on quit (folder paths, in order) and the active one; reopened on start,
+    # missing ones (card not inserted) are skipped
     open_tabs: list = field(default_factory=list)
     active_tab: str = ''
-    last_template: str = ''      # Pfad des zuletzt gewaehlten Templates
-    # Template-Dateien vom Rechner, die ausserhalb des Konfigurationsverzeichnisses liegen
+    last_template: str = ''      # path of the template chosen last
+    # template files on the computer that live outside the configuration directory
     template_files: list = field(default_factory=list)
-    # Gewaehlte Orte (Stadt, Ort, Koordinaten), neueste zuerst; siehe geo.PlaceBook
+    # chosen places (city, location, coordinates), newest first; see geo.PlaceBook
     places: list = field(default_factory=list)
-    thumbnail_size: int = 220    # Kachelbreite in der Galerie (Regler), siehe gallery.tile_size
-    roster_font_size: int = 0    # Schriftgroesse im Roster-Editor (Punkt), 0 = Systemvorgabe
-    # Eigene Tastenkuerzel, nur Abweichungen vom Standard: {Befehl: [Tasten, ...]}, siehe keymap.apply
+    thumbnail_size: int = 220    # tile width in the gallery (slider), see gallery.tile_size
+    roster_font_size: int = 0    # font size in the roster editor (points), 0 = system default
+    # custom shortcuts, only deviations from the defaults: {command: [keys, ...]}, see keymap.apply
     shortcuts: dict = field(default_factory=dict)
-    # Zuletzt eingegebener Name im Dialog "Bilder umbenennen" (ohne Nummer), siehe rename.default_prefix
+    # name entered last in the "Rename images" dialog (without number), see rename.default_prefix
     rename_prefix: str = ''
 
     @classmethod

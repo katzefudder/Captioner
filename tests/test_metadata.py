@@ -46,7 +46,7 @@ def test_jpeg_gets_iptc_xmp_and_exif(tool, tmp_path):
     assert record['Rating'] == 4
     assert record['Label'] == 'Green'
     assert metadata.image_data_hash(tool, path) == before
-    if sys.platform != 'win32':  # Windows kennt keine POSIX-Rechte
+    if sys.platform != 'win32':  # Windows has no POSIX permissions
         assert path.stat().st_mode & 0o777 == 0o640
     assert not list(tmp_path.glob('.*captioner-tmp*'))
 
@@ -107,7 +107,7 @@ def test_clearing_keywords_and_label(tool, tmp_path):
 
 
 def test_limits_are_bytes_not_characters():
-    meta = Metadata(city='Ö' * 17)  # 34 Bytes > 32
+    meta = Metadata(city='Ö' * 17)  # 34 bytes > 32
     assert metadata.validate(meta)
     assert not metadata.validate(Metadata(city='Ö' * 16))
 
@@ -125,7 +125,7 @@ def test_object_name_is_truncated_on_char_boundary():
 
 
 def test_tile_is_rotated_even_before_metadata_is_loaded(tool, tmp_path):
-    """Regression: Kacheln entstanden vor dem Metadaten-Scan mit Ausrichtung 1."""
+    """Regression: tiles were created with orientation 1 before the metadata scan."""
     from captioner import previews
     path = make_jpeg(tmp_path / 'a.jpg', size=(600, 400))
     tool.execute('-overwrite_original', '-n', '-Orientation=6', str(path))
@@ -172,7 +172,7 @@ def test_gps_in_sidecar_and_camera_gps_in_raw_counts(tool, tmp_path):
     record = read(tool, tmp_path / 'DSC_0001.xmp', '-n', '-GPSLatitude', '-GPSLongitude')
     assert (record['GPSLatitude'], record['GPSLongitude']) == pytest.approx((50.36335, -8.74107))
 
-    # Kamera-GPS im JPG eines RAW+JPG-Paares, Beschriftung im Sidecar: GPS wird trotzdem erkannt
+    # camera GPS in the JPG of a RAW+JPG pair, caption in the sidecar: GPS is still detected
     make_jpeg(tmp_path / 'DSC_0002.JPG')
     tool.execute('-overwrite_original', '-EXIF:GPSLatitude=48.1', '-EXIF:GPSLatitudeRef=N',
                  '-EXIF:GPSLongitude=11.5', '-EXIF:GPSLongitudeRef=E', str(tmp_path / 'DSC_0002.JPG'))
@@ -219,7 +219,7 @@ def test_rights_go_into_xmp_iptc_and_exif(tool, tmp_path):
     assert record['XMP:Source'] == record['IPTC:Source'] == 'chuc.de'
     assert record['XMP:State'] == record['IPTC:Province-State'] == 'Hessen'
     assert record['XMP:Country'] == record['IPTC:Country-PrimaryLocationName'] == 'Deutschland'
-    assert record['XMP:Category'] == 'Sport' and 'IPTC:Category' not in record  # IIM nur 3 Zeichen
+    assert record['XMP:Category'] == 'Sport' and 'IPTC:Category' not in record  # IIM only 3 characters
     assert record['XMP:Instructions'] == record['IPTC:SpecialInstructions'] == RIGHTS['instructions']
     assert record['XMP:CountryCode'] == record['IPTC:Country-PrimaryLocationCode'] == 'DEU'
     assert record['XMP:Credit'] == record['IPTC:Credit'] == 'Florian Dehn/chuc.de'
@@ -230,19 +230,19 @@ def test_rights_go_into_xmp_iptc_and_exif(tool, tmp_path):
 
 
 def test_multiline_rights_are_written_on_one_line(tool, tmp_path):
-    """Adresse/Kontoverbindung aus einer Template-Datei mit Umbruechen: ExifTool-Argumente sind zeilenweise."""
+    """Address/bank details from a template file with line breaks: ExifTool arguments are line-based."""
     import dataclasses
     path = make_jpeg(tmp_path / 'a.jpg')
     item = scanner.scan(tmp_path)[0]
     instructions = 'Kontakt: foto@example.org\nIBAN DE00 1234\n'
     metadata.write_item(tool, item, dataclasses.replace(META, instructions=instructions, source='a\nb'))
     record = tool.json('-G', '-XMP:Instructions', '-XMP:Source', str(path))[0]
-    assert record['XMP:Instructions'] == 'Kontakt: foto@example.org · IBAN DE00 1234'  # Zeilen mit ·
+    assert record['XMP:Instructions'] == 'Kontakt: foto@example.org · IBAN DE00 1234'  # lines with ·
     assert record['XMP:Source'] == 'a b'
 
 
 def test_camera_artist_and_copyright_survive_saving(tool, tmp_path):
-    """Kamera schreibt Artist/Copyright in RAW und JPG; Speichern ohne Template darf sie nicht leeren."""
+    """Camera writes Artist/Copyright into RAW and JPG; saving without a template must not clear them."""
     (tmp_path / 'DSC_0001.NEF').write_bytes(b'raw')
     jpg = make_jpeg(tmp_path / 'DSC_0001.JPG')
     tool.execute('-overwrite_original', '-EXIF:Artist=Kamera Fotograf', '-EXIF:Copyright=Kamera ©', str(jpg))
@@ -270,7 +270,7 @@ def test_short_category_also_goes_into_iptc(tool, tmp_path):
 
 
 def test_locked_file_is_retried_then_reported(tool, tmp_path, monkeypatch):
-    """Windows: Explorer/Virenscanner sperren kurz; erst nachfassen, dann klar melden."""
+    """Windows: Explorer/virus scanners lock briefly; retry first, then report clearly."""
     from captioner import files
     path = make_jpeg(tmp_path / 'a.jpg')
     item = scanner.scan(tmp_path)[0]
@@ -299,5 +299,5 @@ def test_locked_file_is_retried_then_reported(tool, tmp_path, monkeypatch):
     with pytest.raises(metadata.WriteError, match='anderen Programm'):
         metadata.write_item(tool, item, Metadata(headline='DEL 2 - X gegen Y'))
     assert len(calls) == 3
-    assert read(tool, path, '-IPTC:Headline')['Headline'] == META.headline   # Original unangetastet
+    assert read(tool, path, '-IPTC:Headline')['Headline'] == META.headline   # original untouched
     assert not list(tmp_path.glob('.*captioner-tmp*'))

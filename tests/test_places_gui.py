@@ -1,4 +1,4 @@
-"""Karten-Picker und Orte im Beschriftungs-Panel, offscreen und ohne echtes Netz."""
+"""Map picker and places in the caption panel, offscreen and without a real network."""
 import os
 import time
 
@@ -24,7 +24,7 @@ def app():
 
 @pytest.fixture(autouse=True)
 def no_internet(monkeypatch):
-    """Kacheln und Nominatim auf einen geschlossenen Port: wie offline, nie ins echte Netz."""
+    """Tiles and Nominatim on a closed port: like offline, never into the real network."""
     from captioner.ui import mapview
     monkeypatch.setattr(mapview.MapView, 'tile_url', staticmethod(lambda z, x, y: f'{UNREACHABLE}/{z}/{x}/{y}.png'))
     monkeypatch.setattr(geo, 'NOMINATIM_URL', UNREACHABLE)
@@ -60,8 +60,8 @@ def test_click_on_map_sets_point_and_asks_for_the_address(app):
     center = QPoint(view.width() // 2, view.height() // 2)
     QTest.mouseClick(view, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, center + QPoint(40, 0))
     assert dialog.latitude == pytest.approx(BN.latitude, abs=1e-4)
-    assert dialog.longitude > BN.longitude  # rechts vom alten Punkt
-    # Rueckwaertssuche scheitert ohne Netz mit Hinweis; Felder bleiben
+    assert dialog.longitude > BN.longitude  # to the right of the old point
+    # reverse search fails without network, with a notice; fields stay
     assert wait_until(lambda: 'keine Verbindung' in dialog.status.text())
     assert (dialog.city.text(), dialog.sublocation.text()) == (BN.city, BN.sublocation)
     dialog.close()

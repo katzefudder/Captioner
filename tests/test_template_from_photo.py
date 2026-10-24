@@ -1,4 +1,4 @@
-"""Template aus Foto: aus der Beschriftung eines Bildes (wie von Lightroom) ein Template."""
+"""Template from photo: a template from an image's caption (e.g. from Lightroom)."""
 import os
 import subprocess
 import time
@@ -37,7 +37,7 @@ def window(app, tmp_path):
     folder.mkdir()
     photo = folder / 'L1001167.JPG'
     make_jpeg(photo)
-    # so, wie Lightroom die Beispieldatei beschriftet hat
+    # as Lightroom captioned the sample file
     subprocess.run([find_exiftool(''), '-overwrite_original', '-charset', 'iptc=UTF8', '-codedcharacterset=utf8',
                     f'-XMP-photoshop:Headline={HEADLINE}', f'-IPTC:Headline={HEADLINE}',
                     f'-XMP-dc:Description=Hellvis (Maskottchen EC BadNauheim), {HEADLINE}, Bad Nauheim, , 20.02.24',
@@ -83,7 +83,7 @@ def test_template_from_photo_opens_the_dialog_and_saves_on_ok(window, monkeypatc
     assert (template.credit, template.country_code, template.contact_email) == ('Florian Dehn', 'DEU', 'info@chuc.de')
     assert template.caption_suffix == ', {headline}, {city}, {sublocation}, {date}'
     assert template.extra_tags == ['DEL2', 'Eishockey', 'Colonel-Knight-Stadion']
-    # gespeichert und gewaehlt
+    # saved and selected
     assert template.path and window.editor.template.path == template.path
 
 

@@ -1,4 +1,4 @@
-"""Tastenkuerzel (keymap.py), mit echten Tastendruecken."""
+"""Keyboard shortcuts (keymap.py), with real key presses."""
 import os
 
 import pytest
@@ -34,7 +34,7 @@ def test_no_ambiguous_shortcuts(mac):
 def test_platform_tables():
     mac = {b.command: b.keys for b in keymap._bindings(True)}
     win = {b.command: b.keys for b in keymap._bindings(False)}
-    # Farbklasse: Cmd bzw. Strg + Ziffer; Sterne: Ziffer ohne Modifier
+    # color class: digit without modifier; stars: Cmd or Ctrl + digit
     assert mac['color_3'] == ('3',) and win['color_3'] == ('3',)
     assert mac['rating_4'] == ('Ctrl+4',) and win['rating_4'] == ('Ctrl+4',)
     assert mac['save_next'] == ('Ctrl+]', 'Ctrl+N') and win['save_next'] == ('Alt+]', 'Ctrl+M')
@@ -97,7 +97,7 @@ def test_color_class_and_rating(window):
     press(window.view, Qt.Key.Key_3)
     assert item.meta.color_class == 3 and item.meta.label == 'Green'
     press(window.view, Qt.Key.Key_7)
-    assert item.meta.color_class == 7 and item.meta.label == ''  # kein Lightroom-Label fuer Klasse 7
+    assert item.meta.color_class == 7 and item.meta.label == ''  # no Lightroom label for class 7
     press(window.view, Qt.Key.Key_0)
     assert item.meta.color_class == 0
     press(window.view, Qt.Key.Key_4, CMD)
@@ -111,9 +111,9 @@ def test_digits_set_color_class_only(window):
     item = window.filtered[0]
     press(window.view, Qt.Key.Key_3)
     assert item.meta.color_class == 3 and item.meta.rating == 0
-    press(window.view, Qt.Key.Key_7, CMD)  # Cmd/Strg + 6-9 sind nicht belegt
+    press(window.view, Qt.Key.Key_7, CMD)  # Cmd/Ctrl + 6-9 are not assigned
     assert item.meta.color_class == 3 and item.meta.rating == 0
-    press(window.view, Qt.Key.Key_5, Qt.KeyboardModifier.MetaModifier)  # Control-Ziffer setzt keine Farbe
+    press(window.view, Qt.Key.Key_5, Qt.KeyboardModifier.MetaModifier)  # Control + digit sets no color
     assert item.meta.color_class == 3
 
 
@@ -163,7 +163,7 @@ def test_save_and_next_from_caption(window):
         press(window.editor.caption, Qt.Key.Key_M, CMD)
     assert first.meta.caption == 'Jubel'
     assert window._selected_items() == [second]
-    # ohne Speichern zurueck
+    # back without saving
     press(window.editor.caption, Qt.Key.Key_B, CMD | Qt.KeyboardModifier.ShiftModifier)
     assert window._selected_items() == [first]
 
@@ -174,10 +174,10 @@ def test_keywords_field_wraps_and_enter_saves(window):
     tags = window.editor.keywords
     caption_height = window.editor.caption.minimumHeight()
     assert tags.lineWrapMode() == tags.LineWrapMode.WidgetWidth and tags.height() < caption_height
-    tags.setPlainText('Eishockey, DEL2\n2026/27')  # eingefuegter Umbruch trennt wie ein Komma
+    tags.setPlainText('Eishockey, DEL2\n2026/27')  # a pasted line break separates like a comma
     tags.setFocus()
     press(tags, Qt.Key.Key_Return)
-    assert tags.toPlainText() == 'Eishockey, DEL2\n2026/27'  # Enter fuegt keinen Umbruch ein
+    assert tags.toPlainText() == 'Eishockey, DEL2\n2026/27'  # Enter doesn't insert a line break
     assert item.meta.keywords == ['Eishockey', 'DEL2', '2026/27']
 
 
@@ -199,7 +199,7 @@ def test_snapshot_copy_paste(window):
 
 @requires_exiftool
 def test_snapshot_buttons(window):
-    """Kopieren/Einfügen im Panel wie die Kuerzel; Einfügen erst nach dem Kopieren."""
+    """Copy/paste in the panel like the shortcuts; paste only after copying."""
     other = window.filtered[2]
     editor = window.editor
     assert not editor.snapshot_paste_button.isEnabled()
@@ -218,7 +218,7 @@ SHIFT = Qt.KeyboardModifier.ShiftModifier
 
 @requires_exiftool
 def test_copy_next_paste_while_typing(window):
-    """Beschriften, Cmd+Shift+C, Cmd+N (speichert, weiter), Cmd+Shift+V - alles im Panel."""
+    """Caption, Cmd+Shift+C, Cmd+N (saves, next), Cmd+Shift+V - all in the panel."""
     from captioner.templates import MatchTemplate
     first, second = window.filtered[0], window.filtered[1]
     first.taken_at, second.taken_at = '2026:03:01 18:00:00', '2026:03:02 19:00:00'
@@ -229,25 +229,25 @@ def test_copy_next_paste_while_typing(window):
     caption = window.editor.caption
     caption.setFocus()
     QTest.keyClicks(caption, 'Jubel')
-    press(caption, Qt.Key.Key_C, CMD | SHIFT)        # kopiert auch Ungespeichertes
+    press(caption, Qt.Key.Key_C, CMD | SHIFT)        # also copies unsaved content
     assert caption.toPlainText() == 'Jubel'
     press(caption, Qt.Key.Key_N if keymap.MAC else Qt.Key.Key_M, CMD)
     assert first.meta.caption == 'Jubel, 01.03.26' and window._selected_items() == [second]
     assert second.meta.caption == ''
 
     press(caption, Qt.Key.Key_V, CMD | SHIFT)
-    # Anhang mit dem Datum des Zielbildes, nicht des kopierten
+    # suffix with the date of the target image, not of the copied one
     assert second.meta.caption == 'Jubel, 02.03.26'
     assert (second.meta.headline, second.meta.city, second.meta.keywords) == (
         'DEL 2 - A gegen B', 'Bad Nauheim', ['Eishockey'])
-    assert caption.toPlainText() == 'Jubel'  # Panel zeigt das eingefuegte Bild, als Rohtext
+    assert caption.toPlainText() == 'Jubel'  # the panel shows the pasted image, as raw text
 
 
 @requires_exiftool
 def test_double_click_opens_viewer(window):
     view, target = window.view, window.filtered[1]
     rect = view.visualRect(window.model.index(window.filtered.index(target), 0))
-    # wie echt: erst ein Klick (macht die Kachel aktuell), dann der Doppelklick
+    # as in real life: first a click (makes the tile current), then the double-click
     QTest.mouseClick(view.viewport(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, rect.center())
     QTest.mouseDClick(view.viewport(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier, rect.center())
     QtWidgets.QApplication.processEvents()
@@ -259,7 +259,7 @@ def test_double_click_opens_viewer(window):
 @requires_exiftool
 def test_next_and_previous_image_in_gallery(window):
     window.view.setFocus()
-    # Cmd+N/B auf macOS, Strg+M/Alt+B unter Windows
+    # Cmd+N/B on macOS, Ctrl+M/Alt+B on Windows
     nxt, prev = (QKeySequence(keymap.keys(command)[1])[0] for command in ('next_image', 'prev_image'))
     press(window.view, nxt.key(), nxt.keyboardModifiers())
     assert window._selected_items() == [window.filtered[1]]
@@ -275,16 +275,16 @@ def test_caption_in_viewer_with_copy_paste(window):
     first, second = window.filtered[0], window.filtered[1]
     window.view.setCurrentIndex(window.model.index(0))
     window.open_viewer()
-    QtWidgets.QApplication.processEvents()        # Grossansicht wird aktives Fenster
+    QtWidgets.QApplication.processEvents()        # preview becomes the active window
     viewer = window.viewer
-    assert not window._editor_in_viewer()  # Standard: Panel bleibt im Hauptfenster
+    assert not window._editor_in_viewer()  # default: the panel stays in the main window
 
-    press(viewer.zoom, Qt.Key.Key_I)              # Panel in die Grossansicht, Fokus in die Beschreibung
+    press(viewer.zoom, Qt.Key.Key_I)              # panel into the preview, focus into the caption
     assert window._editor_in_viewer() and viewer.caption_slot.isVisible()
     caption = window.editor.caption
     assert caption.hasFocus()
 
-    # Tippen loest keine Grossansicht-Kuerzel aus (Ziffern, T, Z, +, -, Leertaste)
+    # typing triggers no preview shortcuts (digits, T, Z, +, -, space)
     QTest.keyClicks(caption, 'Tor 3 T+Z-')
     QtWidgets.QApplication.processEvents()
     assert caption.toPlainText() == 'Tor 3 T+Z-'
@@ -292,38 +292,38 @@ def test_caption_in_viewer_with_copy_paste(window):
     assert viewer.zoom.zoom is None
 
     window.editor.headline.setText('DEL 2 - A gegen B')
-    press(caption, Qt.Key.Key_C, CMD | SHIFT)     # kopieren
-    press(caption, Qt.Key.Key_N if keymap.MAC else Qt.Key.Key_M, CMD)   # speichern, weiter
+    press(caption, Qt.Key.Key_C, CMD | SHIFT)     # copy
+    press(caption, Qt.Key.Key_N if keymap.MAC else Qt.Key.Key_M, CMD)   # save, next
     assert first.meta.caption == 'Tor 3 T+Z-'
-    assert viewer.key == second.key                # Grossansicht zeigt das naechste Bild
-    press(caption, Qt.Key.Key_V, CMD | SHIFT)     # einfuegen
+    assert viewer.key == second.key                # the preview shows the next image
+    press(caption, Qt.Key.Key_V, CMD | SHIFT)     # paste
     assert second.meta.caption == 'Tor 3 T+Z-' and second.meta.headline == 'DEL 2 - A gegen B'
 
-    # Auf dem Bild wirken die Kuerzel wieder
+    # on the image the shortcuts work again
     viewer.zoom.setFocus()
     press(viewer.zoom, Qt.Key.Key_4, CMD)
     assert second.meta.rating == 4
-    # auch die des Panels: Cmd+N speichert und zeigt das naechste Bild, ohne Fokus im Panel
+    # the panel's too: Cmd+N saves and shows the next image, without focus in the panel
     third = window.filtered[2]
     press(viewer.zoom, Qt.Key.Key_N if keymap.MAC else Qt.Key.Key_M, CMD)
     assert viewer.key == third.key and viewer.zoom.hasFocus()
     prev = QKeySequence(keymap.keys('save_prev')[1])[0]
-    press(viewer.zoom, prev.key(), prev.keyboardModifiers())   # Cmd+B bzw. Alt+B: zurueck
+    press(viewer.zoom, prev.key(), prev.keyboardModifiers())   # Cmd+B or Alt+B: back
     assert viewer.key == second.key
     assert window.settings.viewer_caption_panel
 
-    # Schliessen: Panel zurueck ins Hauptfenster
+    # close: panel back into the main window
     press(viewer.zoom, Qt.Key.Key_Escape)
     assert not viewer.isVisible() and not window._editor_in_viewer()
     assert window.main_splitter.indexOf(window.editor) == 1
-    # im Hauptfenster wieder nur mit Fokus im Panel (die Galerie hat eigene Cmd+N)
+    # in the main window again only with focus in the panel (the gallery has its own Cmd+N)
     window.activateWindow()
     window.view.setFocus()
     QtWidgets.QApplication.processEvents()
     press(window.view, Qt.Key.Key_N if keymap.MAC else Qt.Key.Key_M, CMD)
     assert window._selected_items() == [third]
 
-    # Naechstes Oeffnen: Panel wieder dabei (Einstellung gemerkt)
+    # next opening: the panel is there again (setting remembered)
     window.open_viewer()
     QtWidgets.QApplication.processEvents()
     assert window._editor_in_viewer() and viewer.zoom.hasFocus()
@@ -341,9 +341,9 @@ def test_viewer_frame_shows_color_class(window):
     QtWidgets.QApplication.processEvents()
     viewer = window.viewer
     assert viewer.zoom.frame_color is None
-    press(viewer.zoom, Qt.Key.Key_3)            # Farbklasse 3: gruener Rahmen
+    press(viewer.zoom, Qt.Key.Key_3)            # color class 3: green frame
     assert viewer.zoom.frame_color.name() == CLASS_COLORS[3]
-    press(viewer.zoom, Qt.Key.Key_0)            # entfernt: kein Rahmen
+    press(viewer.zoom, Qt.Key.Key_0)            # removed: no frame
     assert viewer.zoom.frame_color is None
     viewer.close()
 
@@ -355,27 +355,27 @@ def test_template_without_teams_keeps_typed_headline(window, roster):
     editor.template = MatchTemplate(name='DEL2 Heim', city='Bad Nauheim', caption_suffix='')
     first, second = window.filtered[0], window.filtered[1]
 
-    # Titel in falschem Format: Hinweis, Speichern geht trotzdem
+    # headline in the wrong format: notice, saving still works
     editor.headline.setText('Bad Nauheim gegen Bietigheim')
     assert editor.headline_hint.isVisibleTo(editor)
     editor.headline.setText('DEL 2 - Bietigheim Steelers gegen EC Bad Nauheim')
     assert not editor.headline_hint.isVisibleTo(editor)
-    # Code-Vorschlaege: Teams aus dem Titel zuerst (Heim = Bietigheim)
+    # code suggestions: teams from the headline first (home = Bietigheim)
     assert editor.caption.model.stringList()[0].startswith('bi')
     editor.caption.setPlainText('Jubel')
-    editor.submit(1)                                   # speichern, weiter
+    editor.submit(1)                                   # save, next
     assert first.meta.headline == 'DEL 2 - Bietigheim Steelers gegen EC Bad Nauheim'
-    # naechstes, noch unbeschriftetes Bild bekommt den Titel vorgeschlagen
+    # the next, still uncaptioned image gets the headline suggested
     assert window._selected_items() == [second]
     assert editor.headline.text() == first.meta.headline
-    # ... aber nie die Beschreibung des vorigen: das Feld ist leer
+    # ... but never the caption of the previous one: the field is empty
     assert second.meta.caption == '' and editor.caption.toPlainText() == ''
-    # Beschreibung des naechsten Bildes ist markiert: Tippen ueberschreibt sie
+    # the caption of the next image is selected: typing overwrites it
     cursor = editor.caption.textCursor()
     assert cursor.selectedText() == editor.caption.toPlainText()
     assert cursor.selectionStart() == 0
 
-    # Template anwenden (ohne "Inhalte überschreiben") ueberschreibt den Titel nicht mit einem leeren
+    # applying a template (without "Overwrite content") doesn't overwrite the headline with an empty one
     editor.overwrite_box.setChecked(False)
     window.select_only(first)
     window.apply_template()
@@ -395,7 +395,7 @@ def test_apply_template_overwrites_everything(window):
     editor.submit(0)
     editor.template = MatchTemplate(name='Neu', headline='DEL 2 - C gegen D', city='Bad Nauheim',
                                     extra_tags=['Eishockey'], caption_suffix='')
-    assert editor.overwrite_box.isChecked()  # Voreinstellung
+    assert editor.overwrite_box.isChecked()  # default
     window.apply_template()
     assert (item.meta.headline, item.meta.caption, item.meta.keywords, item.meta.city, item.meta.sublocation) == (
         'DEL 2 - C gegen D', '', ['C', 'D', 'Bad Nauheim', 'Eishockey'], 'Bad Nauheim', '')
@@ -418,7 +418,7 @@ def test_saving_with_template_writes_rights(window):
     editor.submit(0)
     assert (item.meta.creator, item.meta.copyright, item.meta.country) == (
         'Florian Dehn', '© 2026 Florian Dehn', 'Deutschland')
-    assert item.meta.source == 'vorher'  # leeres Template-Feld laesst den Wert stehen
+    assert item.meta.source == 'vorher'  # an empty template field keeps the value
 
 
 def test_template_dialog_checks_lengths_and_headline(app):
@@ -429,7 +429,7 @@ def test_template_dialog_checks_lengths_and_headline(app):
     save = dialog.buttons.button(QDialogButtonBox.StandardButton.Save)
     assert save.isEnabled() and not dialog.headline_hint.isVisibleTo(dialog)
     dialog.headline.setText('Training')
-    assert save.isEnabled() and 'Format' in dialog.headline_hint.text()   # warnt nur
+    assert save.isEnabled() and 'Format' in dialog.headline_hint.text()   # only warns
     dialog.creator.setText('x' * 40)
     assert not save.isEnabled() and 'Fotograf' in dialog.headline_hint.text()
     dialog.creator.setText('Florian Dehn')
@@ -459,7 +459,7 @@ def test_undo_and_redo(window):
     press(window.view, Qt.Key.Key_Z, CMD | Qt.KeyboardModifier.ShiftModifier)
     assert first.meta.rating == 4
 
-    # Beschriftung mit GPS: Rueckgaengig nimmt Titel, Rohtext und das gesetzte GPS zurueck
+    # caption with GPS: undo takes back headline, raw text and the GPS that was set
     window.places.remember(geo.Place('Bad Nauheim', 'Halle', 50.37, 8.73))
     window.select_only(first)
     editor = window.editor
@@ -517,7 +517,7 @@ def test_codes_in_headline(window):
     editor.set_roster(roster, '#')
     editor.headline.setText('DEL 2 - #bn# gegen #kh#')
     assert '→ DEL 2 - EC Bad Nauheim gegen EC Kassel Huskies' in editor.headline_preview.text()
-    assert not editor.headline_hint.isVisibleTo(editor)          # aufgeloest im richtigen Format
+    assert not editor.headline_hint.isVisibleTo(editor)          # resolved, in the right format
     editor.caption.setPlainText('Tor #bn23#')
     editor.submit(0)
     item = window.filtered[0]
@@ -545,9 +545,9 @@ def test_find_replace_over_the_selection(window, roster, monkeypatch):
         dialog.find.setText('#bn23#')
         dialog.replacement.setText('#bn31#')
         dialog.refresh()
-        assert [c.item for c in dialog.changes] == [first, second]   # das dritte hat keinen Treffer
+        assert [c.item for c in dialog.changes] == [first, second]   # the third has no match
         assert dialog.apply_button.text() == '2 Bilder ändern'
-        dialog.rows[1].setChecked(False)          # zweites abgewaehlt
+        dialog.rows[1].setChecked(False)          # second deselected
         assert dialog.apply_button.text() == '1 Bild ändern'
         return 1
     monkeypatch.setattr(ReplaceDialog, 'exec', run_dialog)
@@ -556,7 +556,7 @@ def test_find_replace_over_the_selection(window, roster, monkeypatch):
     assert first.meta.caption == 'Tor -31- Dean Döge (EC Bad Nauheim)'
     assert 'Dean Döge' in first.meta.keywords and 'Marius Erk' not in first.meta.keywords
     assert window.raw_captions.get(first) == 'Tor #bn31#'
-    assert second.meta.caption == 'Jubel mit -23- Marius Erk (EC Bad Nauheim)'   # abgewaehlt: unveraendert
+    assert second.meta.caption == 'Jubel mit -23- Marius Erk (EC Bad Nauheim)'   # deselected: unchanged
     assert window.undo_action.text() == 'Rückgängig: Ersetzen'
     window.undo()
     assert first.meta.caption == 'Tor -23- Marius Erk (EC Bad Nauheim)' and window.raw_captions.get(first) == 'Tor #bn23#'
@@ -582,7 +582,7 @@ def test_customized_shortcut_works_without_restart(window, monkeypatch):
         window.customize_shortcuts()
         assert window.settings.shortcuts == {'tag_toggle': ['Y']} and keymap.keys('tag_toggle') == ('Y',)
         press(window.view, Qt.Key.Key_T)
-        assert not item.meta.tagged                      # T ist nicht mehr belegt
+        assert not item.meta.tagged                      # T is no longer assigned
         press(window.view, Qt.Key.Key_Y)
         assert item.meta.tagged
     finally:
@@ -599,16 +599,16 @@ def test_capture_field_shows_pressed_keys_and_records_up_to_three(app):
     shift, alt = Qt.KeyboardModifier.ShiftModifier, Qt.KeyboardModifier.AltModifier
     assert field.text() == ''
     QTest.keyPress(field, Qt.Key.Key_Control, CMD)
-    assert field.text() == native('Ctrl+A')[:-1]          # nur der Modifier, z. B. „⌘“
+    assert field.text() == native('Ctrl+A')[:-1]          # only the modifier, e.g. "⌘"
     QTest.keyPress(field, Qt.Key.Key_K, CMD | shift)
     assert captured == ['Ctrl+Shift+K'] and field.text() == native('Ctrl+Shift+K')
     QTest.keyRelease(field, Qt.Key.Key_K, CMD | shift)
     QTest.keyRelease(field, Qt.Key.Key_Control, Qt.KeyboardModifier.NoModifier)
-    assert field.text() == ''                              # nichts gedrueckt: leer
-    QTest.keyPress(field, Qt.Key.Key_K, CMD | shift | alt)  # vier Tasten
+    assert field.text() == ''                              # nothing pressed: empty
+    QTest.keyPress(field, Qt.Key.Key_K, CMD | shift | alt)  # four keys
     assert too_many and captured == ['Ctrl+Shift+K']
-    QTest.keyClick(field, Qt.Key.Key_Asterisk, shift)       # * braucht Shift, gemerkt wird nur *
-    QTest.keyClick(field, Qt.Key.Key_Escape)                # auch Esc und Tab sind Kuerzel
+    QTest.keyClick(field, Qt.Key.Key_Asterisk, shift)       # * needs Shift, only * is remembered
+    QTest.keyClick(field, Qt.Key.Key_Escape)                # Esc and Tab are shortcuts too
     QTest.keyClick(field, Qt.Key.Key_Tab)
     assert captured[1:] == ['*', 'Esc', 'Tab']
 
@@ -627,17 +627,17 @@ def test_editor_dialog_replaces_and_takes_over_clashing_keys(app):
     dialog = ShortcutEditorDialog()
     dialog.select('tag_on')
     assert dialog.key_list.count() == 1 and not dialog.default_button.isEnabled()
-    record(Qt.Key.Key_T)                                   # T gehoert tag_toggle (gleicher Kontext)
+    record(Qt.Key.Key_T)                                   # T belongs to tag_toggle (same context)
     dialog.change_key()
     assert dialog.keys['tag_on'] == ['T'] and dialog.keys['tag_toggle'] == []
-    assert dialog.items['tag_on'].font(0).bold()          # geaendert: fett
-    # gleiche Taste in einem anderen, nie gleichzeitig aktiven Kontext bleibt
+    assert dialog.items['tag_on'].font(0).bold()          # changed: bold
+    # the same key in another context that is never active at the same time stays
     assert dialog.keys['viewer_tag_toggle'] == ['T']
     dialog.select('open_folder_tab')
     record(Qt.Key.Key_N, CMD | Qt.KeyboardModifier.ShiftModifier)
     dialog.add_key()
     assert dialog.keys['open_folder_tab'] == ['Ctrl+Shift+N']
-    # Menue-Kuerzel gelten ueberall: das Panel verliert seine Belegung
+    # menu shortcuts apply everywhere: the panel loses its binding
     assert dialog.keys['next_nosave'] == [k for k in keymap.DEFAULT_KEYS['next_nosave'] if k != 'Ctrl+Shift+N']
     assert dialog.overrides()['tag_toggle'] == [] and 'color_1' not in dialog.overrides()
     dialog.select('tag_on')

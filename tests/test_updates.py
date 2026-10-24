@@ -1,4 +1,4 @@
-"""Update-Hinweis: Versionsvergleich, GitHub-Antwort, Anzeige (ohne echtes Netz)."""
+"""Update notice: version comparison, GitHub response, display (without a real network)."""
 import json
 import os
 
@@ -14,7 +14,7 @@ RELEASE = {'tag_name': 'v0.1.20', 'html_url': 'https://github.com/katzefudder/Ca
 def test_versions():
     assert updates.parse_version('v0.1.20') == (0, 1, 20)
     assert updates.parse_version('dev') is None
-    assert updates.is_newer('0.1.20', '0.1.9')           # numerisch, nicht als Text
+    assert updates.is_newer('0.1.20', '0.1.9')           # numerically, not as text
     assert not updates.is_newer('0.1.9', '0.1.20')
     assert not updates.is_newer('0.1.20', '0.1.20')
     assert not updates.is_newer('0.2.0', 'dev')

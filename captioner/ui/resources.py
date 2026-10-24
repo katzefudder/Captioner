@@ -1,4 +1,4 @@
-"""Logo und Icons aus captioner/resources (erzeugt mit `make icons` aus logo.svg)."""
+"""Logo and icons from captioner/resources (generated from logo.svg with `make icons`)."""
 from pathlib import Path
 
 from PySide6.QtGui import QIcon, QPixmap
@@ -17,7 +17,7 @@ def app_icon():
 
 
 def logo_pixmap(size):
-    """Logo in passender Groesse; nimmt die naechstgroessere PNG und skaliert herunter."""
+    """Logo in a suitable size; takes the next larger PNG and scales it down."""
     for candidate in ICON_SIZES:
         if candidate >= size:
             break

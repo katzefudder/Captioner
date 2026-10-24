@@ -1,17 +1,17 @@
-"""Datei atomar ersetzen, auch wenn Windows sie gerade sperrt (ohne Qt)."""
+"""Replace a file atomically, even while Windows is locking it (no Qt)."""
 import os
 import sys
 import time
 
-# Explorer (Vorschau), Virenscanner, Indexdienst oder Lightroom halten eine Datei unter
-# Windows oft kurz offen; os.replace scheitert dann mit PermissionError. Ein paarmal
-# nachfassen, dann aufgeben. Auf macOS/Linux tritt das nicht auf.
+# Explorer (preview), virus scanners, the indexing service or Lightroom often keep a file
+# open briefly on Windows; os.replace then fails with PermissionError. Retry a few times,
+# then give up. This does not happen on macOS/Linux.
 ATTEMPTS = 10 if sys.platform == 'win32' else 1
 DELAY = 0.2
 
 
 def replace_file(source, target):
-    """os.replace mit Wiederholung bei PermissionError; danach der letzte Fehler."""
+    """os.replace, retried on PermissionError; after that the last error."""
     for attempt in range(ATTEMPTS):
         try:
             os.replace(source, target)

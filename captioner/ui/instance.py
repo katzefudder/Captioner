@@ -1,11 +1,11 @@
 """
-Eine laufende App je Benutzer (Windows).
+One running app per user (Windows).
 
-Der Explorer startet fuer "Mit Captioner oeffnen" bei mehreren markierten Ordnern je
-Ordner einen eigenen Prozess. Der erste wird zur App und lauscht auf einem lokalen
-Socket (unter Windows eine Named Pipe); jeder weitere reicht seine Ordner dorthin
-weiter und beendet sich. Auf macOS kommen dieselben Faelle als QFileOpenEvent an
-(main_window.OpenRequests), dort braucht es das nicht.
+For "Open with Captioner" on several selected folders, Explorer starts a separate
+process per folder. The first one becomes the app and listens on a local socket (a
+named pipe on Windows); every further one passes its folders there and quits. On macOS
+the same cases arrive as QFileOpenEvent (main_window.OpenRequests), so it isn't
+needed there.
 """
 import getpass
 import json
@@ -18,7 +18,7 @@ from PySide6.QtNetwork import QLocalServer, QLocalSocket
 logger = logging.getLogger(__name__)
 
 TIMEOUT_MS = 1000
-ACK_TIMEOUT_MS = 5000   # bis die laufende App die Ordner uebernommen hat
+ACK_TIMEOUT_MS = 5000   # until the running app has taken over the folders
 
 
 def server_name():
@@ -31,11 +31,11 @@ def server_name():
 
 def forward(paths, name=None):
     """
-    An eine laufende App weiterreichen. True, wenn eine da war (dann beenden).
+    Pass on to a running app. True if there was one (then quit).
 
-    Eine Nachricht je Verbindung: JSON-Liste plus Zeilenende. Der Server legt auf, sobald
-    er sie uebernommen hat; erst dann endet dieser Prozess. Wer selbst sofort auflegt,
-    verliert unter Windows ungelesene Daten in der Named Pipe.
+    One message per connection: JSON list plus line ending. The server hangs up as soon
+    as it has taken it over; only then does this process end. Hanging up right away
+    loses unread data in the named pipe on Windows.
     """
     socket = QLocalSocket()
     socket.connectToServer(name or server_name())
@@ -51,17 +51,17 @@ def forward(paths, name=None):
 
 
 class InstanceServer(QObject):
-    """Nimmt Ordner weiterer Starts an: on_paths(liste), auch mit leerer Liste (nur nach vorn holen)."""
+    """Accepts folders of further starts: on_paths(list), also with an empty list (just raise)."""
 
     def __init__(self, on_paths, name=None, parent=None):
         super().__init__(parent)
         self.on_paths = on_paths
-        self.buffers = {}    # Socket -> angefangene Zeile
+        self.buffers = {}    # socket -> partial line
         self.server = QLocalServer(self)
         self.server.newConnection.connect(self._accept)
         name = name or server_name()
         if not self.server.listen(name):
-            # Unter Unix kann ein abgestuerzter Lauf die Socket-Datei hinterlassen
+            # on Unix a crashed run can leave the socket file behind
             QLocalServer.removeServer(name)
             if not self.server.listen(name):
                 logger.warning('Kein Instanz-Socket %s: %s', name, self.server.errorString())
@@ -72,7 +72,7 @@ class InstanceServer(QObject):
             self.buffers[socket] = bytearray()
             socket.readyRead.connect(lambda socket=socket: self._read(socket))
             socket.disconnected.connect(lambda socket=socket: self._drop(socket))
-            self._read(socket)  # was schon vor dem connect angekommen ist
+            self._read(socket)  # whatever arrived before the connect
 
     def _read(self, socket):
         buffer = self.buffers.get(socket)
@@ -85,7 +85,7 @@ class InstanceServer(QObject):
             self._deliver(line)
 
     def _finish(self, socket):
-        """Uebernommen: auflegen, damit der weiterreichende Prozess endet."""
+        """Taken over: hang up so the passing process ends."""
         if self.buffers.pop(socket, None) is None:
             return
         socket.readyRead.disconnect()
@@ -94,7 +94,7 @@ class InstanceServer(QObject):
         socket.deleteLater()
 
     def _drop(self, socket):
-        """Gegenseite weg: was noch im Puffer liegt, gilt (auch ohne Zeilenende)."""
+        """Other side gone: what is still in the buffer counts (even without a line ending)."""
         if socket not in self.buffers:
             return
         self._read(socket)
